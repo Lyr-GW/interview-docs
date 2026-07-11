@@ -6,11 +6,12 @@ Flash Attention 通过 SRAM 分块（tiling）与 online softmax，将标准 Sel
 
 
 !!! abstract "30 秒速览"
-    - Flash Attention 通过 SRAM 分块（tiling）与 online softmax，将标准 Self-Attention 的显存复杂度从 O(N²) 降到 O(N)，消除注意力矩阵的 HBM 反复读写
-    - vLLM 和 MindIE 分别采用 CUDA 上的 flash-attn 库和昇腾 NPU 上的 `npu_fused_infer_attention_score` 融合算子，在 Prefill/Decode 分离、Paged KV Ca
-    - !!! abstract "30 秒速览"
-    - (核心要点从上文提取)
-
+    - **核心原理**
+    - **实现细节**
+    - **框架对比**
+    - **面试要点**
+    - 问题背景
+    - 方案概述
 
 ---
 ## 2. 核心原理

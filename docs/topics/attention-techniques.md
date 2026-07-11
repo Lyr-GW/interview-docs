@@ -6,10 +6,12 @@ DeepSeek-V4 系列通过 **Compressed Sparse Attention (CSA)** 与 **Heavily Com
 
 
 !!! abstract "30 秒速览"
-    - DeepSeek-V4 系列通过 Compressed Sparse Attention (CSA) 与 Heavily Compressed Attention (HCA) 两种高效注意力机制，将百万 token 上下文的 KV 缓存压缩
-    - !!! abstract "30 秒速览"
-    - (核心要点从上文提取)
-
+    - **核心原理**
+    - **实现细节**
+    - **框架对比**
+    - **面试要点**
+    - 问题背景
+    - 方案概述
 
 ---
 ## 2. 核心原理

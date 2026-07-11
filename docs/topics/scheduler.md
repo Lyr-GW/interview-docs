@@ -6,10 +6,12 @@
 
 
 !!! abstract "30 秒速览"
-    - Continuous Batching 动态组合 Prefill 与 Decode，最大化吞吐
-    - PagedAttention 分页化 KV 缓存，消除碎片，支持前缀共享
-    - MindIE 三队列 + transferringMap_ 模型，vLLM v1 简化为纯 recompute 抢占
-    - MindIE 内置 PD 分离 KV 传输、多 DP 协调、可插拔 Stage Policy
+    - **核心原理**
+    - **框架对比**
+    - **面试要点**
+    - 问题背景
+    - 方案概述
+    - 调度队列与请求状态机
 
 
 ---

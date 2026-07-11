@@ -6,10 +6,12 @@ Prefix Cache（前缀缓存）通过缓存公共前缀（如 system prompt、few
 
 
 !!! abstract "30 秒速览"
-    - Prefix Cache（前缀缓存）通过缓存公共前缀（如 system prompt、few-shot examples）的 KV Cache 来避免重复计算，降低首 Token 延迟（TTFT）并提升吞吐
-    - MindIE 采用双层架构——C++ 调度层做前缀匹配、Python 插件层做 hash 生成与分布式 KV Store（Mooncake/Memcache）读写
-    - vLLM 则使用纯 Python 实现的 RadixTree 做灵活的单机前缀共享
-    - 核心差异在于 MindIE 面向多机分布式部署优先，vLLM 面向单机通用场景优先
+    - **核心原理**
+    - **实现细节**
+    - **框架对比**
+    - **面试要点**
+    - 问题背景
+    - 方案概述
 
 
 ---
