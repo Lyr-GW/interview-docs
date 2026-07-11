@@ -31,7 +31,7 @@
 
 **二者关系：乘法模型**  
 端到端有效前缀命中率 h = h<sub>reuse</sub> × P<sub>route</sub> × P<sub>pool</sub>，亲和抬高 P<sub>route</sub>（≈1），池化抬高 P<sub>pool</sub>（≈1），缺一即坍塌。
- ```mermaid
+```mermaid
 flowchart TB
   subgraph Client["客户端"]
       REQ[请求]
@@ -107,7 +107,7 @@ flowchart TB
 - **后续升级（PR#304）**：对于 `unified` 模式，Worker 将**每个 endpoint** 的 `prefill_cost`（亲和折扣后待算量）全量上报，Scheduler 用自身 fresh load 全局重算完整 unified 分数取 min，不再受固定 k 限制。
 
 **关键保证**：Scheduler 不会越出 Worker 提交的候选集选取，亲和边界由 Worker 保持。
- ```mermaid
+```mermaid
 sequenceDiagram
     participant W as Worker
     participant C as Conductor
