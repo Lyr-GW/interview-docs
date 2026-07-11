@@ -43,7 +43,7 @@ graph TB
     A2 -.注册/查询命中.-> B1
     B1 --> C1 --> B2
     B1 --> C2
-```text## 3. 实现细节
+## 3. 实现细节
 
 ### 3.1 PD 分离与 KV Cache 传输
 
@@ -74,24 +74,58 @@ graph TB
 
 ### 3.2 前缀缓存：SGLang RadixTree vs vLLM Block Hash
 
-#### SGLang RadixAttention
-核心文件 `sglang/python/sglang/srt/mem_cache/radix_cache.py`，用基数树做 token 序列 → KV Cache 物理索引映射：
+前缀缓存（Prefix Caching）是推理框架最核心的优化之一——多轮对话、system prompt、few-shot 示例等场景大量 token 重复，复用已计算的 KV Cache 可直接跳过 prefill，显著降低 TTFT。
+
+**核心差异一句话**：SGLang 用基数树做 token 级最长前缀匹配，vLLM 用哈希表做 block 级整块复用。
+
+#### SGLang RadixAttention：基数树驱动的精细前缀缓存
+
+核心文件 `sglang/python/sglang/srt/mem_cache/radix_cache.py`，用**基数树（Radix Tree / Patricia Trie）**做 token 序列 → KV Cache 物理索引的映射。为什么选基数树？哈希表只能整串精确匹配，普通 Trie 逐 token 建节点会产生大量单分支链（内存和指针跳转开销大）；基数树把单分支链压缩成一条边（一段 token 序列），节点数降到分叉点数量级，同时保留了任意长度前缀匹配能力。
 
 **数据结构**：
-- `RadixKey`：用 C 级别 `array("q", ...)` 存 token_ids，`is_bigram` 标志位零拷贝切换 EAGLE 视图。
-- `TreeNode`：`children: Dict[child_key, TreeNode]` 做 O(1) 子节点查找，`value` 存 GPU KV Cache 索引，`lock_ref` 引用计数沿路径传播到根，`last_access_time`/`hit_count` 服务驱逐策略。
+
+- `RadixKey`：用 C 级别 `array("q", ...)`（int64 数组）存 token_ids，`match()` 用**指数探测 + 二分**找分歧点（167-196 行），避免逐 token 的 Python for 循环；`extra_key` 字段做 LoRA adapter / cache salt 的命名空间隔离，两个请求 token 相同但 `extra_key` 不同会在 `_check_compatible` 阶段拒绝合并；`is_bigram` 标志位零拷贝切换 EAGLE 投机解码的 bigram 视图，底层同一份数组，逻辑解释为相邻 token 对 `(t_i, t_{i+1})`。
+
+- `TreeNode`：`children: Dict[child_key, TreeNode]` 做 O(1) 子节点查找（child_key 是边首 token 或 page 级 tuple）；`value` 存 GPU KV Cache 物理槽位索引（`torch.Tensor`）；**`lock_ref` 引用计数**——请求占用时从该节点沿 `parent` 一路回溯到根全部 +1，只有 `lock_ref == 0` 的节点才可驱逐；`last_access_time` / `hit_count` / `priority` 分别服务 LRU / LFU / Priority 驱逐策略；`host_value` / `host_ref_counter` / `hash_value` 预留分层缓存（HiCache）扩展。
 
 **核心算法**：
-- `match_prefix`：逐层哈希查孩子 + 指数探测二分找分歧点（`RadixKey.match()`），近似 O(层数×log L)。若匹配点落边中间则现场 `_split_node`（副作用：以访问精细化树结构）。
-- **驱逐**：只淘汰叶子节点，用最小堆按策略优先级排序，驱逐后级联回收父节点。策略可插拔（`LRUStrategy`/`LFUStrategy`/`SLRUStrategy`/`PriorityStrategy`）。
 
-**Cache-Aware 调度**：`LPM` 策略优先调度共享最长前缀的等待请求到相邻批次，额外维护一棵模拟树 `waiting_queue_radix_tree` 估计批内重合度。
+1. `match_prefix`：逐层用 `child_key` 做 O(1) 哈希查找孩子 → `RadixKey.match()` 指数探测二分找分歧点，时间复杂度近似 **O(层数 × log L)**。三种情况：完全不匹配则终止；完全匹配该边则继续下一层；**部分匹配**（`prefix_len < len(child.key)`）说明匹配点落边中间，必须现场 `_split_node` 把边从中间切开——这是"以访问精细化树结构"的副作用设计，分裂后精确代表公共前缀边界，后续查询更快命中。
 
-#### vLLM Prefix Caching
-用 hash-based block 方案：哈希表 `hash(block content) → block id`，只能做整块精确复用，匹配粒度为 block 级（通常 16/32 token），不如 RadixTree 的 token 级/YUCE 灵活。
+2. `_split_node`：将原边 `原父 → child` 变为 `原父 → new_node → child`，new_node 拿公共前缀部分的 key/value，child 收缩为后缀，同时继承 `lock_ref` / `hit_count` / `priority`（共享前缀理应算作被命中/引用过）。
+
+3. **驱逐（evict）**：只淘汰叶子节点（内部节点的 KV 是其所有子孙共享的前缀，删除会破坏树结构），用**最小堆**按策略优先级排序弹出；驱逐一个叶子后，若父节点因此变成空孩子且未锁定的新叶子，**级联推入堆**——自底向上整条链路的连锁回收，直到凑够所需 token 数。策略可插拔：`LRUStrategy`（默认）、`LFUStrategy`、`SLRUStrategy`（分段 LRU，防止一次性大请求冲刷长期热点）、`PriorityStrategy`（业务优先级 + LRU 兜底）。
+
+**Cache-Aware 调度（LPM）**：调度器不只被动依赖缓存，还**反向利用树结构优化批处理顺序**。`LPM`（Longest Prefix Match）策略将共享最长前缀的等待请求优先调度到相邻批次，最大化刚被计算出、尚未被驱逐的 KV Cache 利用率。实现上额外维护一棵独立的模拟树 `waiting_queue_radix_tree` 估计批内重合度，与持有真实 KV 索引的主树分离，避免相互干扰。
+
+**进阶特性**：
+
+- **分页适配 PagedAttention**：`page_size > 1` 时所有 key 做 `page_aligned(page_size)` 向下取整到 page 倍数，`child_key()` 从单 token 变为 page 内多 token 组成的 tuple，复用粒度从 token 级降到 page 级。
+- **EAGLE bigram 视图**：`is_bigram` 标志让同一棵树在零拷贝前提下支持投机解码的 bigram 级前缀匹配。
+- **分层缓存 HiCache / HiRadixCache**：在这棵 GPU 侧 radix tree 之上叠加 CPU/磁盘/远程多级缓存，驱逐前先异步"写透"到 host，`host_ref_counter` 保护副本不被过早清理，后续命中可直接从 host/远程加载回 GPU，减少完整 prefill 重算。
+
+#### vLLM Prefix Caching：基于 Block Hash 的整块复用
+
+vLLM 的前缀缓存用**链式哈希方案**：`block_hash_i = H(parent_hash_{i-1}, token_ids_in_block_i, extra_keys)`，哈希表 `hash(block content) → block_id`。命中后 `num_computed_tokens` 可跳过已缓存块，但仍需重算最后 1 token 以获取 logits。
+
+**核心限制**：
+
+- **匹配粒度粗**：只能整 block 精确复用（通常 16/32 token），不像 RadixTree 支持任意 token 边界的最长前缀匹配。一个未满 block 的尾部 token 必须整体重算。
+- **无树形共享**：哈希表是扁平结构，多个不同后缀请求共享同一前缀时，每个请求独立维护自己的 block 链，无法像 RadixTree 那样天然表达前缀的树形分支关系。
+- **无全局驱逐感知**：APC（Automatic Prefix Caching）只做单进程内的 block 复用，`ref_cnt == 0` 的块可被 LRU 驱逐，但不主动去重；无跨实例的缓存感知。
+
+**vLLM 何时够用**：单实例、前缀简单重复的场景（固定 system prompt + 少量分支）下，hash-based 方案足够且实现简单；一旦涉及多分支复用（树状搜索、复杂 agent 多步推理）或跨实例共享，就需要 RadixTree 级的精确匹配或外接 Mooncake Conductor 做全局索引。
 
 #### 面试话术
-> "两家核心技术高度趋同，最常被点名的差异是 SGLang 的 RadixAttention 前缀缓存和更激进的 overlap 调度，vLLM 的优势是生态与 production-stack 周边。"
+
+> "SGLang 的前缀缓存用 RadixTree 做 token 级最长前缀匹配，树边存 token 序列，节点 value 直指 GPU KV Cache 物理索引，支持 `lock_ref` 引用计数沿路径传播保护和可插拔驱逐策略；vLLM 用 hash-based block，整块复用，粒度粗但实现简洁。调度维度上 SGLang 的 LPM 策略通过模拟等待队列树，主动把共享前缀的请求调度到相邻批次——缓存不只是被动命中，而是反向影响调度顺序。面试时先点出 RadixTree vs Block Hash 的粒度和结构差异，再把调度视角补上，展示从缓存到调度的全链路理解。"
+
+#### 关键代码路径
+- SGLang RadixCache：`sglang/python/sglang/srt/mem_cache/radix_cache.py`（match_prefix 648-672 行，split_node 674-694 行，evict 563-590 行）
+- SGLang 驱逐策略：`sglang/python/sglang/srt/mem_cache/evict_policy.py`
+- SGLang Cache-Aware 调度：`sglang/python/sglang/srt/managers/schedule_policy.py`（LPM 139 行）
+- vLLM Prefix Caching：`vllm/v1/core/kv_cache_utils.py`（block hash 链）
+- vLLM Block Pool：`vllm/v1/core/block_pool.py`（cached_block_hash_to_block）
 
 ### 3.3 路由调度：KV 亲和 vs 强弱模型分发
 
@@ -153,7 +187,7 @@ graph TB
     Client -.点对点直传，不经过Master.-> TE
     Master <-->|元数据| ETCD["etcd"]
     TE <-->|Segment元数据| ETCD
-```text- **Transfer Engine**：纯传输库，提供 Segment + BatchTransfer 语义，可独立用于点对点搬运。
+- **Transfer Engine**：纯传输库，提供 Segment + BatchTransfer 语义，可独立用于点对点搬运。
 - **Mooncake Store**：在 Transfer Engine 之上加对象管理层（Master 元数据 + 副本 + 驱逐 + HA），提供 Put/Get 高层 KV cache 存取。
 - **Conductor**：独立的调面子系统，维护 KV 块状态索引，回答"谁持有最长前缀"。
 
