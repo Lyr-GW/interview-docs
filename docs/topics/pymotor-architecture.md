@@ -62,8 +62,12 @@ flowchart TB
         NM ---- ES
     end
     subgraph INFRA["基础设施"]
-        etcd[etcd\nmaster lock · 实例\n持久化存储]
-        k8s[Kubernetes\nDeployer YAML · ConfigMap\n故障感知]
+        etcd[etcd
+master lock · 实例
+持久化存储]
+        k8s[Kubernetes
+Deployer YAML · ConfigMap
+故障感知]
     end
     C --> CO
     EP -.->|refresh events| CO
@@ -100,14 +104,30 @@ flowchart TB
     end
     subgraph standby["Standby 节点"]
         direction TB
-        S_C[Controller\n└─ 仅 ControllerAPI]
-        S_CO[Coordinator\n├─ Scheduler\n├─ Mgmt\n├─ Obs\n└─ role_shm byte0=0]
-        S_ES[Engine Server\n└─ 不受主备影响]
+        S_C[Controller
+└─ 仅 ControllerAPI]
+        S_CO[Coordinator
+├─ Scheduler
+├─ Mgmt
+├─ Obs
+└─ role_shm byte0=0]
+        S_ES[Engine Server
+└─ 不受主备影响]
     end
     subgraph master["Master 节点"]
         direction TB
-        M_C[Controller\n├─ InstanceManager\n├─ Assembler\n├─ EventPusher\n├─ FaultManager\n└─ ControllerAPI]
-        M_CO[Coordinator\n├─ Scheduler\n├─ Mgmt\n├─ Obs\n├─ Infer Workers\n└─ role_shm byte0=1]
+        M_C[Controller
+├─ InstanceManager
+├─ Assembler
+├─ EventPusher
+├─ FaultManager
+└─ ControllerAPI]
+        M_CO[Coordinator
+├─ Scheduler
+├─ Mgmt
+├─ Obs
+├─ Infer Workers
+└─ role_shm byte0=1]
     end
     etcd_lock -->|acquire/renew| standby
     etcd_lock -->|acquire/renew| master
