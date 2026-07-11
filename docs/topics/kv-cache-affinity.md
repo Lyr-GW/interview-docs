@@ -31,7 +31,7 @@
 
 **二者关系：乘法模型**  
 端到端有效前缀命中率 h = h<sub>reuse</sub> × P<sub>route</sub> × P<sub>pool</sub>，亲和抬高 P<sub>route</sub>（≈1），池化抬高 P<sub>pool</sub>（≈1），缺一即坍塌。
- $$mermaid
+ ```mermaid
 flowchart TB
   subgraph Client["客户端"]
       REQ[请求]
@@ -64,7 +64,7 @@ flowchart TB
   P1 -->|Store 写池| MM
   P1 -->|Layerwise 直传| D[Decode]
   MM -->|按需读| D
-  SS -->|write workload| SHM_R $$text## 3. 实现细节
+  SS -->|write workload| SHM_Rtext## 3. 实现细节
 
 ### 3.1 KV 亲和调度：Conductor 索引与 Tokenize 前置
 
@@ -83,8 +83,8 @@ flowchart TB
 ### 3.2 双模式亲和-负载融合评分（v2）
 
 #### Unified 模式（推荐）
-统一融合分数，全局取最小： $$textscore = prefill_load_scale × max(0, isl − overlap_credit × matched_tokens)
-      + load_weight × workload_score $$text- `overlap_credit=1` 时，每命中 token 减免 1 个 prefill token 的工作量。
+统一融合分数，全局取最小：textscore = prefill_load_scale × max(0, isl − overlap_credit × matched_tokens)
+      + load_weight × workload_scoretext- `overlap_credit=1` 时，每命中 token 减免 1 个 prefill token 的工作量。
 - `load_weight=0` 退化为纯最长前缀；`overlap_credit=0` + `load_weight=1` 退化为纯负载均衡。
 
 #### Load-Gated 模式
@@ -107,7 +107,7 @@ flowchart TB
 - **后续升级（PR#304）**：对于 `unified` 模式，Worker 将**每个 endpoint** 的 `prefill_cost`（亲和折扣后待算量）全量上报，Scheduler 用自身 fresh load 全局重算完整 unified 分数取 min，不再受固定 k 限制。
 
 **关键保证**：Scheduler 不会越出 Worker 提交的候选集选取，亲和边界由 Worker 保持。
- $$mermaid
+ ```mermaid
 sequenceDiagram
     participant W as Worker
     participant C as Conductor
@@ -121,9 +121,9 @@ sequenceDiagram
         S->>S: 慢路径：_select_lowest_load_among_candidates
     end
     S->>S: update_workload + SHM 写回
-    S-->>W: 最终落点 (instance, endpoint) $$text### 3.4 降级与容错（三级瀑布）
+    S-->>W: 最终落点 (instance, endpoint)text### 3.4 降级与容错（三级瀑布）
 
-KV 亲和是增强路径，不是服务可用性的单点依赖： $$textKV Cache Affinity (L1) → Load Balance (L2) → Round Robin (L3) $$text- Conductor 查询超时（0.2s）或返回空 tenant → 自动降级 L2。
+KV 亲和是增强路径，不是服务可用性的单点依赖：textKV Cache Affinity (L1) → Load Balance (L2) → Round Robin (L3)text- Conductor 查询超时（0.2s）或返回空 tenant → 自动降级 L2。
 - Tokenize 失败（如无 prompt、tokenizer 未就绪）→ 返回 `[]`，同样降级。
 - Decode 等非 KVA 角色直接走负载均衡。
 
@@ -135,8 +135,8 @@ KV 亲和是增强路径，不是服务可用性的单点依赖： $$textKV Cach
 - **配置注入**：`kv_cache_pool_config`（global_segment_size、eviction_high_watermark_ratio、eviction_ratio、default_kv_lease_ttl 等）经 deploy.py → kv_pool.py 转为 Master 启动参数。
 - **PD 解耦**：P 写完 KV 即释放 HBM → D 异步从池拉取，无需 P/D 同时在线。
 
-#### 数据流 $$textPrefill  → 写池（AscendStoreConnector）→ 打租约 → 释放显存
-Decode   → 查 kv_transfer_params 元数据 → 按需从池拉取 $$text### 3.6 MultiConnector 双通道传输
+#### 数据流textPrefill  → 写池（AscendStoreConnector）→ 打租约 → 释放显存
+Decode   → 查 kv_transfer_params 元数据 → 按需从池拉取text### 3.6 MultiConnector 双通道传输
 
 在一份配置中组合快路径与持久层：
 - **通道 [0]：MooncakeLayerwiseConnector**（逐层直传 P→D，不经 Master，低延迟，压低 TTFT）
@@ -161,8 +161,8 @@ Decode   → 查 kv_transfer_params 元数据 → 按需从池拉取 $$text### 3
 - P<sub>route</sub>：由亲和（Conductor 全局索引）提升至 ≈1.0
 - P<sub>pool</sub>：由池化（分级+租约+驱逐）提升至 ≈1.0
 
-**交汇代码点**：`$$ \text{prefill\_cost} = \max(0,\ \text{isl} - \text{overlap\_credit} \times \text{matched\_tokens}) $$`  
-- `matched_tokens` 来自亲和，`overlap_credit` 靠池化兑现（高速搬 KV 而非重算）。两者任意一个缺失都导致 `$$ \text{prefill\_cost} \approx \text{isl} $$`，即全量重算。
+**交汇代码点**：`\text{prefill\_cost} = \max(0,\ \text{isl} - \text{overlap\_credit} \times \text{matched\_tokens})`  
+- `matched_tokens` 来自亲和，`overlap_credit` 靠池化兑现（高速搬 KV 而非重算）。两者任意一个缺失都导致 `\text{prefill\_cost} \approx \text{isl}`，即全量重算。
 
 ### 3.9 配置部署要点
 
@@ -186,7 +186,7 @@ llm-d 定位为 K8s 原生推理平台，通过 Envoy Gateway 与可插拔的 En
 调度流水线由 ProfileHandler（支持单池或 P/D 双 profile）、Filters（affinity-filter、PD label 等）与 Scorers 加权组合构成，最终由 Picker 选择最高分实例。推荐的精确路由权重为：prefix-cache-scorer 3.0、kv-cache-utilization-scorer 2.0、queue-scorer 2.0、no-hit-lru-scorer 2.0。在传输与卸载方面，llm-d 本身不实现统一池化层，而是通过 guide 组合各引擎的卸载能力：Native offloading 通过 `--kv-offloading-backend native` 及 `TieringOffloadingSpec` 配置 HBM→CPU→文件系统的层级；LMCache 通过 `LMCACHE_MAX_LOCAL_CPU_SIZE` 等环境变量设置 L2 容量；Mooncake Store 则提供嵌入式或独立 DRAM 与 SSD 存储。近似模式下的 tier 路由使用双 `approx-prefix-cache-producer`（GPU + CPU），分别搭配 scorer，手动设置 CPU LRU 容量，但文档指出 autoTune 仅统计 GPU blocks，在 offload tier 场景存在已知缺陷。精确路由与 LMCache/Mooncake 的端到端组合 recipe 仍缺少 validated 方案，反映了其在统一池化索引方面的不足。
 
 ### 4.2 NVIDIA Dynamo — KV Router 与 KV Block Manager
-Dynamo 面向分布式生成式推理，提供 Frontend、KV Router、KV Block Manager (KVBM)、NIXL 传输库以及 Planner 的全栈运行时。其核心亲和机制基于代价函数路由，实现在 `lib/kv-router/src/scheduling/selector.rs`。该函数计算 `raw_prefill_blocks = (active_prefill_tokens + uncached_tokens) / block_size`，再减去重叠信用块 `overlap_credit_blocks`，该信用块由 `overlap_score_credit` 乘以退化系数与设备重叠量决定，并加入不同介质命中权重与重叠量的乘积：host_cache_hit_weight × host_overlap、disk_cache_hit_weight × disk_overlap、shared_cache_multiplier × shared_beyond_device，最终 $$ \text{cost} = \text{prefill\_load\_scale} \times \text{adjusted\_prefill} + \text{decode\_blocks} $$，选择最低 cost 的 worker。分层权重通过 CLI 直接映射到存储层级：`--router-kv-overlap-score-credit`（设备 L1，默认 1.0）、`--router-host-cache-hit-weight`（L2，默认 0.75）、`--router-disk-cache-hit-weight`（L3，默认 0.25），并可通过 `--shared-cache-type hicache` 加上 `--shared-cache-multiplier` 纳入全局共享 L3 的贡献。
+Dynamo 面向分布式生成式推理，提供 Frontend、KV Router、KV Block Manager (KVBM)、NIXL 传输库以及 Planner 的全栈运行时。其核心亲和机制基于代价函数路由，实现在 `lib/kv-router/src/scheduling/selector.rs`。该函数计算 `raw_prefill_blocks = (active_prefill_tokens + uncached_tokens) / block_size`，再减去重叠信用块 `overlap_credit_blocks`，该信用块由 `overlap_score_credit` 乘以退化系数与设备重叠量决定，并加入不同介质命中权重与重叠量的乘积：host_cache_hit_weight × host_overlap、disk_cache_hit_weight × disk_overlap、shared_cache_multiplier × shared_beyond_device，最终 \text{cost} = \text{prefill\_load\_scale} \times \text{adjusted\_prefill} + \text{decode\_blocks}，选择最低 cost 的 worker。分层权重通过 CLI 直接映射到存储层级：`--router-kv-overlap-score-credit`（设备 L1，默认 1.0）、`--router-host-cache-hit-weight`（L2，默认 0.75）、`--router-disk-cache-hit-weight`（L3，默认 0.25），并可通过 `--shared-cache-type hicache` 加上 `--shared-cache-multiplier` 纳入全局共享 L3 的贡献。
 
 KVBM 实现了统一的四级内存池：G1 Device、G2 Host、G3 Disk、G4 Remote，通过环境变量 `DYN_KVBM_CPU_CACHE_GB` 和 `DYN_KVBM_DISK_CACHE_GB` 配置容量。vLLM 连接器使用 `DynamoConnector` 并指定 `kv_role` 为 `kv_both`，在 disagg 场景常用 `PdConnector` 组合 KVBM 与 NixlConnector，实现 P/D 分离下的 KV 传输。主索引器维护 Radix 树的 Device 层命中，并沿 parent 链 walk 对 Host 和 Disk 层进行 lower-tier 索引（`indexer/lower_tier_indexers.rs`），事件携带 `storage_tier` 和 `medium` 字段，路由器据此更新各层状态。近似降级通过 `--no-router-kv-events` 启用，采用基于路由决策的预测缓存和 TTL（`--router-ttl-secs` 默认 120 秒）退化为 approximate 模式。
 
@@ -230,7 +230,7 @@ MindIE-PyMotor（路径 `MindIE-PyMotor/motor/coordinator/scheduler/policy/kv_ca
 - `AsyncSchedulerClient` 中对非 `ROLE_P` 角色直接走 LoadBalance，不做 Conductor 查询。
 
 #### Q: 亲和与负载均衡如何“叠加”？
-- **unified**：$$ \text{score} = \alpha \cdot \max(0,\ \text{isl} - \beta \cdot \text{matched}) + \gamma \cdot \text{load} $$，全部 token 量纲，软权衡。
+- **unified**：\text{score} = \alpha \cdot \max(0,\ \text{isl} - \beta \cdot \text{matched}) + \gamma \cdot \text{load}，全部 token 量纲，软权衡。
 - **load_gated**：先按负载筛出 Top-N 最闲 endpoint，再在其中比最长前缀，硬负载上界。
 - 若仅 α·M − β·Load 简单相减，流量 regime 一变化就容易失谐，因此 Motor 使用与 prefill 工作量统一的 token 量纲。
 
