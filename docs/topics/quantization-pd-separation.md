@@ -1,9 +1,18 @@
-# 量化与 PD 分离
+# 量化与 **PD 分离**
 > 覆盖 14 个知识点 | 来源 1 个文件 | 更新于 2026-07-11
 
 ## 1. 一句话总结
-量化通过低精度表示压缩模型，减少显存、带宽与算力开销，典型选择为延迟场景的 W4A16 和吞吐场景的 FP8；PD 分离将 Prefill 与 Decode 分布至异构节点，消除资源争抢并实现独立扩缩容，核心代价是 KV Cache 传输链路，必须权衡传输与重算成本。
+量化通过低精度表示压缩模型，减少显存、带宽与算力开销，典型选择为延迟场景的 W4A16 和吞吐场景的 FP8；PD 分离将 Prefill 与 Decode 分布至异构节点，消除资源争抢并实现独立扩缩容，核心代价是 **KV Cache** 传输链路，必须权衡传输与重算成本。
 
+
+!!! abstract "30 秒速览"
+    - 量化通过低精度表示压缩模型，减少显存、带宽与算力开销，典型选择为延迟场景的 W4A16 和吞吐场景的 FP8
+    - PD 分离将 Prefill 与 Decode 分布至异构节点，消除资源争抢并实现独立扩缩容，核心代价是 KV Cache 传输链路，必须权衡传输与重算成本
+    - !!! abstract "30 秒速览"
+    - (核心要点从上文提取)
+
+
+---
 ## 2. 核心原理
 ### 2.1 问题背景
 大模型推理面临三重瓶颈：
@@ -15,8 +24,10 @@
 
 ### 2.2 方案概述
 - **量化方案**：将 FP16/BF16 权重、激活或 KV Cache 转换为 INT8/FP8/INT4/FP4 等低精度格式，结合反量化 Kernel 或专用 Tensor Core 指令，实现显存 ÷2~÷4、带宽和算力收益。根据 batch 特性和业务目标选择不同格式（W4A16 侧重延迟，FP8 侧重吞吐与训练衔接）。
-- **PD 分离方案**：调度器将请求的 Prefill 阶段发送到算力型 Prefill 节点，完成后将 KV Cache 传输至内存带宽型 Decode 节点继续生成；支持 Handoff（串行）和 Concurrent（并行）两种同步模式，并可与 Prefix Cache 协同仅传输增量 KV。
+- **PD 分离方案**：调度器将请求的 Prefill 阶段发送到算力型 Prefill 节点，完成后将 KV Cache 传输至内存带宽型 Decode 节点继续生成；支持 Handoff（串行）和 Concurrent（并行）两种同步模式，并可与 **Prefix Cache** 协同仅传输增量 KV。
 
+
+---
 ## 3. 实现细节
 ### 3.1 量化收益模型与格式选型
 量化收益来自三个机制：
@@ -38,8 +49,7 @@
 | FP4/NVFP4 | ÷4+ | ✓ | ×4 | Blackwell；需 block scale |
 
 #### 关键代码路径
-```
-vllm/model_executor/layers/quantization/
+```textvllm/model_executor/layers/quantization/
   __init__.py
   fp8.py
   auto_gptq.py
@@ -50,9 +60,7 @@ vllm/model_executor/layers/quantization/
   utils/nvfp4_utils.py
 vllm/config/cache.py          # cache_dtype
 vllm/v1/kv_cache_interface.py # KVQuantMode
-```
-
-### 3.2 GPTQ vs AWQ
+```text### 3.2 GPTQ vs AWQ
 
 | | GPTQ | AWQ |
 |--|------|-----|
@@ -67,15 +75,12 @@ vllm/v1/kv_cache_interface.py # KVQuantMode
 4. **Accumulator 精度**：attention 内部累加器必须保持 FP32，输出前再 clamp 到 FP8（`triton_unified_attention.py`）。
 
 #### 关键代码路径
-```
-vllm/model_executor/layers/quantization/fp8.py
+```textvllm/model_executor/layers/quantization/fp8.py
 vllm/model_executor/layers/quantization/utils/fp8_utils.py
 vllm/model_executor/layers/quantization/kv_cache.py
 vllm/v1/kv_cache_interface.py
 vllm/v1/attention/backends/triton_unified_attention.py
-```
-
-### 3.4 精度验收与回归流程
+```text### 3.4 精度验收与回归流程
 **三层验收**：
 1. 烟雾测试：PPL 偏离 < 阈值。
 2. 标准 Benchmark：MMLU / GSM8K / HumanEval（数学和代码最敏感）。
@@ -92,7 +97,7 @@ vllm/v1/attention/backends/triton_unified_attention.py
 
 **负优化场景**：短 prompt、卡数少、无 RDMA 环境、传输开销 > 重算收益时，PD 分离不盈利。
 
-与 Chunked Prefill 的关系：**同题不同解**。Chunked Prefill 在同一节点内把长 Prefill 切块与 Decode 交错调度，低成本消除长尾抢占；PD 分离是彻底隔离+独立扩缩，代价是 KV 传输链路。
+与 **Chunked Prefill** 的关系：**同题不同解**。Chunked Prefill 在同一节点内把长 Prefill 切块与 Decode 交错调度，低成本消除长尾抢占；PD 分离是彻底隔离+独立扩缩，代价是 KV 传输链路。
 
 ### 3.6 Handoff vs Concurrent 传输模式
 
@@ -105,12 +110,9 @@ vllm/v1/attention/backends/triton_unified_attention.py
 - Concurrent 下 TTFT ≈ max(T_prefill, T_transfer)，对长 Prefill 延迟改善明显。
 
 #### 关键代码路径
-```
-vllm/v1/core/scheduler.py
+```textvllm/v1/core/scheduler.py
 vllm/v1/engine/unified_pd.py  # Handoff 串行 vs Concurrent 并行路由
-```
-
-### 3.7 Motor 调度与路由事实
+```text### 3.7 Motor 调度与路由事实
 - `_KVA_ROLES = {ROLE_P, ROLE_U}` —— D 节点不注册 Conductor（`conductor_api_client.py`）。
 - KVA 调度仅作用于 P 节点：`kv_cache_affinity.py` 检查 `role==ROLE_P`。原因：Prefix 索引只在写入侧有意义，D 只消费。
 - **Capability 检查**：P/D capability 无交集 → 返回 503（`dispatch.py`）。
@@ -118,24 +120,22 @@ vllm/v1/engine/unified_pd.py  # Handoff 串行 vs Concurrent 并行路由
 
 ### 3.8 传输 vs 重算临界点分析
 量化公式：
-```
-|KV| ≈ 2 × L × N_layers × H × dtype_bytes
+```text|KV| ≈ 2 × L × N_layers × H × dtype_bytes
 T_transfer = |KV|/BW + T_handshake
 T_recompute ≈ L × t_prefill_per_token
-```
-传优于算当 `T_transfer < T_recompute`。
+```text传优于算当 `T_transfer < T_recompute`。
 
 **关键认知**：PD 分离的核心收益是**干扰消除与独立扩缩**，并非「传比算快」。  
 数量级示例：70B，L=8K，80 层，H=8192，FP16 → |KV|≈21 GB；100 Gbps 有效带宽约 10 GB/s → 传输约 2 s，而同配置 Prefill 可能仅 200–800 ms——此时传输更慢，但 D 池不被 P 阻塞，仍可能整体更优。  
 Layerwise 传输与 Delta 传输（只传未命中 Suffix）可大幅改善临界点。
 
 ### 3.9 PD 与 Prefix Cache 协同
-```
-KVA 选最长前缀 P → P 只算 suffix → 传 delta KV → D 消费
-```
-- SGLang Decode 端显式发送 delta indices。
+```textKVA 选最长前缀 P → P 只算 suffix → 传 delta KV → D 消费
+```text- SGLang Decode 端显式发送 delta indices。
 - vLLM 通过 `get_num_new_matched_tokens` 传递 metadata，connector 据此传输增量 KV。
 
+
+---
 ## 4. 框架对比
 ### 4.1 vLLM MooncakeConnector vs SGLang chunk overlap vs MoRIIO
 
@@ -145,6 +145,8 @@ KVA 选最长前缀 P → P 只算 suffix → 传 delta KV → D 消费
 | Overlap 位置 | 传输完全在 P 完成后开始 | Overlap 在 P 侧（与计算重叠） | P/D 同时运行，最大 overlap |
 | 实现落地 | NIXL 后端批量传输 | Scheduler 内按 chunk 触发 send | 论文原型，要求 engine 级并发 |
 
+
+---
 ## 5. 面试要点
 ### 5.1 常见追问
 #### Q: PD 分离与 Chunked Prefill 有何不同？
@@ -191,6 +193,8 @@ KVA 选最长前缀 P → P 只算 suffix → 传 delta KV → D 消费
 **PD 分离本质**：  
 “PD 分离解决的核心问题是干扰消除和独立扩缩，不是传输比计算快。即便某些配置下传输比重算慢，只要 D 池不被 P 阻塞，总体延迟和吞吐仍然可以更优。短 prompt 或无 RDMA 时我们可能会选择混部或直接重算，一切由临界点分析驱动。”
 
+
+---
 ## 6. 延伸阅读
 ### 6.1 相关主题
 - Mooncake 在 vLLM 与 SGLang 中的实现对比（参见 `docs/interview-review/11-Mooncake在vLLM与SGLang中的实现对比.md`）

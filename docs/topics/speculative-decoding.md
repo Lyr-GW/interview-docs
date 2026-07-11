@@ -1,32 +1,40 @@
 # 投机推理 (MTP / DSpark)
-> 覆盖 18 个知识点 | 来源 6 个文件 | 更新于 2026-07-11
+> 覆盖 10+ 知识点 | 来源 8 个文件 | 更新于 2026-07-11
 
 ## 1. 一句话总结
-投机推理用小模型/轻量层"猜"多个未来 token，再由大模型一次前向并行"验"，把串行逐 token 生成变成批量校验，从而提升推理吞吐。核心创新沿着两条腿演进：**把草稿做得更准**（Medusa → EAGLE 特征级自回归 → EAGLE-3 多层融合 → MTP 联合训练）和**把草稿/验证做得更省**（DFlash 并行扩散一次出整块 → DSpark 半自回归 + 按 GPU 负载动态调度验证长度）。MindIE（华为昇腾）采用 Plugin 模式 + 无损贪心验证，vLLM 采用独立 Worker 体系 + 概率拒绝采样，两者架构理念不同但都实现了投机推理的工程落地。
+投机推理（Speculative Decoding）用廉价草稿模型一次预测多个 token，再由目标模型并行批量验证，以闲置算力换取推理延迟的大幅降低。DeepSeek 的内置 **MTP（Multi-Token Prediction）** 模块在 MindIE 中通过贪心验证实现无损加速；2026 年新框架 **DSpark** 在此基础上引入**半自回归生成（并行骨干+轻量串行 Markov 头）** 和**置信度调度验证（按 GPU 负载动态裁剪验证长度）**，同时解决了并行草稿的“后缀衰减”和“高并发下验证浪费”两大瓶颈，在 DeepSeek-V4 线上真实流量中单用户生成速度提升 **60%**–**85%**。
 
+
+!!! abstract "30 秒速览"
+    - 投机推理（Speculative Decoding）用廉价草稿模型一次预测多个 token，再由目标模型并行批量验证，以闲置算力换取推理延迟的大幅降低
+    - DeepSeek 的内置 MTP（Multi-Token Prediction） 模块在 MindIE 中通过贪心验证实现无损加速
+    - 2026 年新框架 DSpark 在此基础上引入半自回归生成（并行骨干+轻量串行 Markov 头） 和置信度调度验证（按 GPU 负载动态裁剪验证长度），同时解决了并行草稿的“后缀衰减”和“高并发下验证浪费”两大瓶颈，在 DeepSeek
+    - !!! abstract "30 秒速览"
+    - (核心要点从上文提取)
+
+
+---
 ## 2. 核心原理
 ### 2.1 问题背景
-大模型自回归解码每步只生成 1 个 token，而 GPU/NPU 算力在 decode 阶段往往未饱和（memory-bound：大部分时间花在把权重从显存搬到计算单元）。传统自回归每步产出 1 token，延迟与序列长度线性相关，算力大量闲置。
-
-投机推理的核心思路：用便宜的草稿模型串行猜 k 个 token，再让 target 模型一次前向并行验证这 k 个 token，把"k 次 target 前向"压缩成"1 次 target 前向 + k 次廉价 draft 前向"。
+LLM 自回归解码每步只生成一个 token，而深度模型的 decode 阶段受限于显存带宽（memory-bound），GPU 计算单元大量闲置。投机推理的核心思路是 **“用闲置算力换延迟”**：让一个轻量级的草稿模型（draft model）串行猜测 k 个候选 token，再由完整的目标模型（target model）一次性并行验证整段草稿，把 k 次完整前向压缩为 1 次 target 前向 + k 次廉价 draft 前向。
 
 ### 2.2 方案概述
-投机推理的加速公式为 **L = (T_draft + T_verify) / τ**，其中 τ 为接受 token 数。三条加速路径：
-1. 降低 T_draft（猜得更快）
-2. 提高 τ（猜得更准）  
-3. 减少 T_verify 浪费（验得更聪明）
+投机解码的标准流程（数学上无损）：
+1. Draft 模型自回归生成 k 个候选 token，并输出每个位置的分布 q。
+2. Target 模型对“上下文 + k 个草稿 token”做一次前向，得到每个位置的分布 p。
+3. **拒绝采样（Rejection Sampling）** 逐位验证：对草稿 token x，以 `min(1, p(x)/q(x))` 的概率接受；一旦拒绝，丢弃后续所有草稿，并从 `norm(max(0, p−q))` 的修正分布中重采样一个 token。全部通过时还可额外获得一个 bonus token（从 target 分布直接采样）。
+4. 最终输出序列的分布与 target 模型单独解码严格一致。
 
-**标准流程（draft-verify + 拒绝采样）**：
-1. Draft 模型自回归生成 k 个候选 token（及其分布 q）
-2. Target 模型对"上下文 + k 个草稿 token"做一次前向，得到每个位置的分布 p
-3. 拒绝采样逐位验证：对草稿 token x，以 `min(1, p(x)/q(x))` 概率接受；一旦某位被拒绝，丢弃其后所有草稿，并从修正分布 `norm(max(0, p−q))` 中重采样一个 token
-4. 全部接受时还能白拿一个 bonus token
+每 token 的平均延迟为 `L = (T_draft + T_verify) / τ`（τ 为每轮平均接受 token 数）。加速途径有三：降低 T_draft（猜得更快）、提高 τ（猜得更准）、减少无效 T_verify（验得更聪明）。
 
-**关键性质：数学上无损**——拒绝采样保证最终输出序列的分布与 target 模型单独解码完全一致。
+MindIE 的 **MTP** 和 DeepSeek 的 **DSpark** 都是从上述框架出发的不同实现：MTP 是训练时内置的多 token 预测头，推理时作为草稿器，采用确定性贪心比对实现无损；DSpark 则引入半自回归草稿与自适应验证，进一步拉动三条加速杠杆。
 
+
+---
 ## 3. 实现细节
-### 3.1 MindIE MTP 架构
-MindIE 基于 DeepSeek 论文 Multi-Token Prediction，在 DeepSeek V3 主模型上增加固定 MTP 层（layer 61），通过 `plugin_params` 启用 `MtpPlugin`。与主模型共享 block table，通过 Plugin 机制融入现有生成链路。
+### 3.1 MindIE 中的 MTP 投机推理
+#### 架构与数据流
+MindIE 在 DeepSeek V3 主模型上增加固定的 MTP 层（layer 61），以 `Plugin` 模式集成到推理引擎中。整体端到端链路如下：
 
 ```mermaid
 flowchart TB
@@ -40,10 +48,13 @@ flowchart TB
         G[plugin_verify: 贪心比对 无损]
         A --> B --> C --> D --> E --> F --> G
     end
-```
+```text- **MtpPlugin**：通过 `plugin_params` 启用，负责大小模型的协同调度。
+- **DecodingPolicy**：完成大小模型的输入构造、逐 token 贪心验证。
+- **CacheEngine**：缓存主模型上一步的 hidden states，供 MTP 层下一轮使用。
+- **DeepseekV3MtpLayer**：继承自 `DeepseekV3Layer`，额外包含 embed_tokens、enorm、hnorm、eh_proj 和 SharedHead，与主模型共享 block table 但使用 dummy slot 避免污染真实 KV cache。前向时拼接主模型 hidden states 与当前输入 embedding：
 
-**MTP 层核心逻辑**：拼接主模型 hidden states 与 embedding 输入后送入 transformer 层：
-```
+```python
+# deepseek_v3_mtp.py
 last_hidden_states = forward_context.mtp_metadata.last_hidden_states
 hidden_states = mtp_layer.embed_tokens(input_ids)
 hidden_states = mtp_layer.enorm(hidden_states)
@@ -51,267 +62,166 @@ last_hidden_states = mtp_layer.hnorm(last_hidden_states)
 hidden_states = torch.concat([hidden_states, last_hidden_states], dim=-1)
 hidden_states = mtp_layer.eh_proj(hidden_states)
 residual, hidden_states = mtp_layer(hidden_states, residual)
-```
+```text#### 贪心验证（无损）
+MindIE 采用 deterministic greedy 比对，而非概率拒绝采样：
 
-**验证机制**：MindIE 采用确定性贪心比对（无损），`verify_greedy_one_batch` 逐位比对草稿 token 与目标模型输出，第一次不等即截断。
+```python
+# decoding_policy.py
+def verify_greedy_one_batch(verify_guess_tokens, next_guess_tokens):
+    gg = 0
+    for eg, guess_tokens in enumerate(verify_guess_tokens):
+        guess = guess_tokens
+        correct = next_guess_tokens[eg]
+        if guess != correct:
+            break
+        gg += 1
+    return gg  # 连续匹配数，+1 为最终接受 token
+```text贪心解码下目标 token 固定，因此比对结果与自回归完全一致。采样类后处理受限，只支持重复惩罚等少数操作以保证一致性。
 
 #### 关键代码路径
-- `mindie_llm/text_generator/plugins/mtp/mtp_plugin.py` — MtpPlugin 主编排
-- `mindie_llm/text_generator/plugins/mtp/decoding_policy.py` — DecodingPolicy 输入构造与验证
+- 插件入口：`MtpPlugin.model_inputs_update` → `DecodingPolicy.decode_model_input_update`
+- 草稿生成：`DeepseekV3MtpModel.forward`
+- 验证：`DecodingPolicy.verify_greedy_one_batch`
+- hidden states 传递：`CacheEngine.cache_update` → `infer_context.set_mtp_hidden_states_prefix`
 
-#### 数据流
-Prefill: 主模型 hidden → MTP 层 → 缓存 D 的 hidden states（`CacheEngine.cache_update`）
-Decode: num_speculative_tokens 次 MTP 小模型前向 + 1 次主模型验证前向 → 贪心比对
-
-### 3.2 vLLM Speculative Decoding 架构
-vLLM 以 `SpecDecodeWorker` 为编排中心，支持 5 类 Proposer（独立 draft 模型、MLPSpeculator、Medusa、NGram、DeepSeek MTP），验证侧可选 RejectionSampler 或 TypicalAcceptanceSampler。
+### 3.2 vLLM 的通用投机解码架构
+#### 分层设计与解耦
+vLLM 将投机解码抽象为 **Speculator**（草稿生成）+ **统一 RejectionSampler**（验证）的解耦体系：
 
 ```mermaid
 flowchart TB
-    subgraph vLLM_SD[vLLM Speculative Decoding]
-        A[Scheduler<br/>num_lookahead_slots=k]
-        B[SpecDecodeWorker<br/>spec_decode_worker.py]
-        C[Top1Proposer → batch 拆分]
-        D[MultiStepWorker / NGram / Medusa / MLP<br/>proposer 族]
-        E[MQAScorer / BatchExpansion<br/>target scoring]
-        F[RejectionSampler<br/>rejection_sampler.py]
-        G[accepted + bonus token<br/>有损随机验证]
-        A --> B --> C --> D --> E --> F --> G
-    end
-```
+    A[Scheduler<br/>num_lookahead_slots=k]
+    B[SpecDecodeWorker<br/>spec_decode_worker.py]
+    C[Top1Proposer → batch 拆分]
+    D[MultiStepWorker / NGram / Medusa / MLP / DFlash / DSpark<br/>proposer 族]
+    E[MQAScorer / BatchExpansion<br/>target scoring]
+    F[RejectionSampler<br/>rejection_sampler.py]
+    G[accepted + bonus token<br/>有损随机验证]
+    A --> B --> C --> D --> E --> F --> G
+```text- **AutoRegressiveSpeculator**（Eagle/MTP/Gemma4）：草稿逐 token 串行生成，需多次前向。
+- **DFlashSpeculator** / **DSparkSpeculator**：并行 generation，一次前向产出整块草稿。DFlash 纯并行无块内依赖；DSpark 在其基础上添加序列化 Markov 采样头。
+- 验证阶段统一经 `RejectionSampler`，支持 `standard`（概率无损拒绝采样）、`synthetic`、`block` 三种模式，与草稿方法无关。
 
-**vLLM V1 Speculator 类层级（源码级）**：
-```text
-BaseSpeculator（抽象接口）
-└── DraftModelSpeculator（draft_tokens/温度/种子等公共状态）
-    ├── AutoRegressiveSpeculator（逐 token 串行：_prefill → _multi_step_decode 循环）
-    │   ├── EagleSpeculator（method="eagle"/"eagle3"）
-    │   ├── MTPSpeculator（method="mtp"）
-    │   └── Gemma4Speculator
-    └── DFlashSpeculator（一次并行前向出整块，非因果 attention）
-        └── DSparkSpeculator（DFlash 主干 + 序列化 Markov 采样）
-```
+#### 关键类
+- 编排：`SpecDecodeWorker`
+- 输入构造：`Top1Proposer` + `ProposerWorkerBase`
+- 草案生成：`MultiStepWorker.sampler_output`、`EagleSpeculator`、`DFlashSpeculator` 等
+- 目标打分：`MQAScorer` / `BatchExpansionTop1Scorer`
+- 验证：`RejectionSampler`（`rejection_sampler.py`）
 
-**两种根本不同的 draft 生成范式**：
+### 3.3 DSpark：半自回归生成与置信度调度
+DSpark 在并行草案（DFlash）的基础上引入两个关键组件，分别解决“块内接受率衰减”和“高并发下验证浪费”。
 
-| 维度 | AutoRegressiveSpeculator | DFlashSpeculator/DSparkSpeculator |
-|------|-------------------------|----------------------------------|
-| 草稿生成方式 | 逐 token 串行，每步一次完整 forward | 一次并行 forward 出整块 N 个 token |
-| draft 前向次数 | N 次 | 1 次 |
-| 每步依赖 | 上一步真实采样 token | 块内用统一 mask token 占位 |
-| CUDA Graph 粒度 | prefill(1次) + decode(循环 N-1 次) | 单张图覆盖整块 |
-| attention | causal（标准自回归） | 非因果（DSpark 固定 `causal=False`） |
+#### 3.3.1 半自回归生成（Semi-Autoregressive Generation）
+- **并行阶段**：基于 DFlash 骨干，一次前向对所有 γ 个位置产出 base logits（U₁…U_γ）。将 anchor token 作为第一个预测位置，使 γ 个输入 token 直接生成 γ 个草稿 logits，减少计算量。
+- **串行阶段**：在 base logits 上叠加前缀依赖偏置 B_k，通过自回归因式分解定义块级分布，使每个位置能依赖前序采样 token。默认使用极其轻量的 **马尔可夫头（Markov head）**：
 
-#### 关键代码路径
-- `vllm/v1/worker/gpu/spec_decode/speculator.py` — DraftModelSpeculator 基类
-- `vllm/v1/worker/gpu/spec_decode/autoregressive/speculator.py` — 自回归草案器
-- `vllm/v1/worker/gpu/spec_decode/dspark/speculator.py` — DSpark 草案器
-- `vllm/v1/sample/rejection_sampler.py` — 拒绝采样验证
+```textB(x_{k-1}, x_k) = W_1[x_{k-1}] · W_2
+```text其中 W₁ ∈ ℝ^{V×r}（embedding），W₂ ∈ ℝ^{r×V}（投影），秩 r=256。该头仅依赖前一 token，通过低秩分解避免 V² 尺寸的存储与计算。推理时从左到右顺序采样：对第 k 位置，`logits = U_k + Markov(前一个采样 token)`，采样后继续传递。
 
-### 3.3 DSpark 半自回归草稿
-DSpark 用"并行 draft 主干 + 轻量串行 Markov 头"解决纯并行草案器的后缀衰减问题：
+可选 **RNN 头** 可累积完整前缀信息，但增益有限，默认关闭。实测草稿长度由 4 增至 16，串行开销仅增 0.2%–1.3%，接受长度可提升高达 **30%**。
 
-**并行阶段**：基于 DFlash 骨干，一次前向产出所有 γ 个位置的 base logits U_1...U_γ
+#### 3.3.2 置信度调度验证（Confidence-Scheduled Verification）
+- **置信度头**：轻量线性投影 + sigmoid，预测每个位置的“条件存活概率” c_k = σ(wᵀ[h_k; W_1[x_{k-1}])，监督信号为分析接受率 `c*_k = 1 - ½‖p^d_k - p^t_k‖₁`。
+- **顺序温度缩放（STS）**：神经网络天然过度自信，原始置信度 ECE 3%–8%。STS 对每个位置的累积乘积 Íc_i 进行逐位置 1D 网格搜索，校准至经验接受率，保留排序不变，ECE 降至 ~1%。
+- **硬件感知前缀调度器**：将验证长度选择形式化为全局吞吐最大化问题 `Θ = τ · SPS(B)`，其中 B = Σ(1+ℓ_r) 为总 batch 大小，τ 为期望接受 token 数，SPS(B) 为预标定的引擎吞吐曲线。贪心算法按全局存活概率 a_{r,j} = Π_{i≤j} c_{r,i} 降序排列候选，逐步准入并查表更新 Θ，Θ 下降时早停（因果约束保证无损）。部署时因硬件 SPS 锯齿状和 CUDA Graph/ZOS 冲突，采用**异步调度**：用两步前的历史预测决定当前动态截断长度，将准入过程转化为动态 top-K 选择，移除早停进行无约束全局搜索（ZOS 天然隔离信息泄漏，仍保证无损）。
 
-**串行阶段**：在 base logits 上叠加前缀依赖偏置，通过自回归因式分解定义块级分布：
-```
-P(X|x_0) = Π p_k(x_k|x_0, x_<k)
-p_k(v) = exp(U_k(v) + B_k(x_0, x_<k, v)) / Σ exp(...)
-```
+#### 3.3.3 训练与部署
+- **训练**：目标模型冻结，草稿模型共享其 embedding/LM head（均冻结），仅训练骨干、串行头和置信度头。使用 Open-PerfectBlend（1.3M 样本，chat/math/code 混合），损失函数为 L_ce + L_tv（直接最大化接受率）+ L_conf，位置权重 w_k = exp(-(k-1)/γ)。
+- **优化**：通过传送 hidden state（O(d) 而非 O(V) 的 logits）降低通信开销；anchor-bounded 序列打包避免 padding 损失。
+- **生产部署**：DSpark-5（γ=5）部署在 DeepSeek-V4 Flash/Pro。并行骨干为 3 层 MoE + mHC + 滑动窗口注意力 128。调度器负载自适应：低并发分配 4–6 token/请求的验证预算；高并发动态缩减；调度逻辑完全 GPU 内异步执行，兼容 ZOS 和 CUDA Graph。
 
-两种串行头实现：
+#### 3.3.4 在 vLLM 中的工程落地
+- **DSparkSpeculator** 继承 `DFlashSpeculator`，复用 context-KV 预计算、非因果 query-block 前向和 CUDA Graph 管理。
+- 关键改动：
+  1. **Anchor-as-first-prediction**：每请求发 N（而非 1+N）个 query token，锚点 token 也参与预测。
+  2. **序列化 Markov 采样**：`_sample_sequential` 中循环 N 步，通过 `DSparkMarkovHead`（markov_w1/markov_w2 低秩分解）为 base logits 添加前缀偏置。
+  3. **CUDA Graph 全覆盖**：`_generate_draft` 将并行主干 forward + N 步序列采样整体捕获进一张图，避免多次 launch 开销。
+  4. **缩小词表概率化采样**：draft 使用小词表，通过 `d2t` 索引 scatter 回 target 词表，配合 `probabilistic` 模式使用 Gumbel-max 采样保证拒绝采样的无损性。
 
-| 方案 | 机制 | 特点 |
-|------|------|------|
-| **马尔可夫头**（默认） | B(x_{k-1}, x_k) = W_1[x_{k-1}] W_2，rank-256 低秩分解 | 仅看前一个 token，计算几乎忽略 |
-| **RNN 头** | 门控循环状态 s_k 累积完整前缀 | 增益有限，默认关闭 |
+### 3.4 MindIE 其他并行解码方案
+MindIE 通过 Plugin 体系还支持另外两种无须额外权重的投机解码：
+- **Lookahead（lookahead, Jacobi 迭代）**：基于 Jacobi 迭代生成多 token 猜测，通过 N/W/G 参数控制前瞻窗口、并行宽度和猜测集大小，验证同样使用贪婪比对。
+- **Memory Decoding（trie 树缓存）**：用前缀树缓存历史输入输出，检索式生成候选 token，适合代码补全等重复模式多的场景。
 
-Markov 头的低秩分解：`B = W_1 · W_2`，其中 `W_1 ∈ R^{V×r}`（embedding）、`W_2 ∈ R^{r×V}`（投影），将 `V×V` 转移矩阵（约 10¹⁰ 参数）压缩为 `2×V×r`（约 5×10⁷），量级降两三个数量级。
+三者互斥，不能同时启用，且均遵循“小模型/廉价算法生成候选 → 大模型一次前向验证 → token-by-token 贪心比对”的统一范式。
 
-**三种"串行"的本质区别**：
 
-| 方法 | 串行的本质 | 计算量随 N |
-|------|-----------|-----------|
-| MTP/EAGLE | 每步跑一次完整 transformer 前向（计算上的累加） | 线性增长 |
-| DSpark Markov 头 | 只做 embedding 查表 + 低秩矩阵乘（逻辑上的校对） | 常数级增量 |
-
-#### 关键代码路径
-- `vllm/v1/worker/gpu/spec_decode/dspark/speculator.py::_sample_sequential` — 序列化 Markov 采样
-- `vllm/model_executor/models/qwen3_dspark.py::DSparkMarkovHead` — 低秩 Markov 头实现
-
-### 3.4 DSpark 置信度调度验证
-**置信度头**：轻量线性投影 + sigmoid，估计每个草稿 token 的存活概率：
-```
-c_k = σ(w^T [h_k; W_1[x_{k-1}]])
-```
-监督信号为分析接受率：`c*_k = 1 - ½‖p^d_k - p^t_k‖₁`（总变差距离）
-
-**顺序温度缩放（STS）**：神经网络天然过度自信（ECE 3%–8%），STS 通过逐位置 1D 网格搜索最优温度，将联合概率校准至经验接受率，ECE 降至 ~1%。
-
-**硬件感知前缀调度器**：将验证长度选择形式化为全局吞吐量最大化问题 `Θ = τ · SPS(B)`，贪心算法按全局存活概率降序排列候选 token 逐步准入。生产环境中采用异步适配：
-- 利用两步前历史预测决定当前截断长度（兼容 ZOS/CUDA Graph 回放）
-- 移除早停，进行无约束全局搜索（异步设计天然隔离信息泄漏，保证无损）
-
-**负载自适应**：
-- 中等并发（<200 并发）：分配较长验证预算（4–6 token/请求）
-- 高并发饱和：动态缩减验证长度，拒绝低置信度尾部 token
-- 异步调度器完全隐藏调度延迟
-
-#### 关键代码路径
-- `vllm/v1/worker/gpu/spec_decode/dspark/speculator.py::_sample_sequential` — 含置信度计算
-
-### 3.5 MindIE 并行解码替代方案
-MindIE 除 MTP 外，还提供两种无需额外训练权重的插件：
-
-| 方案 | 草案来源 | 验证 | 模型绑定 |
-|------|---------|------|---------|
-| MTP | MTP 层 forward | 贪心比对 | DeepSeek V3 紧耦合 |
-| Lookahead (LA) | Jacobi 多 token 猜测（N/W/G 参数） | 贪心比对 | 通用 plugin |
-| Memory Decoding | trie 树历史序列匹配 | 贪心比对 | 无额外模型权重 |
-
-三者互斥，共享 `Plugin` 统一接口（`model_inputs_update` / `sample_preprocess` / `plugin_verify` / `plugin_cache_update`）。
-
-### 3.6 vLLM 多种 Proposer 对比
-
-| 类型 | 需要模型 | KV cache | 特点 |
-|------|---------|----------|------|
-| MultiStepWorker | 是 | 是 | 通用 draft，GPU multi-step |
-| MLPSpeculatorWorker | 是 (轻量) | 否 | 基于 target hidden states |
-| MedusaWorker | 是 (多 head) | 否 | 并行多 head 预测 |
-| NGramWorker | 否 | 否 | Prompt n-gram 查找 |
-| DeepSeek MTP | 是 | 是 | num_spec_prefill_steps |
-| DFlash/DSpark | 是 | 是 | 并行/半自回归 draft |
-
-### 3.7 DSpark 训练
-**目标模型冻结**，草稿模型共享其 embedding 层和 LM head（均冻结），仅训练骨干草案器、串行块和置信度头。
-
-**数据**：Open-PerfectBlend（1.3M 样本，chat 17.6% / math 39.4% / code 38.9%），仅用 prompt，由各目标模型重新生成回答。10 epoch 至收敛。
-
-**损失函数**（三项加权，位置权重 w_k = exp(-(k-1)/γ)）：
-
-| 损失 | 权重 | 作用 |
-|------|------|------|
-| L_ce | 0.1 | 交叉熵，预测正确 token |
-| L_tv | 0.9 | 总变差距离，最小化草案与目标分布差异（直接最大化接受率） |
-| L_conf | 1.0 | 二元交叉熵，训练置信度头预测分析接受标签 |
-
-**训练优化**（HAI-LLM 框架内）：
-- 隐藏状态通信：只传送 LM head 前的 hidden state（O(d) 而非 O(V)）
-- Anchor-bounded 序列打包：用 token 级 attention index 替代 2D mask，避免 padding 开销
-
-**DeepSpec 全栈训练框架**：随 DSpark 开源，三阶段流程（数据准备 → 训练 → 评估），支持 DSpark/DFlash/Eagle3 三种草案模型，Qwen3/Gemma 目标模型，10 个评估数据集。仓库地址：`https://github.com/deepseek-ai/DeepSpec`。
-
-### 3.8 验证机制深度对比
+---
+## 4. 框架对比
+### 4.1 MindIE MTP vs vLLM Speculative Decoding
 
 | 维度 | MindIE MTP | vLLM Spec Decode |
 |------|-----------|------------------|
-| 验证算法 | `verify_greedy_one_batch` | RejectionSampler / TypicalAcceptance |
-| 精度一致性 | 无损（开=关输出一致） | 有损（stochastic）但数学上保证 target 分布 |
-| 恢复机制 | 丢弃后续草稿 | (q-p)+ 归一化重采样 |
-| 奖励 token | 无（固定草稿数） | Bonus token (+1) |
-| EOS | stop_criteria 逐 token | sampler 内处理 |
-| DP 适配 | lm_head_indice, hit_mask | N/A（单卡语义） |
+| **整体架构** | Plugin + DecodingPolicy | Worker + Proposer + Scorer + Sampler |
+| **草案模型** | 内置 MTP 层（DeepSeek V3 紧耦合） | 5+ 种 Proposer（Eagle, MTP, DFlash, DSpark, NGram, Medusa 等） |
+| **模型绑定** | 紧耦合（须在训练时预留 MTP 模块） | 松耦合，支持独立 draft 模型、多头、n-gram 等 |
+| **验证方式** | 贪心逐位比对（**无损**，但仅保证贪心解码一致性） | 概率拒绝采样（**严格无损**，适用于任意采样策略） |
+| **GPU 多步优化** | DecodingPolicy 循环调度 | TP1DraftModelRunner 零 CPU 同步；CUDA Graph 覆盖 |
+| **KV 管理** | 共享主模型 block table + dummy slot（PD 分离下 dummy block） | 独立 KV block 均分（Draft 模型独立分配） |
+| **PD 分离** | 完整支持（dummy block, hidden 零填充等） | 未原生支持 |
+| **适用场景** | 低时延 DeepSeek 推理、金融/合规等要求 bit-level 一致的场景 | 通用加速、多模型集成、需多 proposer 切换的开源/商业部署 |
 
-MindIE 的贪心比对在采样模式下不完全等价于拒绝采样的无损保证；vLLM 的 `standard` 模式代表严格数学无损。
+**为何 MindIE 选择贪心？** 其在 PD 分离、量化和 DP 下可严格保证输出一致性，调试友好；vLLM 选择拒绝采样则可利用 bonus token 提升平均接受长度，并支撑更广泛的草稿生态。
 
-## 4. 框架对比
-### 4.1 MindIE vs vLLM 投机推理全维度对比
+**DSpark 在两个框架中的位置**：论文核心算法（半自回归+置信度调度）在 vLLM 中落地为 `DSparkSpeculator`，强化了并行草稿的质量与效率；MindIE 目前虽以 MTP 为主，但其 Plugin 体系留有接入类似调度器的扩展空间。
 
-| 维度 | MindIE-LLM（Plugin 体系） | vLLM（V1 GPU Speculator 体系） |
-|------|--------------------------|-------------------------------|
-| 整体架构 | Plugin + DecodingPolicy | Worker + Proposer + Scorer + Sampler |
-| 抽象方式 | `Plugin` 统一接口（`model_inputs_update`/`sample_preprocess`/`plugin_verify`/`plugin_cache_update`） | `BaseSpeculator`/`DraftModelSpeculator` 类层级，Triton kernel 复用 |
-| 草案模型 | 内置 MTP 层 (DeepSeek V3) + Lookahead/Memory Decoding | EAGLE/EAGLE3、MTP、DFlash、DSpark、ngram、medusa、suffix |
-| 模型绑定 | MTP 紧耦合（主模型扩展层）；Lookahead/Memory 无绑定 | 松耦合（独立 speculative model 或 head） |
-| 验证方式 | 贪心比对（无损贪心，采样时有限制） | 拒绝采样 `standard`/`synthetic`/`block`（probability-aware 无损） |
-| 图捕获 | ATB 图模式（C++ 侧组图） | CUDA Graph（`FULL`/`FULL_DECODE_ONLY`/`PIECEWISE`），DSpark 单图覆盖主干+采样 |
-| PD 分离 | 完整（dummy block, hidden 处理, hit_mask 异步补齐） | N/A |
-| DP / SCP | 集中式 DP + context/seq parallel | N/A |
-| 适用场景 | 华为昇腾 NPU，低时延 DeepSeek 推理 | NVIDIA/AMD GPU，通用加速（代码/对话/多模型） |
-| 典型硬件 | 昇腾 Atlas 800I A2/A3、300I Duo | NVIDIA/AMD GPU |
 
-### 4.2 投机推理方法演进全景对比
-
-| 方法 | 核心改进 | 优势场景 | 劣势场景 |
-|------|---------|---------|---------|
-| **Vanilla SD** | 首次提出 draft-verify + 拒绝采样框架，数学无损 | 已有同系列小模型，验证可行性 | 小模型与 target 分布不对齐，独立部署成本高 |
-| **Medusa** | 去掉独立 draft 模型，target 上加多头 | 最小改动加速，不愿维护独立模型 | 各头独立预测，接受率有限，非严格无损 |
-| **EAGLE-1** | 特征层自回归（比 token 层平滑），复用 embedding/LM head | 通用长文本生成，训练成本低 | 逐 token 串行，块越长 draft 延迟越大 |
-| **EAGLE-2** | 置信度动态决定草稿树扩展 | 上下文难度差异大的任务 | 依赖置信度校准良好 |
-| **EAGLE-3** | 放弃特征预测，直接预测 token + 多层特征融合 + training-time test | 有充足训练数据，追求极致加速 | 训练复杂度高，仍逐 token 串行 |
-| **MTP** | 预训练联合训练草稿头，训练-推理零对齐成本 | 自研、控制预训练流程的厂商 | 依赖模型预训练时预留 MTP 模块 |
-| **DFlash** | block diffusion 并行去噪出整块，draft 延迟与块长解耦 | 长草稿块、大 batch 高吞吐场景 | 纯并行牺牲块内依赖，后缀衰减 |
-| **DSpark** | 半自回归（并行主干+Markov 头）+ 置信度调度验证 | 生产级高并发在线服务，负载波动大 | 工程复杂度全场最高，通用性有待验证 |
-
+---
 ## 5. 面试要点
 ### 5.1 常见追问
-#### Q: 投机推理为什么能加速？加速公式是什么？
-- 加速公式：`L = (T_draft + T_verify) / τ`
-- 本质：把"k 次 target 前向"压缩成"1 次 target 前向 + k 次廉价 draft 前向"
-- 三条优化路径：降低 T_draft（猜更快）、提高 τ（猜更准）、减少 T_verify 浪费（验更聪明）
-- 验证是并行的（target 一次前向处理整块），draft 成本足够低时整体延迟下降
+#### Q: 投机解码在什么情况下会失效甚至变慢？
+- 接受率过低：draft 与 target 分布差异大（领域不匹配、高温采样、高熵任务），大量草稿被拒，draft 计算白费。
+- GPU 已饱和（大 batch / 高并发）：验证 k 个草稿的算力挤占其他请求的计算资源，系统总吞吐下降。这也是 DSpark 动态缩减验证长度的动机。
+- Draft 延迟过高：若 draft 单步延迟 × k 接近 target 一步延迟，收益被抵消。
+- 输出过短：prefill 时间占主导，decode 加速收益有限。
+- 显存税：draft 模型额外占据显存，可能压缩可用 KV cache，降低最大 batch。
 
-#### Q: 投机解码什么情况下会失效？
-- **接受率低**：draft 与 target 分布差异大（领域不匹配、高温采样、高熵写作），草稿大量被拒
-- **大 batch / 高并发下 GPU 已饱和**：验证 k 个草稿的算力从其他请求嘴里抢，总吞吐下降（DSpark 的置信度调度为此设计）
-- **draft 本身开销过大**：draft 单步延迟 × k 逼近 target 一步延迟
-- **输出短**：prefill 占主导，decode 加速有限
-- **显存税**：draft 权重 + 草稿 KV 挤压 KV cache 池 → 最大 batch 变小
+#### Q: EAGLE 为什么比 Medusa 更好？
+- EAGLE 在**特征层**做自回归，复用 target 的 top-layer hidden states 和外推，比在 token 层自回归的 Medusa 更易预测。
+- EAGLE 将上一步实际采样 token 的 embedding 与特征拼接，消除采样不确定性。
+- EAGLE 支持树形草稿和动态扩展（EAGLE-2/3），在相同算力下显著提高有效接受率。
+- Medusa 多头独立预测无序列依赖，接受率随块长衰减明显，且 typical acceptance 通常非严格无损。
 
-#### Q: EAGLE 为什么比 Medusa 好？
-- Medusa 各头独立预测，没有序列依赖，接受率有限
-- EAGLE-1 核心洞察：**在特征层（target top-layer hidden）做自回归比在 token 层更容易**——feature 序列更平滑、规律性强，单层网络即可外推
-- 草稿头把上一步实际采样出的 token embedding 与 feature 拼接输入，消除 token 采样的不确定性
-- EAGLE-3 更进一步：放弃特征预测直接预测 token、多层特征融合、training-time test 消除训练-推理不一致
+#### Q: DFlash 的核心思想是什么？
+- 用轻量 block diffusion 模型做 parallel drafting，将未来一个 block（如 8–16 token）全部置为 [MASK]，一次并行去噪前向直接产出整块草稿，使 draft 延迟与草稿长度近乎解耦。
+- 通过 **KV 注入（target feature injection）** 将 target 模型多层的 hidden features 融合后注入草稿模型每层 KV，深度条件在 target 语义状态上，弥补并行生成接受率不足的问题。
+- 验证侧保持不变，仍为标准拒绝采样，无损。
 
-#### Q: DFlash 是怎么做到一次前向出整块草稿的？
-- 用 block diffusion：把未来一个 block 全部置为 [MASK]，一次并行去噪前向产出整块草稿
-- **KV 注入（target feature injection）**：把 target 多个中间层的 hidden feature 注入草稿模型每层 KV cache，深度条件在 target 语义状态上保住接受率
-- draft 延迟与草稿长度近乎解耦
+#### Q: DSpark 的主要创新及与 DFlash 的区别？
+- DSpark 在 DFlash 并行骨干基础上增加 **半自回归生成**：轻量 Markov 头顺序注入前缀依赖，缓解并行生成的后缀衰减问题，接受率比纯 DFlash 高 16–**18%**。
+- 加入 **置信度调度验证**：用 confidence head 预测每个 draft token 的存活概率，结合硬件感知前缀调度器实时负载动态裁剪验证长度，解决高并发下固定长度验证造成的算力浪费。
+- 训练和推理整体优化，生产环境相对 MTP-1 生成速度提升 **60%**–**85%**。
 
-#### Q: DSpark 相比 DFlash 多了什么？为什么能打败 DFlash？
-- **半自回归**：并行主干负责速度 + 轻量 Markov 头补上块内局部依赖，缓解 DFlash 的后缀衰减
-- **置信度调度验证**：按 GPU 实时负载动态裁剪验证长度，闲多验、忙少验，直击高并发下验证浪费算力的失效场景
-- 离线接受长度比 Eagle3 高 26–31%、比 DFlash 高 16–18%；线上单用户生成速度 Flash +60–85%、Pro +57–78%
-
-#### Q: 并行草案（DFlash）的全局接受长度竟然高于全自回归（Eagle3），为什么？
-- **位置 1 的容量优势**：并行草案 O(1) 延迟允许更深的网络（5 层 vs 1 层），第一位置条件接受率显著更高（Math: 0.88 vs 0.81; Chat: 0.72 vs 0.53）
-- 投机解码是严格前缀生存过程，第一 token 拒绝即整块作废，此优势杠杆效应极大
-- **后期位置 Eagle3 优势**：自回归在后半段维持/提升接受率（Chat: 0.53→0.74），DFlash 衰减（Code: 0.87→0.78）
-- **DSpark 融合效果**：继承并行骨干的高初始接受率（Math: 0.93），同时通过串行头缓解衰减
-
-#### Q: MindIE 为什么选择 Plugin 模式而非独立 Worker？
-- MTP 与现有 `PluginManager` 生成链路天然契合：prefill/decode 共用 `generate_token`
-- 通过 `plugin_data_param` 传递 `mtp_model_inputs` 与 `hidden_states`，无需替换整个 ModelRunner
-- Lookahead、Memory Decoding 与 MTP 可互斥注册，降低侵入性
-
-#### Q: MindIE 贪心验证 vs vLLM 拒绝采样，各有什么优劣？
-- **MindIE 贪心**：与自回归 bit-level 一致、易调试；但无法接受低概率但正确的草稿扩展，采样场景下有限制
-- **vLLM 拒绝采样**：理论保证 target 分布、bonus token 提吞吐、支持任意采样参数；但引入随机性，需 draft/target 概率对齐
+#### Q: 如何提高投机解码的草稿接受率？
+- 让 draft 看到 target 的内部表征（如 EAGLE 复用 target 的 embedding/LM head 并以 hidden/feature 为输入；DFlash 的 KV 注入；MTP 的联合训练）。
+- 数据对齐：用 target 生成的数据训练 draft，直接对齐条件分布。
+- 结构优化：树形草稿 + 动态扩展，并行验证多条路径，提高“至少一条被接受”的概率。
+- 训练目标：直接最小化分布差异（如 DSpark 的 L_tv 损失）。
+- 推理期自适应：根据置信度提前停止低质量 draft、根据负载调整验证长度。
 
 ### 5.2 口述话术
-**投机推理一句话总结**："用便宜的小模型/轻量层猜 k 个未来 token，大模型一次前向并行验证，把串行逐 token 变成批量校验，数学上通过拒绝采样保证无损。加速效果取决于三个因素：猜得够快、猜得够准、验证不浪费算力。"
+“投机推理就是用空闲算力预支未来，用批量验证替代逐字生成。MTP 是训练中内置的快速草稿头，而 DSpark 是更极致的系统工程——并行出整块候选，再用几乎是免费的 Markov 头修一下块内连贯性，并且根据 GPU 忙闲动态决定验证多少。记住三个杠杆：猜得快、猜得准、验得聪明，DSpark 就是同时拉了这三把。”
 
-**演进主线一句话**："演进就是两条腿——把 draft 做得更准（Medusa 多头 → EAGLE 特征级自回归 → EAGLE-3 多层融合 → MTP 联合训练），和把 draft/verify 做得更省（树 attention 并行验证 → DFlash diffusion 一次出整块 → DSpark 半自回归 + 按 GPU 负载调度验证长度）。每一步都是上一步的优势场景不变、劣势场景被下一步针对性修补。"
 
-**DSpark 一句话**："并行骨干保证速度，轻量 Markov 头补上块内连贯性，置信度头估计草稿存活概率，硬件感知调度器按 GPU 实时负载动态裁剪验证长度——同时解决了纯并行草案的后缀衰减和固定长度验证的算力浪费。"
-
+---
 ## 6. 延伸阅读
 ### 6.1 相关主题
-- **DeepSeek-V4 / V3** — MTP 的原始模型载体，V4 线上已部署 DSpark
-- **DeepSpec** — DSpark 配套的全栈投机解码训练框架（Eagle3/DFlash/DSpark，Qwen3/Gemma）
-- **vLLM Speculative Decoding** — vLLM V1 投机推理引擎架构（`vllm/v1/worker/gpu/spec_decode/`）
-- **MindIE-LLM PyServer** — 华为昇腾投机推理引擎，Plugin 体系（MTP/Lookahead/Memory Decoding）
+- **EAGLE 系列**（EAGLE-1 → EAGLE-2 → EAGLE-3）：特征级自回归与动态树验证
+- **DFlash**：Block diffusion 并行草稿与 KV 注入
+- **DeepSpec**：DeepSeek 开源的投机解码草稿模型全栈训练库（Eagle3, DFlash, DSpark 实现）
+- **vLLM Speculative Decoding**：多 proposer 平台架构与 CUDAGraph 优化
+- **MindIE 并行解码**：MTP、Lookahead、Memory Decoding 三种插件
 
 ### 6.2 源文件
 
 | 文件路径 | 标题 | 类型 |
 |---------|------|------|
-| wiki/repos/mindie-pyserver/mtp-spec-decode.md | MTP / Speculative Decoding 投机推理 | 技术文档 |
-| wiki/ai/techniques/dspark.md | DSpark 置信度调度投机解码 | 技术文档 |
-| wiki/ai/infrastructure/deepspec.md | DeepSpec 全栈投机解码训练框架 | 技术文档 |
-| wiki/raw/articles/pyserver/mtp_spec_decode_deep_analysis.md | MTP / 投机推理 — 深度分析 | 深度分析 |
-| wiki/raw/articles/deepseek-dspark-qzw-2026.md | 梁文锋署名的DSpark，看懂这10个点就够了！ | 技术解读 |
-| wiki/raw/articles/deepseek-dspark-jxz-2026.md | 刚刚，DeepSeek V4更新DSpark，推理速度提升80% | 新闻解读 |
-| wiki/raw/papers/dspark-paper-2026.md | DSpark论文全文 | 学术论文 |
-| interview/interview-review/02-投机解码专题.md | 投机解码专题——原理、失效场景与方法演进 | 面试专题 |
+| wiki/repos/mindie-pyserver/mtp-spec-decode.md | MTP / Speculative Decoding 投机推理 | 架构文档 |
+| wiki/ai/techniques/dspark.md | DSpark 置信度调度投机解码 | 技术详细介绍 |
+| wiki/ai/infrastructure/deepspec.md | DeepSpec 全栈投机解码训练框架 | 工具介绍 |
+| wiki/raw/articles/pyserver/mtp_spec_decode_deep_analysis.md | MTP / 投机推理 — 深度分析 | 深度对比分析 |
+| wiki/raw/articles/deepseek-dspark-qzw-2026.md | 梁文锋署名的DSpark，看懂这10个点就够了！ | 科普文章 |
+| wiki/raw/articles/deepseek-dspark-jxz-2026.md | 刚刚，DeepSeek V4更新DSpark，推理速度提升**80%** | 新闻报道 |
+| wiki/raw/papers/dspark-paper-2026.md | DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation | 论文全文 |
+| interview/interview-review/02-投机解码专题.md | 专题 02：投机解码（Speculative Decoding）——原理、失效场景与方法演进 | 面试专题 |

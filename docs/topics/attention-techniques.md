@@ -4,6 +4,14 @@
 ## 1. 一句话总结
 DeepSeek-V4 系列通过 **Compressed Sparse Attention (CSA)** 与 **Heavily Compressed Attention (HCA)** 两种高效注意力机制，将百万 token 上下文的 KV 缓存压缩至标准方案的 ~2%，在避免内存爆炸的同时保留细粒度与全局信息，让超大上下文推理变得经济可行。
 
+
+!!! abstract "30 秒速览"
+    - DeepSeek-V4 系列通过 Compressed Sparse Attention (CSA) 与 Heavily Compressed Attention (HCA) 两种高效注意力机制，将百万 token 上下文的 KV 缓存压缩
+    - !!! abstract "30 秒速览"
+    - (核心要点从上文提取)
+
+
+---
 ## 2. 核心原理
 ### 2.1 问题背景
 长上下文场景下，Transformer 的 KV 缓存随序列长度线性增长，极易耗尽显存。即便使用分组查询注意力（GQA）等经典优化，在 100 万 token 时缓存仍可能高达数十 GB。行业急需一种能大幅压缩 KV 缓存、同时保持模型质量的注意力方案。
@@ -14,6 +22,8 @@ DeepSeek-V4 提出 **混合注意力架构**：在网络层中交替部署两种
 - **HCA**：将 KV 高度压缩（128×），不做稀疏选择而进行全量注意力，以极低成本提供全局视野。
 两者叠加 **滑动窗口分支** 保持局部细节，并统一使用 **多查询注意力 (MQA)** 与 **分组输出投影** 降低计算与带宽开销，最终实现在百万上下文下 KV 缓存仅为标准 GQA8 方案的 2%。
 
+
+---
 ## 3. 实现细节
 ### 3.1 Compressed Sparse Attention (CSA)
 CSA 将序列压缩与稀疏选择解耦，三步完成高效注意力。
@@ -51,6 +61,8 @@ HCA 追求极致压缩，牺牲 token 粒度以换取超低缓存。
 - **FP4 Indexer**（CSA 专属）：Lightning Indexer 内部计算采用 FP4 量化，进一步加速指标筛选。
 - **QK 归一化**：在注意力核前对 Q 和 K 施加 RMSNorm，防止高分 logits 导致数值不稳定。
 
+
+---
 ## 4. 框架对比
 ### 4.1 CSA vs HCA 技术特性对比
 | 维度 | CSA | HCA |
@@ -63,6 +75,8 @@ HCA 追求极致压缩，牺牲 token 粒度以换取超低缓存。
 | 共同组件 | MQA、滑动窗口、Partial RoPE、Attention Sink、QK Norm | 同左 |
 两者在混合部署中优势互补，组合后总 KV 缓存仅约标准方案的 2%。
 
+
+---
 ## 5. 面试要点
 ### 5.1 常见追问
 #### Q: CSA 的 Lightning Indexer 为什么不会成为计算瓶颈？
@@ -86,6 +100,8 @@ HCA 追求极致压缩，牺牲 token 粒度以换取超低缓存。
 ### 5.2 口述话术
 “DeepSeek-V4 为了解决百万 token 上下文的显存瓶颈，设计了一套混合注意力架构。核心思路是将两种高效注意力层交替使用：一个是 Compressed Sparse Attention，先 4 倍压缩 KV，再用 Lightning Indexer 选出最重要的部分做稀疏注意力；另一个是 Heavily Compressed Attention，直接 128 倍压缩 KV，全量计算注意力来维持全局视野。两层都用了 MQA 共享键值、滑动窗口保近期细节，还有 Partial RoPE、Attention Sink 等技巧。最终 KV 缓存只有标准方案的 2%，模型在 1M token 下依然高效运行。”
 
+
+---
 ## 6. 延伸阅读
 ### 6.1 相关主题
 - DeepSeek-V4 Pro / Flash 完整架构

@@ -4,6 +4,16 @@
 ## 1. 一句话总结
 K8s 是声明式容器编排系统，Pod 是其最小调度单元，三种探针管控生命周期；在大模型推理场景下，原生自愈能力（进程级重启）不足，需叠加业务感知的 RAS 三层架构——FaultManager 主动 watch K8s API 获取硬件故障分级信号，做 Token 重推/跨实例资源置换等精细恢复；最外层 ras_monitor 用黑盒探活兜底，代价递增，能力递进，共同构成 K8s 通用能力 + 业务高可用智能的完整方案。
 
+
+!!! abstract "30 秒速览"
+    - K8s 是声明式容器编排系统，Pod 是其最小调度单元，三种探针管控生命周期
+    - 在大模型推理场景下，原生自愈能力（进程级重启）不足，需叠加业务感知的 RAS 三层架构——FaultManager 主动 watch K8s API 获取硬件故障分级信号，做 Token 重推/跨实例资源置换等精细恢复
+    - 最外层 ras_monitor 用黑盒探活兜底，代价递增，能力递进，共同构成 K8s 通用能力 + 业务高可用智能的完整方案
+    - !!! abstract "30 秒速览"
+    - (核心要点从上文提取)
+
+
+---
 ## 2. 核心原理
 ### 2.1 问题背景
 大模型分布式推理的故障场景远比“容器死没死”复杂：NPU 卡瞬断只需重推 token、多卡隔离需跨实例置换资源、引擎进程假活需业务级黑盒探活。K8s 原生探针和控制器只能感知进程存活这一种粗粒度二元信号，既看不到硬件故障分级，也不理解 Prefill/Decode 角色的业务语义。单靠 `restartPolicy: Always` 会导致“为一条瞬断重启整个推理实例”的过度恢复，或“容器还活着但推理全超时”的漏检。
@@ -33,12 +43,12 @@ flowchart TB
     B3 -->|L2~L6 故障均在此层闭环| Stop2((Done))
     L2 -.->|20 分钟级挂死、FaultManager 自身失效等极端场景| C1
     C1 --> C2 --> C3
-```
-
-- **Layer 1** 是 K8s 自带能力，负责容器级重启和副本补齐，是 Motor 自动重拉起注册的前置条件
+```text- **Layer 1** 是 K8s 自带能力，负责容器级重启和副本补齐，是 Motor 自动重拉起注册的前置条件
 - **Layer 2** 是 Controller 内的 `FaultManager`，主动 watch K8s Node/ConfigMap 获取硬件故障信号，做 Token 重推（无感）或 ScaleP2D（跨实例资源置换），恢复动作走业务 HTTP 协议而非 `kubectl delete`
 - **Layer 3** 是独立于 Motor 之外的 `ras_monitor.py`，用 `kubectl` 查询 Pod + 虚拟推理请求判定挂死，代价最大（整体重建），但最可靠
 
+
+---
 ## 3. 实现细节
 ### 3.1 K8s 控制平面与 Pod 抽象
 K8s 是声明式系统：用户提交期望状态（YAML 里的 `spec`），控制平面持续将实际状态（`status`）向期望状态收敛。核心组件分工：
@@ -64,9 +74,7 @@ stateDiagram-v2
     Running --> Terminating: 收到删除请求（发送 SIGTERM）
     Terminating --> [*]: 优雅期结束/收到确认，Pod 被移除
     Pending --> Failed: 调度失败/镜像拉取失败
-```
-
-### 3.2 探针机制：三种探针的协同工作
+```text### 3.2 探针机制：三种探针的协同工作
 三种探针服务于容器生命周期的不同阶段，互相独立但存在先后依赖：
 
 | 探针 | 解决的问题 | 失败后果 | 触发时机 |
@@ -97,9 +105,7 @@ sequenceDiagram
             C-->>K: 达到 failureThreshold → kill 容器并重建
         end
     end
-```
-
-#### 关键代码路径
+```text#### 关键代码路径
 本仓库选用 `exec` 方式探测，由 `probe.sh` 按位置参数（startup/readiness/liveness + role）调用 `probe.py`，后者从业务配置动态拼出 `http://<PodIP>:<port>/{startup|readiness|liveness}`，发 HTTP GET 请求，返回码 200 则 `exit 0`（成功），否则 `exit 1`（失败）。Pod IP 通过 Downward API 以 `POD_IP` 环境变量注入。
 
 ```58:76:MindIE-PyMotor/examples/deployer/yaml_template/coordinator_template.yaml
@@ -129,9 +135,7 @@ livenessProbe:
   periodSeconds: 10
   timeoutSeconds: 30
   failureThreshold: 5
-```
-
-**调参要点**：
+```text**调参要点**：
 - `startupProbe.failureThreshold: 100` × `periodSeconds: 10` = 最大容忍 1000 秒启动时间，兼容大模型权重加载
 - `timeoutSeconds: 30` 避免推理引擎繁忙时健康检查接口响应延迟被误判为失败
 - `failureThreshold: 5` 容忍偶发网络抖动，避免过度敏感
@@ -172,9 +176,7 @@ sequenceDiagram
     else fault_level ≤ L2 且已隔离
         FM->>IM: recover_instance() 解除隔离
     end
-```
-
-**三个核心 K8s API 调用**，均封装在 `motor/controller/fault_tolerance/k8s/` 下：
+```text**三个核心 K8s API 调用**，均封装在 `motor/controller/fault_tolerance/k8s/` 下：
 - **Node Watch** (`resource_monitor.py: _monitor_node()`)：监听 Node 的 Ready Condition，变为 NotReady 时注入 NODE_REBOOT 故障（L6）
 - **ConfigMap Watch** (`resource_monitor.py: _monitor_configmap()`)：监听 `mindx-dl-deviceinfo-{node}` ConfigMap，由 MindX DL 设备插件写入 NPU 卡故障/网络故障 JSON，经 `configmap_parser.py` 解析并映射为 L1~L6
 - **Pod 反查 Node** (`k8s_client.py: get_node_hostname_by_pod_ip()`)：按 `field_selector=status.podIP=xxx` 查询，用于故障定位和 ScaleP2D 节点所有权交换
@@ -205,9 +207,7 @@ class K8sClient:
             if node_name:
                 return node_name
         return None
-```
-
-`load_incluster_config()` 优先、失败退回本地 `kubeconfig`，兼顾集群内 Pod 和集群外本地调试两种场景，`is_available()` 让调用方安全降级。
+```text`load_incluster_config()` 优先、失败退回本地 `kubeconfig`，兼顾集群内 Pod 和集群外本地调试两种场景，`is_available()` 让调用方安全降级。
 
 **恢复动作与 K8s 的分工**：
 - L2（可自愈）：只触发 Token 重推，**不重启任何容器、不惊动 K8s**
@@ -221,9 +221,7 @@ def kubectl_get_pods_info():
     result = subprocess.run(
         [shutil.which("kubectl"), "get", "pods", "-A", "-owide"], capture_output=True, text=True, check=True
     )
-```
-
-## 4. 框架对比
+```text## 4. 框架对比
 ### 4.1 CRD 部署模式 vs 传统多 YAML
 本仓库同时提供两种部署模式，选择本质是“控制权归谁”的取舍：
 
@@ -237,6 +235,8 @@ def kubectl_get_pods_info():
 
 **RAS 能力与 CRD 模式互斥的根因**：CRD 模式下 Pod 由 infer-operator 通过 reconcile 循环持续“纠正”到 InferServiceSet.spec 的期望副本数，而 FaultManager 的 ScaleP2D 策略是**命令式地直接让 Pod 内进程退出**（`NodeManagerApiClient.stop()`），不修改 CRD spec。两个控制器同时操作同一资源会打破 K8s 声明式系统的“单一 owner 原则”，产生“Operator 发现副本数不够→立即拉起新 Pod，Motor 认为该节点已释放”的控制回路冲突。要让 CRD 模式支持 RAS，需把恢复动作改为“修改 InferServiceSet.spec”的形式，将恢复语义纳入声明式体系。
 
+
+---
 ## 5. 面试要点
 ### 5.1 常见追问
 #### Q: 为什么大模型服务的探针选 exec 而非 httpGet？
@@ -273,6 +273,8 @@ def kubectl_get_pods_info():
 
 但要理解一点：K8s 原生自愈只解决‘进程死没死’，大模型推理真正的故障场景复杂得多。所以我们又叠了两层 RAS 能力——FaultManager 主动 watch K8s 的 Node 和 ConfigMap 拿硬件故障分级信号，做 Token 重推或 ScaleP2D 这种跨实例的资源置换；最外面还有一个独立的 ras_monitor 脚本做黑盒兜底。三层是能力递进、代价递增的关系，不是互相替代。这就是 K8s 通用可靠性原语之上叠加业务感知调度智能的完整方案。”
 
+
+---
 ## 6. 延伸阅读
 ### 6.1 相关主题
 - **专题 09**（MindIE 并行策略与调度调优）：讲解“实例内”的多卡并行策略（tp/dp/maxBatchSize），与本篇“实例间”的高可用与弹性互补

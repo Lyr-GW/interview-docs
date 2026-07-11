@@ -2,8 +2,16 @@
 > 覆盖 22 个知识点 | 来源 3 个文件 | 更新于 2026-07-11
 
 ## 1. 一句话总结
-PyMotor 是面向 PD 分离场景的大模型推理集群编排框架，通过 **控制面（Controller）— 调度面（Coordinator）— 执行面（Engine Server + Node Manager）** 三层解耦架构，实现实例生命周期管理、可插拔调度策略（含 KV Cache 亲和）、主备高可用及多引擎适配，解决大规模昇腾 NPU 集群下 LLM 推理的编排与调度难题。
+PyMotor 是面向 **PD 分离**场景的大模型推理集群编排框架，通过 **控制面（Controller）— 调度面（Coordinator）— 执行面（Engine Server + Node Manager）** 三层解耦架构，实现实例生命周期管理、可插拔调度策略（含 **KV Cache** 亲和）、主备高可用及多引擎适配，解决大规模昇腾 NPU 集群下 LLM 推理的编排与调度难题。
 
+
+!!! abstract "30 秒速览"
+    - PyMotor 是面向 PD 分离场景的大模型推理集群编排框架，通过 控制面（Controller）— 调度面（Coordinator）— 执行面（Engine Server + Node Manager） 三层解耦架构，实现实例生命周期管
+    - !!! abstract "30 秒速览"
+    - (核心要点从上文提取)
+
+
+---
 ## 2. 核心原理
 ### 2.1 问题背景
 大规模 LLM 在线推理中，Prefill（计算密集）与 Decode（访存密集）资源需求差异显著，传统单体部署无法独立扩缩容，导致资源浪费。同时，多实例集群需要统一的请求路由、负载均衡、KV 缓存复用和故障容错，而社区推理引擎（vLLM/SGLang）本身缺乏集群级控制面与 PD 分离的原生编排能力。此外，在昇腾 NPU 集群中还需处理 HCCL 拓扑、ranktable 组装等硬件特有需求。
@@ -16,6 +24,8 @@ PyMotor 以“控制面慢而全、调度面快而专、执行面薄而稳”为
 
 同时，借助 Mooncake 实现跨节点 KV 传输与池化，通过 etcd 分布式锁提供 Controller/Coordinator 的主备高可用，备节点仅保持管理面预热，切换时快速接管。
 
+
+---
 ## 3. 实现细节
 ### 3.1 三层职责与通信拓扑
 ```mermaid
@@ -59,9 +69,7 @@ flowchart TB
     CO --> NM
     CTRL --- etcd
     k8s -.->|部署| CTRL
-```
-
-**通信关系：**
+```text**通信关系：**
 
 | 调用方 | 被调用方 | 协议/路径 | 用途 |
 |--------|---------|-----------|------|
@@ -101,9 +109,7 @@ flowchart TB
     end
     etcd_lock -->|acquire/renew| standby
     etcd_lock -->|acquire/renew| master
-```
-
-**切换流程：**
+```text**切换流程：**
 1. Master renew 租约失败 → 设置角色为 STANDBY，停止 Infer Workers，更新 RoleShm 为 0。
 2. Standby 通过 `try_become_master()` 获取 etcd 锁。
 3. 获取成功后设置角色为 MASTER，Controller 启动全部业务模块，Coordinator 启动 Infer Workers，RoleShm 置 1。
@@ -154,8 +160,7 @@ class EndpointFactory:
         "vllm": "motor.engine_server.core.vllm.vllm_endpoint.VLLMEndpoint",
         "sglang": "motor.engine_server.core.sglang.sglang_endpoint.SGLangEndpoint",
     }
-```
-提供 `MgmtEndpoint`（/status, /metrics）和 `InferEndpoint`（OpenAI 兼容推理）。
+```text提供 `MgmtEndpoint`（/status, /metrics）和 `InferEndpoint`（OpenAI 兼容推理）。
 
 **Node Manager** 同 Pod 部署，包含：
 - `EngineManager`：启动时注册，接收 start_cmd 写 ranktable；支持 503 触发的 re-register。
@@ -185,9 +190,7 @@ sequenceDiagram
     R->>ED: decode stream forward
     ED-->>C: SSE 流式回传
     Note over IW,S: 完成后 update_workload(RELEASE)
-```
-
-#### 数据流
+```text#### 数据流
 - 令牌化（TokenizerManager）在 Coordinator 侧完成。
 - KV Cache Affinity 模式下，Prefill 选择前向 Conductor 查询最长前缀匹配，若无匹配则降级。
 
@@ -201,6 +204,8 @@ sequenceDiagram
 
 **部署模式**：独立部署（standalone）、主备模式、PD 分离、单容器全组合等，通过 `deploy_mode` 和 `enable_master_standby` 控制。
 
+
+---
 ## 4. 框架对比
 ### 4.1 与 vLLM / SGLang / TGI / Triton 对比
 
@@ -216,6 +221,8 @@ sequenceDiagram
 
 **设计光谱**：PyMotor 定位于“插件化编排 + PD 分离原生 + 主备 HA”，与推理引擎互补，相比 TGI/Triton 更垂直 LLM+NPU 场景。
 
+
+---
 ## 5. 面试要点
 ### 5.1 常见追问
 #### Q: PyMotor 为什么要划分为控制面、调度面、执行面三层？各自的核心职责是什么？
@@ -244,6 +251,8 @@ sequenceDiagram
 ### 5.2 口述话术
 “PyMotor 可以理解为 LLM 推理集群的操作系统：Controller 是集群大脑，管理所有推理实例的生死；Coordinator 是请求总线的智能路由，根据业务策略把流量打到最合适的引擎上；Node Manager 是每个引擎旁边的管家，负责向大脑汇报健康状态。整个系统天生为 PD 分离设计，Prefill 节点和 Decode 节点可以独立扩缩，并通过 Mooncake 实现跨节点的 KV Cache 共享。对接用户侧完全兼容 OpenAI API。”
 
+
+---
 ## 6. 延伸阅读
 ### 6.1 相关主题
 - **KV Cache 亲和调度**：详细解析 prefix-aware 路由的两级选择机制及与架构的协作。
