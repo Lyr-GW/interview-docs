@@ -1,8 +1,8 @@
 site_name: Interview Docs
 site_description: LLM 推理工程面试知识库
 site_url: https://lyr-gw.github.io/interview-docs/
-repo_url: https://github.com/lyr-gw/interview-docs
-repo_name: lyr-gw/interview-docs
+repo_url: https://github.com/Lyr-GW/interview-docs
+repo_name: Lyr-GW/interview-docs
 edit_uri: ""
 
 theme:
