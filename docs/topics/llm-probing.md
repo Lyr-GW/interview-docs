@@ -56,7 +56,8 @@ graph LR
     
     style G fill:#ffcccc,stroke:#ff0000
     style H fill:#ffcccc,stroke:#ff0000
-```text#### U 型曲线与最佳探测范围
+```
+#### U 型曲线与最佳探测范围
 - 只使用前 2 个 Logits 就能推断噪声级别；
 - 观察约 30-40 个候选词时，探针预测准确率达到顶峰；
 - 前 30-80 个 Logits（约 1-2 层 Logits 信息量）是**泄密重灾区**；

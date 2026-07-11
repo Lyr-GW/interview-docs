@@ -47,7 +47,8 @@ flowchart TB
     HH --> Obs
     HH --> DMI
     INNER --> Infra
-```text核心思路：**外观模式对外隐藏复杂度，编排器依据端口配置创建 1~3 个 HTTP 服务实例，路由注册器按三平面分类注入业务逻辑，协议适配层在编译期绑定具体推理协议**。
+```
+核心思路：**外观模式对外隐藏复杂度，编排器依据端口配置创建 1~3 个 HTTP 服务实例，路由注册器按三平面分类注入业务逻辑，协议适配层在编译期绑定具体推理协议**。
 
 
 ---
@@ -71,7 +72,8 @@ private:
     std::mutex mMutex;
     bool mStarted{false};
 };
-```text#### HttpServer — 服务初始化器
+```
+#### HttpServer — 服务初始化器
 - 静态类，核心方法：`HttpServerInit()` / `HttpServerDeInit()`
 - IP/端口合法性校验（`CheckIp`、`IsPortUsed`）
 - 配置 `ThreadPoolMonitor`：工作线程数 = `maxLinkNum`，队列长度 = 2×并发数
@@ -91,7 +93,8 @@ flowchart TB
     D -- No --> F{mgmtPort == metricsPort<br/>但 != port?}
     F -- Yes --> G[MM_SAME<br/>管理+Metrics 共用<br/>业务独立]
     F -- No --> H[ALL_DIFF<br/>三实例完全独立]
-```text| ServerGroupType | 实例数 | 实例1 路由 | 实例2 路由 | 实例3 路由 |
+```
+| ServerGroupType | 实例数 | 实例1 路由 | 实例2 路由 | 实例3 路由 |
 |----------------|--------|-----------|-----------|-----------|
 | ALL_SAME | 1 | Business + Management + Metrics | — | — |
 | BUSINESS_MANAGEMENT_SAME | 2 | Business + Management | Metrics | — |
@@ -113,7 +116,8 @@ flowchart TB
 // DispatchInfer 通过模板参数在编译期绑定推理协议
 template<typename BuildInterfaceFn>
 void DispatchInfer(const ReqCtxPtr &reqCtx, BuildInterfaceFn buildFn);
-```text调用方注册路由时传入不同 lambda 构造 `OpenAIInferInterface`、`TGIInferInterface` 等，无需运行时虚函数分发。
+```
+调用方注册路由时传入不同 lambda 构造 `OpenAIInferInterface`、`TGIInferInterface` 等，无需运行时虚函数分发。
 
 ### 3.4 请求生命周期
 
@@ -127,7 +131,8 @@ flowchart LR
     SRI --> HDR[HandleDResult<br/>res.set_content json]
     HDR --> Post[post_routing_handler<br/>AddTracerData + RemoveMonitorRequest]
     Post --> Client2[HTTP 200 + JSON]
-```text**流式响应差异**：`res.set_chunked_content_provider` 设置；`post_routing` 跳过 `RemoveMonitorRequest`；由 `DResultKeepAlive` 负责清理。
+```
+**流式响应差异**：`res.set_chunked_content_provider` 设置；`post_routing` 跳过 `RemoveMonitorRequest`；由 `DResultKeepAlive` 负责清理。
 
 ### 3.5 TLS/SSL 安全设计
 
@@ -138,11 +143,11 @@ flowchart LR
 - **HttpSslSecret**：后台线程周期性检查密钥过期（框架搭好，循环体为占位逻辑）
 
 #### 证书分类体系
-```textSSLCertCategory
+SSLCertCategory
 ├── BUSINESS_CERT  → g_businessHttpSsl
 ├── MANAGEMENT_CERT → g_managementHttpSsl
 └── METRICS_CERT    → g_metricsHttpSsl
-```text### 3.6 可观测性三层
+### 3.6 可观测性三层
 
 | 层 | 能力 | 实现 |
 |----|------|------|
@@ -165,7 +170,8 @@ private:
     size_t dynamicAverageWindowSize = 1000;
     std::mutex TTFTMutex, TBTMutex;
 };
-```text### 3.7 DMI 分布式推理（PD 分离）
+```
+### 3.7 DMI 分布式推理（PD 分离）
 
 DMI（Distributed Memory Inference）即 Prefill/Decode 分离架构。
 
@@ -178,7 +184,8 @@ stateDiagram-v2
     Linking --> Linked: AssignDmiRole 成功
     Failed --> Linking: 重试
     Linked --> [*]
-```text- **V1/V2 协议**分别处理不同版本的角色协商
+```
+- **V1/V2 协议**分别处理不同版本的角色协商
 - `taskThread_` 执行建链操作（可能阻塞），`queryThread_` 周期轮询链路健康度（10s）
 - DMI 业务请求需通过完整头部校验链：`IsAllDMIHeadersExist → IsReqIdValid → IsReqTypeValid → IsDTargetValid → IsRecomputeParamValid`
 

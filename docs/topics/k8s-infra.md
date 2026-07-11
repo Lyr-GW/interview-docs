@@ -43,7 +43,8 @@ flowchart TB
     B3 -->|L2~L6 故障均在此层闭环| Stop2((Done))
     L2 -.->|20 分钟级挂死、FaultManager 自身失效等极端场景| C1
     C1 --> C2 --> C3
-```text- **Layer 1** 是 K8s 自带能力，负责容器级重启和副本补齐，是 Motor 自动重拉起注册的前置条件
+```
+- **Layer 1** 是 K8s 自带能力，负责容器级重启和副本补齐，是 Motor 自动重拉起注册的前置条件
 - **Layer 2** 是 Controller 内的 `FaultManager`，主动 watch K8s Node/ConfigMap 获取硬件故障信号，做 Token 重推（无感）或 ScaleP2D（跨实例资源置换），恢复动作走业务 HTTP 协议而非 `kubectl delete`
 - **Layer 3** 是独立于 Motor 之外的 `ras_monitor.py`，用 `kubectl` 查询 Pod + 虚拟推理请求判定挂死，代价最大（整体重建），但最可靠
 
@@ -74,7 +75,8 @@ stateDiagram-v2
     Running --> Terminating: 收到删除请求（发送 SIGTERM）
     Terminating --> [*]: 优雅期结束/收到确认，Pod 被移除
     Pending --> Failed: 调度失败/镜像拉取失败
-```text### 3.2 探针机制：三种探针的协同工作
+```
+### 3.2 探针机制：三种探针的协同工作
 三种探针服务于容器生命周期的不同阶段，互相独立但存在先后依赖：
 
 | 探针 | 解决的问题 | 失败后果 | 触发时机 |
@@ -105,7 +107,8 @@ sequenceDiagram
             C-->>K: 达到 failureThreshold → kill 容器并重建
         end
     end
-```text#### 关键代码路径
+```
+#### 关键代码路径
 本仓库选用 `exec` 方式探测，由 `probe.sh` 按位置参数（startup/readiness/liveness + role）调用 `probe.py`，后者从业务配置动态拼出 `http://<PodIP>:<port>/{startup|readiness|liveness}`，发 HTTP GET 请求，返回码 200 则 `exit 0`（成功），否则 `exit 1`（失败）。Pod IP 通过 Downward API 以 `POD_IP` 环境变量注入。
 
 ```58:76:MindIE-PyMotor/examples/deployer/yaml_template/coordinator_template.yaml
@@ -135,7 +138,8 @@ livenessProbe:
   periodSeconds: 10
   timeoutSeconds: 30
   failureThreshold: 5
-```text**调参要点**：
+```
+**调参要点**：
 - `startupProbe.failureThreshold: 100` × `periodSeconds: 10` = 最大容忍 1000 秒启动时间，兼容大模型权重加载
 - `timeoutSeconds: 30` 避免推理引擎繁忙时健康检查接口响应延迟被误判为失败
 - `failureThreshold: 5` 容忍偶发网络抖动，避免过度敏感
@@ -176,7 +180,8 @@ sequenceDiagram
     else fault_level ≤ L2 且已隔离
         FM->>IM: recover_instance() 解除隔离
     end
-```text**三个核心 K8s API 调用**，均封装在 `motor/controller/fault_tolerance/k8s/` 下：
+```
+**三个核心 K8s API 调用**，均封装在 `motor/controller/fault_tolerance/k8s/` 下：
 - **Node Watch** (`resource_monitor.py: _monitor_node()`)：监听 Node 的 Ready Condition，变为 NotReady 时注入 NODE_REBOOT 故障（L6）
 - **ConfigMap Watch** (`resource_monitor.py: _monitor_configmap()`)：监听 `mindx-dl-deviceinfo-{node}` ConfigMap，由 MindX DL 设备插件写入 NPU 卡故障/网络故障 JSON，经 `configmap_parser.py` 解析并映射为 L1~L6
 - **Pod 反查 Node** (`k8s_client.py: get_node_hostname_by_pod_ip()`)：按 `field_selector=status.podIP=xxx` 查询，用于故障定位和 ScaleP2D 节点所有权交换
@@ -207,7 +212,8 @@ class K8sClient:
             if node_name:
                 return node_name
         return None
-```text`load_incluster_config()` 优先、失败退回本地 `kubeconfig`，兼顾集群内 Pod 和集群外本地调试两种场景，`is_available()` 让调用方安全降级。
+```
+`load_incluster_config()` 优先、失败退回本地 `kubeconfig`，兼顾集群内 Pod 和集群外本地调试两种场景，`is_available()` 让调用方安全降级。
 
 **恢复动作与 K8s 的分工**：
 - L2（可自愈）：只触发 Token 重推，**不重启任何容器、不惊动 K8s**
@@ -221,7 +227,8 @@ def kubectl_get_pods_info():
     result = subprocess.run(
         [shutil.which("kubectl"), "get", "pods", "-A", "-owide"], capture_output=True, text=True, check=True
     )
-```text## 4. 框架对比
+```
+## 4. 框架对比
 ### 4.1 CRD 部署模式 vs 传统多 YAML
 本仓库同时提供两种部署模式，选择本质是“控制权归谁”的取舍：
 

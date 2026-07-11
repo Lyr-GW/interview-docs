@@ -27,7 +27,8 @@ flowchart LR
     B --> C[“块内计算 QKᵀ + Softmax (running max/sum)”]
     C --> D[乘以 V 累加至输出块]
     D --> E[只将 O 写回 HBM]
-```text推理框架进一步将此与 **Paged KV Cache** 结合，通过 `block_table` 间接寻址管理动态增长的 KV 序列，支撑 continuous batching 的高吞吐服务。
+```
+推理框架进一步将此与 **Paged KV Cache** 结合，通过 `block_table` 间接寻址管理动态增长的 KV 序列，支撑 continuous batching 的高吞吐服务。
 
 
 ---
@@ -51,9 +52,9 @@ flowchart LR
 MindIE 以 `torch_npu.npu_fused_infer_attention_score`（FIA）融合算子为核心，**单一 API 覆盖 Prefill + Decode**，通过 `input_layout` 参数（TND/BSH）切换模式。
 
 **调用链路**：
-```textQwen2Attention (QKV proj + RoPE) → AttentionLayer → get_attn_backend()
+Qwen2Attention (QKV proj + RoPE) → AttentionLayer → get_attn_backend()
   → FiaAttentionBackendImpl → torch_npu FIA Kernel
-```text**Prefill 路径** (TND 布局)：
+**Prefill 路径** (TND 布局)：
 ```python
 seq_lens = torch.cumsum(attn_metadata.seq_lens, dim=0)
 attn_output, _ = torch_npu.npu_fused_infer_attention_score(
@@ -61,7 +62,8 @@ attn_output, _ = torch_npu.npu_fused_infer_attention_score(
     block_table=None, input_layout="TND",
     actual_seq_lengths=seq_lens.to(torch.int64),
     sparse_mode=3)   # sliding window 内建
-```text- 使用 `cumsum(seq_lens)` 构造变长边界
+```
+- 使用 `cumsum(seq_lens)` 构造变长边界
 - 显式传入 `atten_mask`，Sliding Window 通过 `sparse_mode=3` 实现
 
 **Decode 路径** (BSH 布局)：
@@ -72,7 +74,8 @@ attn_output, _ = torch_npu.npu_fused_infer_attention_score(
     actual_seq_lengths=[1] * len(seq_lens),
     actual_seq_lengths_kv=seq_lens,
     antiquant_scale=self.quant_method.kv_dequant_scale if ... else None)
-```text- Query reshape 为 `(batch, 1, q_size)`
+```
+- Query reshape 为 `(batch, 1, q_size)`
 - 传入 `block_table` 实现 Paged KV 读取
 - 支持 C8 量化 KV 反量化参数
 
@@ -87,7 +90,8 @@ workspace = torch_npu._npu_fused_infer_attention_score_get_max_workspace(...)
 output = torch.empty((batch_size, 1, num_heads*head_size), ...)
 torch_npu.npu_fused_infer_attention_score.out(
     ... workspace=workspace, out=[output, softmax_lse])
-```text- 当 `ForwardContext.capturing == True` 时触发
+```
+- 当 `ForwardContext.capturing == True` 时触发
 - 预分配 workspace 并使用 `.out( )` 变体写入固定地址
 
 **ATB 路径**（编译期构图）：
@@ -97,18 +101,19 @@ torch_npu.npu_fused_infer_attention_score.out(
 vLLM 采用 `vllm-flash-attn` 分叉包，**Prefill 和 Decode 使用不同 API**，并有完整的多 Backend 降级链。
 
 **调用链路**：
-```textLlamaAttention (QKV proj + RoPE) → Attention.forward
+LlamaAttention (QKV proj + RoPE) → Attention.forward
   → FlashAttentionImpl.forward
     ├─ reshape_and_cache_flash()   # 写 paged KV
     └─ flash_attn_varlen_func / flash_attn_with_kvcache
-```text**Prefill 路径**：
+**Prefill 路径**：
 ```python
 attn_output = flash_attn_varlen_func(
     q=query, k=key, v=value,
     cu_seqlens_q=seq_start_loc, cu_seqlens_k=seq_start_loc,
     max_seqlen_q=..., max_seqlen_k=...,
     causal=True, window_size=...)
-```text- 使用 **1D flattened + cu_seqlens** 表示变长序列
+```
+- 使用 **1D flattened + cu_seqlens** 表示变长序列
 - causal mask 内建，window_size 参数控制 sliding window
 
 **Decode 路径**：
@@ -117,7 +122,8 @@ attn_output = flash_attn_with_kvcache(
     q=decode_query.unsqueeze(1),
     k_cache=key_cache, v_cache=value_cache,
     block_table=block_tables, cache_seqlens=seq_lens, causal=True)
-```text**KV Cache 管理**：
+```
+**KV Cache 管理**：
 - 写入调用 `torch.ops._C_cache_ops.reshape_and_cache_flash`，参数名 `slot_mapping`
 - block_size 默认 16，可配置
 - block_table shape 为 `[batch, max_blocks_per_seq]`
@@ -130,7 +136,8 @@ flowchart LR
     D -->|No| F{XFORMERS?} -->|Yes| G[XFormersBackend (fallback)]
     F -->|No| H{FLASH_ATTN?} -->|Yes| I[FlashAttentionBackend (默认)]
     H -->|No| J[Auto → 自动检测降级]
-```text降级条件：SM<80、dtype 非 fp16/bf16、block_size%16≠0、head_size 不支持、无 FA 包。
+```
+降级条件：SM<80、dtype 非 fp16/bf16、block_size%16≠0、head_size 不支持、无 FA 包。
 
 ### 3.4 MindIE 与 vLLM Prefill/Decode 对比
 

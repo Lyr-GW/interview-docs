@@ -75,7 +75,8 @@ Deployer YAML · ConfigMap
     CO --> NM
     CTRL --- etcd
     k8s -.->|部署| CTRL
-```text**通信关系：**
+```
+**通信关系：**
 
 | 调用方 | 被调用方 | 协议/路径 | 用途 |
 |--------|---------|-----------|------|
@@ -131,7 +132,8 @@ flowchart TB
     end
     etcd_lock -->|acquire/renew| standby
     etcd_lock -->|acquire/renew| master
-```text**切换流程：**
+```
+**切换流程：**
 1. Master renew 租约失败 → 设置角色为 STANDBY，停止 Infer Workers，更新 RoleShm 为 0。
 2. Standby 通过 `try_become_master()` 获取 etcd 锁。
 3. 获取成功后设置角色为 MASTER，Controller 启动全部业务模块，Coordinator 启动 Infer Workers，RoleShm 置 1。
@@ -182,7 +184,8 @@ class EndpointFactory:
         "vllm": "motor.engine_server.core.vllm.vllm_endpoint.VLLMEndpoint",
         "sglang": "motor.engine_server.core.sglang.sglang_endpoint.SGLangEndpoint",
     }
-```text提供 `MgmtEndpoint`（/status, /metrics）和 `InferEndpoint`（OpenAI 兼容推理）。
+```
+提供 `MgmtEndpoint`（/status, /metrics）和 `InferEndpoint`（OpenAI 兼容推理）。
 
 **Node Manager** 同 Pod 部署，包含：
 - `EngineManager`：启动时注册，接收 start_cmd 写 ranktable；支持 503 触发的 re-register。
@@ -212,7 +215,8 @@ sequenceDiagram
     R->>ED: decode stream forward
     ED-->>C: SSE 流式回传
     Note over IW,S: 完成后 update_workload(RELEASE)
-```text#### 数据流
+```
+#### 数据流
 - 令牌化（TokenizerManager）在 Coordinator 侧完成。
 - KV Cache Affinity 模式下，Prefill 选择前向 Conductor 查询最长前缀匹配，若无匹配则降级。
 

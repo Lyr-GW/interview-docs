@@ -54,7 +54,8 @@ flowchart TB
     PrePost --> Policies
     Policies --> Queues
     Queues --> BlockSpaceManager
-```text## 3. 实现细节
+```
+## 3. 实现细节
 ### 3.1 调度队列与请求状态机
 **vLLM v1** (`vllm/v1/request.py`)
 - 状态枚举：`WAITING`、`WAITING_FOR_STRUCTURED_OUTPUT_GRAMMAR`、`WAITING_FOR_REMOTE_KVS`、`RUNNING`、`PREEMPTED`、`FINISHED_*`。
@@ -88,7 +89,8 @@ flowchart TB
     E --> F[ConvertToSchedulerOutput budget, policyOutput]
     F --> G[PostScheduler::SyncBatchInfo AllGather]
     G --> H[AsyncExecuteModel → PrepareNextSchedule]
-```text- `DecidePDPriority` 综合 StagePolicy、空闲 block 比例、Chunked Prefill 等因素决定 PREFILL_FIRST / DECODE_FIRST / MIX。
+```
+- `DecidePDPriority` 综合 StagePolicy、空闲 block 比例、Chunked Prefill 等因素决定 PREFILL_FIRST / DECODE_FIRST / MIX。
 - PreScheduler 跨 DP 同步优先级（多数投票）。
 - `PrepCandidatesForPolicy` 从队列拷贝候选序列，Policy::Apply 在预算内选择请求。
 - PostScheduler 通过 AllGather 对齐各 DP 的 batch 信息。

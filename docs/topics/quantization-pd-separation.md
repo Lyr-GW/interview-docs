@@ -50,7 +50,7 @@
 | FP4/NVFP4 | ÷4+ | ✓ | ×4 | Blackwell；需 block scale |
 
 #### 关键代码路径
-```textvllm/model_executor/layers/quantization/
+vllm/model_executor/layers/quantization/
   __init__.py
   fp8.py
   auto_gptq.py
@@ -61,7 +61,7 @@
   utils/nvfp4_utils.py
 vllm/config/cache.py          # cache_dtype
 vllm/v1/kv_cache_interface.py # KVQuantMode
-```text### 3.2 GPTQ vs AWQ
+### 3.2 GPTQ vs AWQ
 
 | | GPTQ | AWQ |
 |--|------|-----|
@@ -76,12 +76,12 @@ vllm/v1/kv_cache_interface.py # KVQuantMode
 4. **Accumulator 精度**：attention 内部累加器必须保持 FP32，输出前再 clamp 到 FP8（`triton_unified_attention.py`）。
 
 #### 关键代码路径
-```textvllm/model_executor/layers/quantization/fp8.py
+vllm/model_executor/layers/quantization/fp8.py
 vllm/model_executor/layers/quantization/utils/fp8_utils.py
 vllm/model_executor/layers/quantization/kv_cache.py
 vllm/v1/kv_cache_interface.py
 vllm/v1/attention/backends/triton_unified_attention.py
-```text### 3.4 精度验收与回归流程
+### 3.4 精度验收与回归流程
 **三层验收**：
 1. 烟雾测试：PPL 偏离 < 阈值。
 2. 标准 Benchmark：MMLU / GSM8K / HumanEval（数学和代码最敏感）。
@@ -111,9 +111,9 @@ vllm/v1/attention/backends/triton_unified_attention.py
 - Concurrent 下 TTFT ≈ max(T_prefill, T_transfer)，对长 Prefill 延迟改善明显。
 
 #### 关键代码路径
-```textvllm/v1/core/scheduler.py
+vllm/v1/core/scheduler.py
 vllm/v1/engine/unified_pd.py  # Handoff 串行 vs Concurrent 并行路由
-```text### 3.7 Motor 调度与路由事实
+### 3.7 Motor 调度与路由事实
 - `_KVA_ROLES = {ROLE_P, ROLE_U}` —— D 节点不注册 Conductor（`conductor_api_client.py`）。
 - KVA 调度仅作用于 P 节点：`kv_cache_affinity.py` 检查 `role==ROLE_P`。原因：Prefix 索引只在写入侧有意义，D 只消费。
 - **Capability 检查**：P/D capability 无交集 → 返回 503（`dispatch.py`）。
@@ -121,18 +121,18 @@ vllm/v1/engine/unified_pd.py  # Handoff 串行 vs Concurrent 并行路由
 
 ### 3.8 传输 vs 重算临界点分析
 量化公式：
-```text|KV| ≈ 2 × L × N_layers × H × dtype_bytes
+|KV| ≈ 2 × L × N_layers × H × dtype_bytes
 T_transfer = |KV|/BW + T_handshake
 T_recompute ≈ L × t_prefill_per_token
-```text传优于算当 `T_transfer < T_recompute`。
+传优于算当 `T_transfer < T_recompute`。
 
 **关键认知**：PD 分离的核心收益是**干扰消除与独立扩缩**，并非「传比算快」。  
 数量级示例：70B，L=8K，80 层，H=8192，FP16 → |KV|≈21 GB；100 Gbps 有效带宽约 10 GB/s → 传输约 2 s，而同配置 Prefill 可能仅 200–800 ms——此时传输更慢，但 D 池不被 P 阻塞，仍可能整体更优。  
 Layerwise 传输与 Delta 传输（只传未命中 Suffix）可大幅改善临界点。
 
 ### 3.9 PD 与 Prefix Cache 协同
-```textKVA 选最长前缀 P → P 只算 suffix → 传 delta KV → D 消费
-```text- SGLang Decode 端显式发送 delta indices。
+KVA 选最长前缀 P → P 只算 suffix → 传 delta KV → D 消费
+- SGLang Decode 端显式发送 delta indices。
 - vLLM 通过 `get_num_new_matched_tokens` 传递 metadata，connector 据此传输增量 KV。
 
 

@@ -64,7 +64,8 @@ hash_block(prefix_hash, block_tokens):
 hash_combine(seed, val):
     seed ^= hash(val) + 0x9e3779b97f4a7c15 + (seed << 6) + (seed >> 2)
     return 1 if seed == 0 else seed % 2^64
-```text**关键特性**：
+```
+**关键特性**：
 - 链式嵌套：每个 Block 的 hash 依赖前一个 Block 的 hash，保证顺序敏感
 - 64-bit 空间：碰撞概率极低，且用于 KV Cache key 无安全需求
 - EXTRA_HASH=0 终止符：防止"abc" + "d" 与 "ab" + "cd" 碰撞
@@ -93,7 +94,8 @@ flowchart LR
     F -->|否| H[正常推理]
     G --> I[Forward 跳过已缓存部分]
     I --> J[put_prefix_kvcache_to_mempool<br/>新 block 写入分布式存储]
-```text### 3.4 SCP（Sequence Context Parallelism）适配
+```
+### 3.4 SCP（Sequence Context Parallelism）适配
 MindIE 深度适配序列并行场景（sp_size > 1 或 cp_size > 1）：
 - **Block 分布**：Token 按 round-robin 分配到各 SCP 维度（sp × cp）
 - **Hash Key 含 Rank 信息**：`"{hash}_{scp_rank}_{scp_size}_{model_name}"`，防止跨 rank 冲突

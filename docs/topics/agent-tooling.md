@@ -44,7 +44,8 @@ NVIDIA Dynamo 推出三层优化弥合 harness（智能体框架）与 orchestra
     }
   }
 }
-```text| 字段 | 类型 | 说明 |
+```
+| 字段 | 类型 | 说明 |
 |------|------|------|
 | `priority` | int | 调度优先级，越高的值越重要。Dynamo 将其翻译为路由器队列排序和后端引擎优先级 |
 | `osl` (output sequence length) | int | Harness 预估的该请求将生成的 token 数，路由器用于评估 worker 占用时间，改进负载均衡 |
@@ -69,7 +70,8 @@ worker_id, dp_rank, overlap = await router.best_worker(
     router_config_override={"overlap_score_weight": 2.0} if len(token_ids) > 8192 else {}
 )
 stream = await router.generate(token_ids, model=model, worker_id=chosen_worker)
-```textNeMo Agent Toolkit 基于 Thompson Sampling bandit 构建自适应路由，从 `nvext` 提取会话元数据，相比默认路由：**4x** p50 TTFT 降低，**1.5x** p50 tokens/s 提升，**最高 **63%**** p50 TTFT 降低（中等内存压力下）。
+```
+NeMo Agent Toolkit 基于 Thompson Sampling bandit 构建自适应路由，从 `nvext` 提取会话元数据，相比默认路由：**4x** p50 TTFT 降低，**1.5x** p50 tokens/s 提升，**最高 **63%**** p50 TTFT 降低（中等内存压力下）。
 
 ### 3.3 智能体感知的 **KV Cache** 管理
 #### 核心问题
@@ -85,8 +87,8 @@ stream = await router.generate(token_ids, model=model, worker_id=chosen_worker)
 传统 LRU 可能因几秒的工具调用暂停就让关键前缀被驱逐。
 
 #### 4 层内存层次
-```textGPU (HBM) ──ns──→ CPU (pinned DRAM) ──μs──→ Local NVMe ──ms──→ Remote Storage (NIXL, RDMA)
-```text采用写穿透路径，每个 block 经序列哈希在全局注册表去重，不可变寻址。子 agent 冷启动时，路由器通过 Flash Indexer 找到共享存储中的 block，直接用 RDMA 加载而无需重算，将 4 次冗余预填充变为 1 次计算 + 3 次加载。
+GPU (HBM) ──ns──→ CPU (pinned DRAM) ──μs──→ Local NVMe ──ms──→ Remote Storage (NIXL, RDMA)
+采用写穿透路径，每个 block 经序列哈希在全局注册表去重，不可变寻址。子 agent 冷启动时，路由器通过 Flash Indexer 找到共享存储中的 block，直接用 RDMA 加载而无需重算，将 4 次冗余预填充变为 1 次计算 + 3 次加载。
 
 #### 选择性缓存保留
 - **TokenRangeRetentionConfig**：在请求内按范围设定保留策略（system prompt 优先级 100，对话上下文 duration 45s，decode token 优先级 1）。
