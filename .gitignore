@@ -1,0 +1,5 @@
+.aggregator-state.json
+__pycache__/
+*.pyc
+site/
+.cache/

@@ -1,0 +1,78 @@
+site_name: Interview Docs
+site_description: LLM 推理工程面试知识库
+site_url: https://lyr-gw.github.io/interview-docs/
+repo_url: https://github.com/lyr-gw/interview-docs
+repo_name: lyr-gw/interview-docs
+edit_uri: ""
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search:
+      lang: zh
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - footnotes
+  - toc:
+      permalink: true
+
+nav:
+  - 首页: index.md
+  - 变更记录: changelog.md
+  - 推理引擎核心:
+    - KV Cache 亲和调度: topics/kv-cache-affinity.md
+    - 投机推理: topics/speculative-decoding.md
+    - Flash Attention: topics/flash-attention.md
+    - 调度器: topics/scheduler.md
+    - Function Call 与结构化输出: topics/function-call-structured-output.md
+    - Prefix Cache: topics/prefix-cache.md
+    - HTTP 服务层: topics/http-server.md
+  - 模型与框架:
+    - DeepSeek 模型: topics/deepseek-models.md
+    - 推理框架对比: topics/inference-frameworks.md
+    - PyMotor 架构: topics/pymotor-architecture.md
+    - 量化与PD分离: topics/quantization-pd-separation.md
+  - 技术专题:
+    - 性能分析与调优: topics/profiling.md
+    - K8s 与基础设施: topics/k8s-infra.md
+    - Attention 技术: topics/attention-techniques.md
+    - 训练技术: topics/training-techniques.md
+    - Agent 与工具链: topics/agent-tooling.md
+    - LLM 探针攻击: topics/llm-probing.md
+  - 面试:
+    - 面试策略与问答: topics/interview-strategy.md
