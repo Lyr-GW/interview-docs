@@ -1,198 +1,154 @@
 # 训练技术
-
-> 来源: 4 files | 最后更新: 2026-07-11
-
-## 核心概念
-
-> **Muon Optimizer 正交化优化器** | 类型: technique | 标签: `training`, `optimization`
-
-# Muon Optimizer 正交化优化器
-*(来源: wiki/ai/techniques/muon-optimizer.md)*
-
-> **On-Policy Distillation 策略蒸馏 (OPD)** | 类型: technique | 标签: `training`, `distillation`, `fine-tuning`
-
-# On-Policy Distillation 策略蒸馏 (OPD)
-*(来源: wiki/ai/techniques/on-policy-distillation.md)*
-
-> **Manifold-Constrained Hyper-Connections 流形约束超连接 (mHC)** | 类型: technique | 标签: `architecture`, `training`
-
-# Manifold-Constrained Hyper-Connections 流形约束超连接 (mHC)
-*(来源: wiki/ai/techniques/manifold-constrained-hyper-connections.md)*
-
-> **DeepSeekMoE 细粒度混合专家架构** | 类型: technique | 标签: `architecture`, `moe`
-
-# DeepSeekMoE
-*(来源: wiki/ai/techniques/deepseek-moe.md)*
-
-## 深入分析
-
-### Algorithm ^[raw/papers/deepseek-v4-2026.md]
-
-For each logically independent weight matrix W at training step t:
-
-1. Compute gradients G_t = ∇L_t(W_{t-1})
-2. Accumulate momentum: M_t = μM_{t-1} + G_t
-3. Apply Nesterov trick and hybrid Newton-Schulz iterations to orthogonalize: O'_t = HybridNewtonSchulz(μM_t + G_t)
-4. Rescale the update RMS: O_t = O'_t · sqrt(max(n,m)) · γ
-5. Apply weight decay and update: W_t = W_{t-1}(1 - ηλ) - ηO_t
-
-*(来源: wiki/ai/techniques/muon-optimizer.md)*
-
-### Usage in V4
-
-- **Muon** is used for the majority of parameters (all transformer weights, MoE weights)
-- **AdamW** is retained for: embedding module, prediction head, mHC static biases and gating factors, and all RMSNorm weights
-- Both use the same learning rate schedule through RMS rescaling (γ=0.18 for Muon)
-- Momentum μ=0.95, weight decay λ=0.1
-
-### Hybrid Newton-Schulz Iterations
-
-A key difference from prior Muon implementations: ^[raw/papers/deepseek-v4-2026.md]
-
-- Uses a two-stage approach with 10 total iterations
-- **Stage 1** (8 iterations): Coefficients (3.4445, -4.7750, 2.0315) — rapid convergence
-- **Stage 2** (2 iterations): Coefficients (2, -1.5, 0.5) — stabilize singular values precisely at 1
-
-### Efficient Implementation
-
-The Muon implementation required several infrastructure innovations: ^[raw/papers/deepseek-v4-2026.md]
-
-- **Hybrid ZeRO**: Dense parameters use a knapsack algorithm for balanced assignment; MoE experts are optimized independently and padded for even distribution
-- **BF16 Newton-Schulz**: Iterations remain stable with BF16 precision, halving communication volume
-- **All-to-all + FP32 local sum**: Prevents accumulation errors from low-precision reduce-scatter
-
----
-
-**Related pages:** [[deepseek-v4-pro]], [[deepseek-v4-flash]], [[deepseek]]
-
-*(来源: wiki/ai/techniques/muon-optimizer.md)*
-
-### Two-Stage Pipeline
-
-### Stage 1: Specialist Training
-Domain-specific expert models are independently trained for mathematics, coding, agent, and instruction following: ^[raw/papers/deepseek-v4-2026.md]
-
-1. **SFT**: Supervised Fine-Tuning on high-quality domain-specific data
-2. **RL**: Group Relative Policy Optimization (GRPO) with domain-specific reward models
-
-This produces a diverse set of specialized experts, each excelling in its respective field.
-
-### Stage 2: Unified Model via OPD
-The unified student model learns from all teacher models via reverse KL divergence:
-
-```
-L_OPD(θ) = Σ_i w_i · D_KL(π_θ || π_Ei)
-```
-
-Key aspects: ^[raw/papers/deepseek-v4-2026.md]
-
-- **On-policy**: Training trajectories are sampled from the student π_θ, not the teachers
-- **Full-vocabulary logits**: Unlike prior work that uses token-level KL estimates, V4 performs full-vocabulary logit distillation for more stable gradients and faithful knowledge transfer
-- **10+ teachers**: More than ten teacher models across various domains are used
-
-*(来源: wiki/ai/techniques/on-policy-distillation.md)*
-
-### Infrastructure
-
-Full-vocabulary OPD at scale required significant engineering: ^[raw/papers/deepseek-v4-2026.md]
-
-- Teacher weights are offloaded to distributed storage, loaded on demand with ZeRO-like sharding
-- Only last-layer hidden states are cached; logits are reconstructed on the fly via the prediction head
-- Samples are ordered by teacher index so each teacher head loads only once per mini-batch
-- A specialized TileLang kernel computes exact KL divergences efficiently
-
-*(来源: wiki/ai/techniques/on-policy-distillation.md)*
-
-### Comparison to Alternatives
-
-OPD circumvents the performance degradation common in traditional weight-merging approaches. By consolidating knowledge at the logits level, the unified model selectively learns from the relevant expert for each task context — e.g., aligning with the math expert for math reasoning. ^[raw/papers/deepseek-v4-2026.md]
-
----
-
-**Related pages:** [[deepseek-v4-pro]], [[deepseek]], [[deepseek-moe]]
-
-*(来源: wiki/ai/techniques/on-policy-distillation.md)*
-
-### Motivation
-
-Standard Hyper-Connections (HC) expand the residual stream by a factor of nhc, introducing three learned linear mappings (input, residual, and output). While effective, HC suffers from numerical instability when stacking many layers — the training frequently exhibits spikes that hinder scaling. ^[raw/papers/deepseek-v4-2026.md]
-
-*(来源: wiki/ai/techniques/manifold-constrained-hyper-connections.md)*
-
-### Core Innovation
-
-mHC constrains the residual mapping matrix B_l to the **Birkhoff polytope** (the set of doubly stochastic matrices). This guarantees: ^[raw/papers/deepseek-v4-2026.md]
-
-- **Spectral norm ≤ 1** — the residual transformation is non-expansive, ensuring stable signal propagation
-- **Closure under multiplication** — stability persists in deep stacks
-- **Non-negative bounded A_l and C_l** via sigmoid — prevents signal cancellation
-
-*(来源: wiki/ai/techniques/manifold-constrained-hyper-connections.md)*
-
-### Implementation
-
-The constraint is enforced via the **Sinkhorn-Knopp algorithm**: ^[raw/papers/deepseek-v4-2026.md]
-
-1. Apply exponential to the raw B matrix (ensure positivity)
-2. Iteratively normalize rows and columns (20 iterations)
-3. The result is a doubly stochastic matrix
-
-Parameters are dynamically generated from a combination of input-dependent (learned projections) and input-independent (static bias) components, with learnable gating factors initialized to small values.
-
-*(来源: wiki/ai/techniques/manifold-constrained-hyper-connections.md)*
-
-### Engineering
-
-In the V4 training framework, mHC adds only ~6.7% wall-time overhead to the overlapped 1F1B pipeline stage, thanks to: ^[raw/papers/deepseek-v4-2026.md]
-
-- Dedicated fused kernels for training and inference
-- Selective recomputation of intermediate tensors
-- Adjusted DualPipe 1F1B overlapping scheme
-- mHC matrix multiplications with output dimension only 24 (nhc=4 × small dimension)
-
-*(来源: wiki/ai/techniques/manifold-constrained-hyper-connections.md)*
-
-### V4 Configuration
-
-In both V4-Pro and V4-Flash: nhc = 4, Sinkhorn-Knopp iterations tmax = 20.
-
----
-
-**Related pages:** [[deepseek-v4-pro]], [[deepseek-v4-flash]]
-
-*(来源: wiki/ai/techniques/manifold-constrained-hyper-connections.md)*
-
-### Key Features ^[raw/papers/deepseek-v4-2026.md]
-
-- **Fine-grained routed experts**: A large number of small experts (256-384 per layer in V4) vs traditional MoE's few large experts
-- **Shared experts**: Each MoE layer has 1 shared expert alongside routed experts
-- **Per-token expert activation**: 6 routed experts activated per token
-
-*(来源: wiki/ai/techniques/deepseek-moe.md)*
-
-### V4-Specific Changes
-
-The V4 series makes several adjustments over DeepSeek-V3: ^[raw/papers/deepseek-v4-2026.md]
-
-- **Activation function change**: From Sigmoid() to Sqrt(Softplus()) for affinity scores
-- **Removed routing target constraints**: No limit on routing target nodes
-- **Hash routing in early layers**: First 3 MoE layers use hash routing (deterministic expert assignment by token ID) instead of learned routing
-- **Auxiliary-loss-free strategy**: Same as V3 — bias-based load balancing with slight sequence-wise balance loss (weight 0.0001)
-- **FP4 MoE weights**: Routed expert parameters use FP4 quantization-aware training for inference efficiency
-
----
-
-**Related pages:** [[deepseek-v4-pro]], [[deepseek-v4-flash]], [[deepseek]], [[on-policy-distillation]]
-
-*(来源: wiki/ai/techniques/deepseek-moe.md)*
-
-## 面试要点
-
-*该主题暂无专门的面试要点文件*
-
-## 源文件索引
-
-- wiki/ai/techniques/muon-optimizer.md — Muon Optimizer 正交化优化器
-- wiki/ai/techniques/on-policy-distillation.md — On-Policy Distillation 策略蒸馏 (OPD)
-- wiki/ai/techniques/manifold-constrained-hyper-connections.md — Manifold-Constrained Hyper-Connections 流形约束超连接 (mHC)
-- wiki/ai/techniques/deepseek-moe.md — DeepSeekMoE 细粒度混合专家架构
+> 覆盖 4 个知识点 | 来源 4 个文件 | 更新于 2026-07-11
+
+## 1. 一句话总结
+大规模语言模型训练面临收敛慢、数值不稳定、多专家知识整合困难等挑战。DeepSeek V4 系列通过正交梯度优化器 Muon 加速收敛并提升稳定性，流形约束超连接 mHC 消除深层网络中的信号异常，混合专家架构 DeepSeekMoE 实现高效稀疏计算，以及策略蒸馏 OPD 统一多个领域专家模型，构成一套完整的训练技术栈。
+
+## 2. 核心原理
+### 2.1 问题背景
+- **收敛速度与稳定性**：传统自适应优化器（如 AdamW）在超大规模模型上收敛缓慢，且梯度方向可能出现异常，导致训练震荡。
+- **深层网络信号退化**：标准残差连接在堆叠过多层时容易产生数值不稳定、梯度消失或爆炸，普通超连接虽能加宽残差流但自身缺乏稳定性约束。
+- **多专家知识整合**：不同领域独立训练出的专家模型（数学、代码、指令跟随等）难以直接合并，权重合并会降低性能，需要更高效的蒸馏方式。
+- **稀疏计算效率**：传统稠密 Transformer 参数量巨大，引入专家混合需要高效负载均衡、路由设计及低精度支持。
+
+### 2.2 方案概述
+DeepSeek V4 训练系统由以下技术协同工作：
+- **Muon 优化器**：对绝大多数参数使用基于牛顿–舒尔茨迭代的正交化更新，保持梯度方向稳定并加速收敛，仅对嵌入、预测头、归一化层等少量参数保留 AdamW。
+- **流形约束超连接 (mHC)**：将残差映射矩阵约束到双随机矩阵流形，确保每层变换非膨胀，杜绝深层堆叠时的数值爆炸或抵消。
+- **DeepSeekMoE**：使用大量细粒度路由专家、共享专家、哈希路由等方式，结合量化感知训练，在保持推理高效的同時提升多专家协作。
+- **策略蒸馏 (OPD)**：先训练领域专家，再用学生模型在自身策略上通过反向 KL 散度学习所有教师的完整词表 logits，统一多专家知识而不退化。
+
+## 3. 实现细节
+### 3.1 Muon 正交优化器
+Muon 取代 AdamW 训练主要参数矩阵，通过正交化梯度实现更快的收敛和更高的训练稳定性。
+
+**算法流程**（每步迭代）：
+1. 计算梯度 `G_t`。
+2. 累积动量 `M_t = μ M_{t-1} + G_t`，μ=0.95。
+3. Nesterov 技巧 + 混合牛顿–舒尔茨迭代正交化：`O'_t = HybridNewtonSchulz(μ M_t + G_t)`。
+4. RMS 重缩放：`O_t = O'_t · sqrt(max(n,m)) · γ`，γ=0.18。
+5. 权重衰减与更新：`W_t = W_{t-1}(1 - ηλ) - η O_t`。
+
+**混合牛顿–舒尔茨迭代**：
+- 共 10 次迭代，分两阶段：
+  - 阶段 1（8 次）：系数 (3.4445, -4.7750, 2.0315)，快速收敛。
+  - 阶段 2（2 次）：系数 (2, -1.5, 0.5)，将奇异值精确稳定在 1。
+- 支持 BF16 精度，通信量减半；All-to-all + FP32 局部求和避免低精度归约误差。
+
+**工程实现**：
+- **混合 ZeRO**：密集参数使用背包算法均衡分配；MoE 专家独立优化并填充对齐。
+- **高效融合内核**：专用于训练与推理，与管道并行 DualPipe 1F1B 重叠。
+
+### 3.2 流形约束超连接 (mHC)
+扩展残差流的宽度并约束映射到双随机矩阵流形，消除深层堆叠的不稳定。
+
+**动机**：标准超连接 (HC) 引入可学习的输入、残差、输出映射，但在深度增加时会出现训练尖峰。
+
+**约束方法**：
+- 残差映射矩阵 `B_l` 强制为双随机矩阵（Birkhoff 多胞体）：
+  - 谱范数 ≤ 1，保证非膨胀传播。
+  - 乘法封闭性，深层依旧稳定。
+  - 输入/输出映射 `A_l`、`C_l` 经 sigmoid 限幅为非负有界，避免信号抵消。
+- 实现通过 **Sinkhorn-Knopp 算法**：对原始矩阵取指数保正，迭代 20 次行/列归一化，生成双随机矩阵。
+- 参数由输入依赖投影与静态偏置动态生成，可学习门控因子初始化为小值。
+
+**工程开销**：在 V4 中仅增加约 6.7% 的管道阶段墙钟开销，得益于融合内核、选择性重计算、1F1B 重叠调整以及 mHC 的输出维度仅 24（nhc=4 × 小维度）。
+
+### 3.3 DeepSeekMoE 混合专家架构
+作为 FFN 范式应用于 V4，在大量细粒度专家中动态选择。
+
+**核心特性**：
+- **细粒度路由专家**：每层 256–384 个小专家，每 token 激活 6 个。
+- **共享专家**：每层 1 个，提供通用知识。
+- **激活函数变更**：亲和度分数从 Sigmoid 改为 `Sqrt(Softplus())`。
+- **哈希路由**：前 3 个 MoE 层使用确定性按 token ID 分配，替代学习路由。
+- **无辅助损失负载均衡**：沿用 V3 的偏置均衡，辅以极小序列级平衡损失（权重 0.0001）。
+- **FP4 量化**：路由专家参数使用 FP4 量化感知训练，提升推理效率。
+
+### 3.4 策略蒸馏 (OPD)
+从多个领域专家模型蒸馏出一个统一模型，替代混合 RL 阶段。
+
+**两阶段流程**：
+1. **专家训练**：对数学、编码、Agent、指令遵循等领域分别进行 SFT + GRPO 强化学习，得到领域专精教师。
+2. **统一蒸馏**：学生模型 π_θ 采样生成轨迹，通过反向 KL 散度从所有教师学习：
+   ```
+   L_OPD(θ) = Σ_i w_i · D_KL(π_θ || π_Ei)
+   ```
+   - 全词表 logits 蒸馏：不依赖 token 级 KL 近似，直接计算完整 logits，梯度更稳定、知识迁移更忠实。
+   - 10+ 教师同时使用。
+   - 样本按教师索引排序，每教师头在小批次内仅加载一次。
+
+**工程优化**：
+- 教师权重按需从分布式存储加载，使用类 ZeRO 分片。
+- 仅缓存最后一层隐状态，通过预测头在线重建 logits。
+- 使用 TileLang 定制内核高效计算精确 KL 散度。
+
+## 4. 框架对比
+### 4.1 Muon vs AdamW
+| 维度 | Muon | AdamW |
+|------|------|-------|
+| 更新机制 | 正交化动量梯度，显式控制方向 | 自适应学习率，对角预处理 |
+| 收敛速度 | 更快，适合超大规模训练 | 一般 |
+| 稳定性 | 牛顿–舒尔茨迭代保证奇异值接近 1 | 依赖 ε 和 β 参数 |
+| 适用范围 | 大权重矩阵（Transformer、MoE） | 嵌入、预测头、归一化层、偏置 |
+
+### 4.2 策略蒸馏 vs 传统权重合并
+| 维度 | OPD | 权重合并 |
+|------|-----|----------|
+| 知识整合方式 | 在 logits 层面按输入上下文动态对齐 | 参数空间线性插值 |
+| 性能退化 | 无，学生选择性学习相关专家 | 常见性能下降，难以保持各领域优势 |
+| 可扩展性 | 支持 10+ 教师，全词表蒸馏 | 合并后难以动态调整 |
+
+### 4.3 mHC vs 标准残差/普通超连接
+| 维度 | mHC | 传统残差 | 普通超连接 |
+|------|-----|----------|------------|
+| 残差流宽度 | 扩展 nhc 倍 | 单分支 | 扩展 nhc 倍 |
+| 稳定性保证 | 双随机矩阵约束，谱范数 ≤ 1 | 无保证，深层可能出现问题 | 缺失数值约束，训练易出现尖峰 |
+| 额外开销 | 极小 (~6.7%) | 无 | 中等 |
+
+### 4.4 DeepSeekMoE vs 传统 MoE
+| 维度 | DeepSeekMoE | 传统 MoE |
+|------|-------------|----------|
+| 专家粒度 | 多而小 (256–384) | 少而大 |
+| 路由策略 | 哈希前三层 + 学习路由，Sqrt(Softplus) 亲和度 | 普遍学习路由，Sigmoid |
+| 负载均衡 | 无辅助损失偏置均衡 | 需辅助损失 |
+| 共享专家 | 有 | 通常无 |
+
+## 5. 面试要点
+### 5.1 常见追问
+#### Q: Muon 优化器的核心思想是什么？与 AdamW 有何本质区别？
+- Muon 通过牛顿–舒尔茨迭代将梯度矩阵正交化，使奇异值稳定在 1 附近，保证更新方向的独立性与稳定性。
+- AdamW 采用自适应学习率和动量，但不显式控制梯度矩阵的几何结构，深层模型下方向分散。
+- Muon 在超大规模模型上收敛更快、训练更稳定，但实现复杂度更高。
+
+#### Q: mHC 如何解决深层网络的不稳定问题？
+- 将残差映射矩阵约束为双随机矩阵，谱范数 ≤ 1，保证信息传递非膨胀。
+- Sinkhorn-Knopp 算法迭代归一化形成双随机矩阵，防止信号爆炸或抵消。
+- 输入/输出映射通过 sigmoid 确保非负有界，避免相消干扰。
+
+#### Q: On-Policy Distillation 为什么优于传统权重合并？
+- 学生从自身策略生成的数据中学习，与教师对齐的是行为分布而非参数。
+- 全词表 logits 蒸馏保留完整知识，避免 token 级近似误差。
+- 学生能够根据输入上下文动态对齐相关专家，不会因参数简单平均而抹平专长。
+
+#### Q: DeepSeekMoE 如何实现负载均衡而不依赖辅助损失？
+- 采用偏置动态调整：为每个专家维护偏置项，当专家过载时降低偏置以减少指派概率。
+- 与极小的序列级平衡损失（权重 0.0001）结合，即可维持负载均衡，避免辅助损失对梯度信噪比的影响。
+
+### 5.2 口述话术
+“DeepSeek V4 训练用了一套组合工程优化：Muon 优化器替代 AdamW 做正交化更新，配合 mHC 流形约束消除深层不稳定性；MoE 架构用几百个小专家每 token 激活 6 个，前三层哈希路由，FP4 量化兼顾效率；最后通过 On-Policy 蒸馏把多个领域专长统一到一个模型里。这几个方法一起解决了收敛慢、数值不稳定和多专家整合难题。”
+
+## 6. 延伸阅读
+### 6.1 相关主题
+- DeepSeek-V4 模型系列（Pro / Flash）
+- 分布式训练混合 ZeRO、DualPipe 调度
+- 组相对策略优化 (GRPO)
+- 高质量 SFT 数据构建
+
+### 6.2 源文件
+| 文件路径 | 标题 | 类型 |
+|--------|------|------|
+| wiki/ai/techniques/muon-optimizer.md | Muon Optimizer 正交化优化器 | 技术文档 |
+| wiki/ai/techniques/on-policy-distillation.md | On-Policy Distillation 策略蒸馏 (OPD) | 技术文档 |
+| wiki/ai/techniques/manifold-constrained-hyper-connections.md | Manifold-Constrained Hyper-Connections 流形约束超连接 (mHC) | 技术文档 |
+| wiki/ai/techniques/deepseek-moe.md | DeepSeekMoE | 技术文档 |

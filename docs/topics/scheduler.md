@@ -1,23 +1,21 @@
 # 调度器与 Continuous Batching
+> 覆盖 9 个知识点 | 来源 3 个文件 | 更新于 2026-07-11
 
-> 来源: 3 files | 最后更新: 2026-07-11
+## 1. 一句话总结
+大模型推理通过 **PagedAttention** 将 KV Cache 切为固定块并按需映射，在 **Continuous Batching** 调度下，每步动态混合 prefill 与 decode 请求；调度器在 token/seq 预算、KV 容量和水位线约束下，使用抢占、chunked prefill、PD 分离等方法，实现高吞吐与低延迟。MindIE 进一步加入了可插拔 Stage Policy、多 DP 协同、Placeholder 异步流水线及边云层状调度等工程化扩展。
 
-## 核心概念
+## 2. 核心原理
+### 2.1 问题背景
+- **碎片与浪费**：传统按最大长度预留 KV 空间，短请求浪费巨大。
+- **动态批次难**：请求长度不一，每次 forward 需对齐形状，难以高效组批。
+- **长 prompt 延迟**：整段 prefill 阻塞其他请求，导致 decode 饥饿，TPOT P99 恶化。
+- **多机协同**：多 DP/PD 分离场景下，各 rank 的批次决策需要一致，否则会造成空计算或资源倾斜。
+- **异构调度**：昇腾 NPU 与边云场景需要感知 Block 布局、支持层级切分和延迟下发。
 
-> **MindIE-LLM Scheduler 调度器** | 类型: repo | 标签: `architecture`, `inference`, `scheduler`, `npu`, `mindie`
+### 2.2 方案概述
+将并发请求的 KV Cache 划为固定大小的 block，通过 block table 做逻辑到物理的映射（PagedAttention）。调度器维护等待/运行/换出等多条队列，每步根据 token 预算、并发度上限、KV 水位等约束，从队列中选取请求组成 batch，推进其 `num_computed_tokens`，无需区分固定的 prefill/decode 阶段。当内存不足时触发抢占（重算或换出），并通过 chunked prefill 将长 prompt 分块与 decode 混批，避免饥饿。在 PD 分离架构下，通过异步拉取远端 KV 实现无缝衔接。
 
-# MindIE-LLM Scheduler 调度器
-*(来源: wiki/repos/mindie-pyserver/scheduler.md)*
-
-> **Scheduler 调度器深度分析**
-
-# Scheduler 调度器
-*(来源: wiki/raw/articles/pyserver/scheduler_deep_analysis.md)*
-
-## 深入分析
-
-### 核心架构
-
+**MindIE Scheduler 架构概览**
 ```mermaid
 flowchart TB
     subgraph ENGINE_LAYER[ENGINE LAYER]
@@ -44,12 +42,23 @@ flowchart TB
     Queues --> BlockSpaceManager
 ```
 
-Scheduler 居中；Pre/Post 负责跨 DP；Policy 层可插拔；底层统一 Block 管理。[^scheduler]
+## 3. 实现细节
+### 3.1 PagedAttention 内存管理
+- **三层结构**（vLLM v1）：
+  - **物理池** `BlockPool`：管理所有 `KVCacheBlock`（`block_id` / `ref_cnt` / 哈希链 / 空闲链表）。
+  - **KV 分配接口** `KVCacheManager`：`allocate_slots()` 失败触发抢占；`get_computed_blocks()` 做前缀匹配。
+  - **Worker 映射** `BlockTable`：每请求一行，`block_table[req_row, logical_block_idx] = physical_block_id`；通过 kernel 计算 slot = `block_id * block_size + offset`。
+- **MindIE**：C++ 层 `BlockSpaceManager` 直接管理 NPU + CPU 块，支持 Prefix Cache computed blocks 和 Layerwise 双 BlockManager。
 
-*(来源: wiki/repos/mindie-pyserver/scheduler.md)*
+**前缀共享链式 hash**：  
+`block_hash = H(parent_hash, tokens_in_block, extra_keys)`，命中后可共享同一物理块，引入 `ref_cnt` 管理生命周期，未引用时方可 LRU 驱逐。
 
-### 三队列模型 + transferringMap
+### 3.2 队列模型与请求状态机
+#### vLLM v1 状态 (`vllm/v1/request.py`)
+`WAITING → WAITING_FOR_REMOTE_KVS → RUNNING / PREEMPTED → FINISHED_*`  
+队列：`waiting` / `skipped_waiting` / `running`（无 swapped，仅 recompute 抢占）。
 
+#### MindIE 三队列 + transferringMap
 | 队列 | 用途 |
 |------|------|
 | `waiting_` | 无 KV Block；新 Prefill 或 PD 分离 D 节点首次 Pull KV 前 |
@@ -57,24 +66,18 @@ Scheduler 居中；Pre/Post 负责跨 DP；Policy 层可插拔；底层统一 Bl
 | `swapped_` | KV 已 Swap 至 CPU；内存不足时暂存 |
 | `transferringMap_` | PD 分离：P 完成 Prefill 待 Publish / D Pull KV 中 |
 
-队列使用 `ConcurrentDeque`，调度线程通过 `Dequeue` 拷贝到 Policy 专属的 `SeqGroupCollection`（非并发 deque），Policy 输出后由 `BackfillConcurrentQueue` 写回。[^scheduler]
+MindIE 使用 `ConcurrentDeque`，调度线程通过 `Dequeue` 拷贝到 Policy 专属 `SeqGroupCollection`（非并发 deque），Policy 输出后由 `BackfillConcurrentQueue` 写回。
 
-*(来源: wiki/repos/mindie-pyserver/scheduler.md)*
+### 3.3 调度流程与预算控制
+#### vLLM v1 `schedule()` 核心路径 (`vllm/v1/core/sched/scheduler.py`)
+1. `token_budget = max_num_scheduled_tokens`，受 `max_num_seqs` 约束。
+2. 先扫 `running` 队列：扣预算，`allocate_slots()` 失败 → 抢占队尾/低优先级请求。
+3. 再扫 `waiting` 队列：分配 block，确保 `watermark` 保留空闲块。
+4. 输出 `SchedulerOutput`：`num_scheduled_tokens`、`block_ids`、被抢占请求列表。
+   - 无独立 prefill/decode 阶段，仅维护 `num_computed_tokens` 追赶 `num_tokens_with_spec`。  
+   - `chunked_prefill` 关闭时，waiting 请求若所需 `num_new_tokens > budget` 则整段跳过。
 
-### Stage Policy 四种策略
-
-| 策略 | 类 | 决策逻辑 |
-|------|----|----------|
-| Prefill-First | `PrefillFirstPolicy` | 固定返回 `PREFILL_FIRST` |
-| TPT (吞吐优先) | `TptStagePolicy` | 基于 decode 浪费时间窗口，动态切换 P/D 优先级 |
-| Latency-First | `LatencyStagePolicy` | 松弛度 (Laxity) + LatencyPredictor 回归预测 |
-| Edge-Cloud | `EdgeCloudPolicy` | 边云 Layerwise：跟踪 P/D batch 计数，配合延迟下发 |
-| Flex 时分 | `TimeDivisionPolicy` | FlexP/FlexD/FlexPnD 单实例多角色时分复用 |
-
-*(来源: wiki/repos/mindie-pyserver/scheduler.md)*
-
-### Schedule() 核心数据流
-
+#### MindIE `Scheduler::Schedule()` 流程 (`src/scheduler/scheduler.cpp:282`)
 ```mermaid
 flowchart TB
     A[Schedule] --> B[DecidePDPriority needSync<br/>← PreScheduler 跨 DP 同步]
@@ -85,572 +88,151 @@ flowchart TB
     F --> G[PostScheduler::SyncBatchInfo AllGather]
     G --> H[AsyncExecuteModel → PrepareNextSchedule]
 ```
-
-*(来源: wiki/repos/mindie-pyserver/scheduler.md)*
-
-### PreScheduler / PostScheduler 跨 DP 同步
-
-**PreScheduler** 在 P/D 决策前同步各 DP 的 `pdPriority_`、`waitingSeqGroupNum_`、`runningSeqGroupNum_`。多数票决策：PREFILL_FIRST 节点数 ≥ 半数 → PREFILL，否则 DECODE。「陪跑」节点（三队列全空）不参与 PD 决策。
-
-**PostScheduler** 在 batch 下发前对齐：
-- `SyncBatchInfo` — AllGather 各 DP 的 maxBatchSize / maxSeqLen，取全局 max
-- `SyncSeqLenList` — 先 AddPaddingData(-1)，AllGather 后按 batchSizeList 裁剪
-- `AllGatherBatchesAcrossDPs` — 集中式场景聚合各 DP 的 MetaDatas 与 SchedulerOutputs
-
-**多 DP 通信路径**：
-- **集中式**（同主机多 DP）：`ThreadGroupCC::AllGather`
-- **分布式**（跨节点）：`ProcessGroup::AllGather`
-
-*(来源: wiki/repos/mindie-pyserver/scheduler.md)*
-
-### 抢占机制
-
-| 模式 | 行为 | 限制 |
-|------|------|------|
-| `RECOMPUTE` | 将 running 请求退回 waiting 重算 | Parallel Sampling 不支持，会导致 abort |
-| `SWAP` | 将 KV 换出至 CPU | 需 CPU 内存预算 |
-
-*(来源: wiki/repos/mindie-pyserver/scheduler.md)*
-
-### PDDS 与 KV Transfer
-
-| 节点 | Schedule() | ScheduleTransfer() |
-|------|-----------|-------------------|
-| P | SchedulePrefill → transferringMap_ | `ReleaseKvPulledBlocks()` 回收已 Pull 的 KV |
-| D | ScheduleDecode（running + swapped） | `KVTransferSchedulePolicy::PickPullSeqGroup` → transferringMap_ |
-| PnD | 标准 FCFS / Chunked | 不调用 Transfer 调度 |
-
-D 节点 Pull 完成后，`KVPulledReqEnterRunningQueue` 将请求从 transferringMap_ 移入 running_。[^scheduler]
-
-*(来源: wiki/repos/mindie-pyserver/scheduler.md)*
-
-### 与 vLLM Scheduler 对比
-
-| 对比维度 | MindIE Scheduler | vLLM Scheduler |
-|----------|-----------------|----------------|
-| 实现语言 | C++ 引擎层 (`src/scheduler/`) | Python (`vllm/core/scheduler.py`) |
-| 接口抽象 | `IScheduler` 多态 + `MakeScheduler` 工厂 | 单一 `Scheduler` 类 |
-| 横切模块 | PreScheduler / PostScheduler 独立类 | 调度器内嵌 DP 逻辑 |
-| Policy 分层 | StagePolicy + Policy 分离 | 调度器内硬编码 scheduling policy |
-| Worker 交互 | Protobuf MetaDatas → ModelExecutor | 直接构造 SequenceGroupMetadata |
-| PD 分离 | 内置 PDDSPolicy + KVTransferSchedulePolicy | 需外部 Router / 自建方案 |
-| 前缀匹配 | C++ BlockSpaceManager 直接计算 | Python BlockAllocator hash |
-| 边云 Layerwise | LayerwiseFcfsPolicy + P 延迟下发 | 无对等内置能力 |
-| 异步调度 | `maxScheduledBatch_` + Placeholder -1 token | 同步；Pipeline Parallel 另有机制 |
-
-**结论**：MindIE Scheduler 在队列语义上与 vLLM 同源（waiting/running/swapped + continuous batching），但针对昇腾生产环境做了显著工程扩展：PDDS 内置 KV 传输调度、Pre/PostScheduler 多 DP 协同、异步 Placeholder 流水线、可插拔 StagePolicy 与边云 Layerwise。[^scheduler]
-
-[^scheduler]: [[raw/articles/pyserver/scheduler_deep_analysis.md]]
-
-*(来源: wiki/repos/mindie-pyserver/scheduler.md)*
-
-### 1\. 应用背景
-
-### 1.1 调度器在 MindIE LLM 中的角色
-
-MindIE LLM 是华为昇腾大模型推理加速套件的核心组件。在其 C++ 引擎层（`LlmEngine`）中，**Scheduler** 负责在有限 NPU HBM 与 CPU 内存预算下，决定每一轮 forward 哪些请求进入 batch、以 Prefill 还是 Decode 模式执行，以及如何分配 / 回收 / 迁移 KV Cache Block。
-
-Client / API AddSeqGroup LlmEngine SchedulerThread Scheduler Schedule / Transfer 三队列 + Policy ModelExecutor AsyncExecuteModel 昇腾 NPU
-
-请求从 API 入队，由独立调度线程驱动 Scheduler，输出 SequenceGroupMetaDatas 给 Executor
-
-### 1.2 解决的核心问题
-
-问题域| Scheduler 职责| 关键机制  
----|---|---  
-多请求并发| Continuous Batching| waiting / running / swapped 三队列 + FCFS Policy  
-KV Cache 内存| Block 分配与抢占| BlockSpaceManager + Recompute / Swap 抢占  
-Prefill ↔ Decode| 阶段切换决策| DecidePDPriority + StagePolicy  
-PD 分离部署| P 节点 Prefill / D 节点 Decode| PDDSPolicy + transferringMap_ + KV Transfer  
-多 DP 协调| 跨 rank 一致 batch| PreScheduler / PostScheduler AllGather  
-边云协同| Layerwise 动态切块| LayerwiseFcfsPolicy + EdgeCloudPolicy + P 延迟下发  
-  
-### 1.3 昇腾场景核心痛点
-
-**NPU 架构适配** 调度器在 C++ 层直接与 BlockSpaceManager 交互，需感知 SP/CP 多 rank Block Table、Prefix Cache computed blocks、以及 Layerwise 边云双 BlockManager。这与 vLLM Python 层 Scheduler 直接操作 BlockAllocator 的模式有本质差异。 
-
-  * **多 DP 协调** ：集中式（单进程多 DP）与分布式（跨节点 ProcessGroup）两套 AllGather 路径，避免 dummy batch 与 PD 决策不一致。
-  * **异步推理** ：`activateAsyncInference` 下最多 2 个 outstanding batch，依赖 Placeholder Token（-1）预占 KV slot。
-  * **PD 分离** ：MindIE 内置 PDDS + KV Pull/Publish 调度，无需外部 Router（对比 vLLM 常配合 SGLang Router 等）。
-
-
-
-### 1.4 与 vLLM Scheduler 的关系
-
-vLLM 的 Scheduler（V0 经典版 / V1 SchedulerCore）在 Python 层实现，与 GPU Worker 紧密耦合。MindIE 采用 `IScheduler` 接口 + C++ 实现，通过 `MakeScheduler()` 工厂创建，并拆出 PreScheduler（决策同步）与 PostScheduler（Batch 同步）两个横切模块——这是面向昇腾多机多 DP 与 PD 分离场景的工程化扩展，而非简单移植 vLLM 逻辑。
-
-*(来源: wiki/raw/articles/pyserver/scheduler_deep_analysis.md)*
-
-### 2\. 设计逻辑
-
-### 2.1 整体架构
-
-ENGINE LAYER Scheduler (IScheduler) CROSS-DP SYNC PreScheduler PostScheduler POLICY LAYER StagePolicy FcfsPolicy PDDSPolicy LayerwiseFcfs KVTransferPolicy QUEUE MODEL waiting_ running_ swapped_ transferringMap_ MEMORY BlockSpaceManager (NPU + CPU Blocks)
-
-Scheduler 居中；Pre/Post 负责跨 DP；Policy 层可插拔；底层统一 Block 管理
-
-### 2.2 三队列模型 + transferringMap
-
-**waiting_** 无 KV Block；新 Prefill 或 PD 分离 D 节点首次 Pull KV 前
-
-**running_** 已分配 Block；Decode 或 Chunked Prefill 进行中
-
-**swapped_** KV 已 Swap 至 CPU；内存不足时暂存
-
-**transferringMap_** PD 分离：P 完成 Prefill 待 Publish / D Pull KV 中
-
-队列使用 `ConcurrentDeque`，调度线程通过 `Dequeue` 拷贝到 Policy 专属的 `SeqGroupCollection`（非并发 deque），Policy 输出后由 `BackfillConcurrentQueue` 写回。P 节点 Prefill 完成后，非 last chunk 的 seq 进 `running_`，否则进 `transferringMap_` 等待 KV 传输。
-
-### 2.3 Stage Policy 四种策略
-
-策略| 类| 决策逻辑  
----|---|---  
-Prefill-First| `PrefillFirstPolicy`| 固定返回 `PREFILL_FIRST`  
-TPT (吞吐优先)| `TptStagePolicy`| 基于 decode 浪费时间窗口，动态切换 P/D 优先级  
-Latency-First| `LatencyStagePolicy`| 松弛度 (Laxity) + LatencyPredictor 回归预测  
-Edge-Cloud| `EdgeCloudPolicy`| 边云 Layerwise：跟踪 P/D batch 计数，配合延迟下发  
-Flex 时分| `TimeDivisionPolicy`| FlexP/FlexD/FlexPnD 单实例多角色时分复用  
-  
-### 2.4 Schedule() 数据流时序
-
-Schedule() DecidePDPriority PrepCandidates Policy.Apply Backfill ConvertToOutput PreScheduler 跨 DP (needSync) Dequeue → SeqGroupCollection + SchedulingBudget prefillPolicy_ / decodePolicy_ SchedulerOutputs + MetaDatas Engine: PostScheduler::SyncBatchInfo → AsyncExecuteModel → PrepareNextSchedule
-
-### 2.5 设计决策与权衡
-
-**(1) 同步 vs 异步调度** 默认同步每轮 1 batch（`maxScheduledBatch_=1`）。开启 `activateAsyncInference` 后可达 2+ outstanding batch，通过 Placeholder Token 预写 outputTokenIds 并预占 KV，Response 线程回填真实 token。权衡：提高 NPU 利用率 vs 占位符与 Prefix Cache 兼容性复杂度。 
-
-**(2) 集中式 vs 分布式多 DP** 同主机多 DP 用 `ThreadGroupCC::AllGather`；跨节点用 `ProcessGroup::AllGather`。PreScheduler 在 P/D 决策前同步；PostScheduler 在 batch 下发前对齐 maxBatchSize / seqLenList。权衡：通信开销 vs 避免 dummy request 与 batch 不对齐。 
-
-**(3) Preemption：Recompute vs Swap** `PreemptionMode::RECOMPUTE` 将 running 请求退回 waiting 重算；`SWAP` 将 KV 换出至 CPU。Parallel Sampling 不支持 Recompute，抢占会导致 abort。与 vLLM 的 RECOMPUTE/SWAP 语义对齐。 
-
-**(4) Chunked Prefill** `enableChunkedPrefill` 时 PnD 角色返回 `PDPriorityType::MIX`，Policy 同时从三队列取数；`isLastChunk_` 控制是否加入 placeholder / 输出 token。对比 vLLM 基于 token budget 的流式 partial prefill。 
-
-### 2.6 边云 Layerwise 延迟下发
-
-在 `layerwiseDisaggregated && dpSize==1` 且 PREFILL_FIRST 时，`LayerwiseDecidePDelay()` 可返回三种策略：
-
-  * `PREFILL_KEEP` — 正常下发 Prefill
-  * `PREFILL_TO_DECODE` — 本轮改调度 Decode（D batch 计数为 0 且有 running D）
-  * `PREFILL_SKIP` — 跳过本轮 Prefill（batchSize=0），等待边云侧响应
-
-
-
-`EdgeCloudPolicy` 维护 `prefillBatchCount_` / `decodeBatchCount_`，与 `LayerwiseMixin` 协同，向 TG 侧传递 `requestGap_`、`curWaitQueueLen_` 用于动态切图。
-
-*(来源: wiki/raw/articles/pyserver/scheduler_deep_analysis.md)*
-
-### 3\. 实现细节
-
-### 3.1 IScheduler 接口
-
-src/include/scheduler/ischeduler.h — 核心虚接口
-
-40| virtual void AddSeqGroup(SequenceGroupSPtr &seqGroup) = 0;  
----|---  
-42| virtual std::pair<SequenceGroupMetaDatas, SchedulerOutputs> Schedule(bool needSync = false) = 0;  
-44| virtual std::pair<SequenceGroupMetaDatas, SchedulerKVTransferOutput> ScheduleTransfer() = 0;  
-57| virtual void PrepareNextSchedule(std::vector<ScheduledSequenceGroupSPtr> &scheduledSeqGroups) = 0;  
-54| virtual void FetchSeqGeneratedTokens(ConcurrentDeque<...> &queue) = 0; // 异步占位符回填  
-71| SchedulerPtr MakeScheduler(SchedulerConfigSPtr, LatencyPredictor, Role pdRole, size_t localDPRank);  
-  
-### 3.2 Scheduler::Schedule() 核心流程
-
-src/scheduler/scheduler.cpp — Schedule() 主路径
-
-282| PDPriorityType pdPriorityType = DecidePDPriority(needSync);  
----|---  
-302| SchedulingBudget budget(budgetTokenNum, batchSize, schedulerConfig_);  
-318| data = PrepCandidatesForPolicy(pdPriorityType, budget); // 或 PrepCandidatesForFlex  
-325| if (pdPriorityType == PREFILL_FIRST) policyOutput = prefillPolicy_->Apply(budget, data);  
-329| else policyOutput = decodePolicy_->Apply(budget, data);  
-334| BackfillConcurrentQueue(policyOutput);  
-337| SchedulerOutputs schedulerOut = ConvertToSchedulerOutput(budget, policyOutput);  
-368| dynamicBatchSize_->ApplyDynamicBatchSize(...); // 可选动态 batch  
-  
-`DecidePDPriority` 在 PnD 场景综合考虑：Chunked Prefill → MIX；Layerwise → EdgeCloudPolicy；`lastScheduleEmpty_` 强制 Decode；空闲 Block 低于 5% 总量保留 → Decode；否则 StagePolicy 或 ShouldImmediatePrefill。
-
-### 3.3 PreScheduler 跨 DP 同步
-
-PreScheduler::ShareSchedInfo / DecidePDPriority
-
-31| sendData = { pdPriority_, waitingSeqGroupNum_, runningSeqGroupNum_ };  
----|---  
-37| ThreadGroupCC::GetInstance().AllGather(sendData, recvData, dpRank);  
-95| // 多数票：PREFILL_FIRST 节点数 ≥ 半数 → PREFILL，否则 DECODE  
-99| return numPrefill >= (decideScheduleInfos.size() - numPrefill) ? PREFILL_FIRST : DECODE_FIRST;  
-  
-「陪跑」节点（三队列全空）不参与 PD 决策，避免空 rank 影响全局优先级。
-
-### 3.4 PostScheduler Batch 同步
-
-  * `SyncBatchInfo` — AllGather 各 DP 的 maxBatchSize / maxSeqLen，取全局 max
-  * `SyncSeqLenList` — 先 AddPaddingData(-1)，AllGather 后按 batchSizeList 裁剪
-  * `AllGatherBatchesAcrossDPs` — 集中式场景聚合各 DP 的 MetaDatas 与 SchedulerOutputs
-  * `AllGatherCleanSeqIdsAcrossDPs` — TG 缓存清理 ID 跨 DP 汇总
-
-
-
-### 3.5 FcfsPolicy::Apply 三分支
-
-src/scheduler/policy/fcfs_policy.cpp
-
-46| switch (collection->pdPriorityType_) {  
----|---  
-47|  case PREFILL_FIRST: return SchedulePrefill(budget); // waiting FCFS  
-48|  case DECODE_FIRST: return ScheduleDecode(budget); // running → swapped  
-49|  case MIX: return ScheduleChunkedPrefill(budget); // decode 优先 + waiting  
-  
-Decode 路径在内存不足时调用 `Preempt()`：优先 Swap，配置允许则 Recompute。Swap 成功后继续从 swapped 队列 Swap In。
-
-### 3.6 Placeholder Token 机制
-
-PrepareNextSchedule push PLACEHOLDER token = -1 AsyncExecuteModel FetchSeqGeneratedTokens ReplacePlaceHolderWithToken
-
-`CalculatePlaceHolderNum` 在 MTP（`speculationGamma`）场景下限制最大占位数为 `maxScheduledBatch_ * (1+gamma) + (1+gamma)`，防止持续不命中导致 KV 浪费。
-
-### 3.7 PDDS 与 KV Transfer
-
-节点| Schedule()| ScheduleTransfer()  
----|---|---  
-P| SchedulePrefill → transferringMap_| ReleaseKvPulledBlocks() 回收已 Pull 的 KV  
-D| ScheduleDecode（running + swapped）| KVTransferSchedulePolicy::PickPullSeqGroup → transferringMap_  
-PnD| 标准 FCFS / Chunked| 不调用 Transfer 调度  
-  
-D 节点 Pull 完成后，`KVPulledReqEnterRunningQueue` 将请求从 transferringMap_ 移入 running_。
-
-### 3.8 LlmEngine 调度线程集成
-
-src/engine/llm_engine.cpp — SchedulerThreadEntry 主循环
-
-436| ScheduleExecTransfer(enginePerDP); // PD 分离 KV 调度  
----|---  
-446| if (GetAsyncBatchNum() >= asyncScheduleRound) continue; // 异步轮次控制  
-469| scheduler->FetchSeqGeneratedTokens(...); // 回填 token  
-485| auto [meta, scheduleOut] = scheduler->Schedule(needSync);  
-506| PostScheduleSyncUp(needSync, ...); // PostScheduler 同步  
-552| modelExecutor->AsyncExecuteModel(request, handler);  
-562| scheduler->PrepareNextSchedule(scheduleOut.scheduledSeqGroups_);  
-  
-### 3.9 关键配置项
-
-配置项| 作用| 默认/典型值  
----|---|---  
-`maxPrefillBatchSize`| Prefill 轮最大 seq 数| 配置依赖模型  
-`maxBatchSize`| Decode 轮最大 seq 数| —  
-`maxPrefillTokens` / `maxSeqLen`| SchedulingBudget token 上限| 取较大者  
-`enableChunkedPrefill`| Chunked Prefill + MIX 模式| false  
-`enablePrefixCache`| Prefix Cache computed blocks| —  
-`layerwiseDisaggregated`| 边云 Layerwise 调度| false  
-`activateAsyncInference`| 异步多 batch 调度| false  
-`stageSelectPolicy`| StagePolicy 类型 (0–3)| 0 = PrefillFirst  
-`dynamicBatchSizeEnable`| 动态调整 maxBatchSize| —  
-`maxQueueDelayMicroseconds`| Prefill batching 等待窗口| 5000μs 默认  
-`distributedEnable`| 跨节点 ProcessGroup 通信| —  
-`batchPnum`| 边云最大 P batch 数（延迟下发）| 2
-
-*(来源: wiki/raw/articles/pyserver/scheduler_deep_analysis.md)*
-
-### 4\. 竞品分析 — vLLM Scheduler 对比
-
-### 4.1 架构风格
-
-维度| MindIE| vLLM  
----|---|---  
-实现语言| C++ 引擎层 (`src/scheduler/`)| Python (`vllm/core/scheduler.py`)  
-接口抽象| `IScheduler` 多态 + `MakeScheduler` 工厂| 单一 `Scheduler` 类（V1 为 SchedulerCore）  
-横切模块| PreScheduler / PostScheduler 独立类| 调度器内嵌 DP 逻辑 / 外部 Executor 协调  
-Policy 分层| StagePolicy（P/D 决策）+ Policy（队列 FCFS）分离| Scheduler 内硬编码 scheduling policy  
-Worker 交互| Protobuf MetaDatas → ModelExecutor| 直接构造 SequenceGroupMetadata → GPU Runner  
-  
-### 4.2 队列模型
-
-队列| MindIE| vLLM  
----|---|---  
-Waiting| `waiting_` ConcurrentDeque| `waiting` deque  
-Running| `running_`| `running`  
-Swapped| `swapped_`| `swapped`  
-PD 传输| `transferringMap_` 独立 ConcurrentMap| 无内置；依赖外部 PD 调度器  
-线程安全| ConcurrentDeque 主线程入 / 调度线程出| 单进程 GIL 下通常单线程调度  
-  
-### 4.3 PD 分离
-
-MindIE PDDS vLLM PD P: Prefill transferring D: Pull KV Decode 外部 Router / 自建 SGLang / 自定义 KV 路由 MindIE: 内置 PDDSPolicy + KVTransferSchedulePolicy + PreScheduler 跨 DP 同步 vLLM: Scheduler 假设单节点 PnD；PD 分离需架构层拆分
-
-### 4.4 全维度对比表
-
-对比维度| MindIE Scheduler| vLLM Scheduler  
----|---|---  
-Preemption| Recompute / Swap（`PreemptionMode`）| RECOMPUTE / SWAP 枚举，语义类似  
-Chunked Prefill| `isLastChunk_` \+ MIX 模式 + Statistics4PartialPrefill| Token budget 流式 partial prefill（V1 更完善）  
-多 DP 协调| PreScheduler ShareSchedInfo + PostScheduler AllGather| Data Parallel 广播；多节点依赖 Ray / 外部  
-异步调度| `maxScheduledBatch_` \+ Placeholder -1| 默认同步；Pipeline Parallel 另有机制  
-Stage Policy| 可插拔 PrefillFirst / TPT / Latency / EdgeCloud| Scheduler 内 policy 参数（如 priority）  
-延迟预测| LatencyPredictor + DynamicBatchSize 闭环| 部分版本有 max_num_seqs 启发式  
-BlockManager| C++ BlockSpaceManager（Prefix / KV Pool / Layerwise）| Python BlockAllocator / V1 KVCacheManager  
-Prefix Cache| 调度层 computedLens / remoteComputedLens| Automatic Prefix Caching hash block  
-边云 Layerwise| LayerwiseFcfsPolicy + P 延迟下发 + 双 BlockManager| 无对等内置能力  
-Flex 混布| FlexP/D/PnD + TimeDivisionPolicy 角色切换| 无 Flex 角色概念  
-  
-### 4.5 差异总结
-
-**结论** MindIE Scheduler 在队列语义上与 vLLM 同源（waiting/running/swapped + continuous batching），但针对昇腾生产环境做了显著工程扩展：**PDDS 内置 KV 传输调度** 、**Pre/PostScheduler 多 DP 协同** 、**异步 Placeholder 流水线** 、**可插拔 StagePolicy** 与 **边云 Layerwise** 。vLLM 优势在于 Python 生态迭代快、V1 Scheduler 统一调度核心、以及更广泛的社区 PD 方案集成；MindIE 优势在于 C++ 引擎层低开销、NPU 原生 Block 管理与华为分布式推理场景的一栈式支持。 
-
-📚 相关文档 [文档索引](<index.html>) [Prefix Cache 分析](<prefix_cache_analysis.html>) [Function Call 分析](<mindie_function_call_deep_analysis.html>)
-
-分析日期: 2026-05-31 · 基于 MindIE-LLM-PyServer 分支源码
-
-参考: src/scheduler/*, src/engine/llm_engine.cpp, src/include/scheduler/ischeduler.h
-
-Generated by Hermes Agent → Cursor Agent (composer-2.5-fast)
-
-◀
-
-▶
-
-*(来源: wiki/raw/articles/pyserver/scheduler_deep_analysis.md)*
-
-### 0. 30 秒总览
-
-> vLLM v1 用 **PagedAttention** 把 KV 切成固定 block；调度层 `BlockPool` 管物理块，Worker `BlockTable` 做逻辑→物理映射。调度器**无独立 prefill/decode 阶段**，每步在 `max_num_batched_tokens` / `max_num_seqs` 预算内推进 `num_computed_tokens`。KV 不够就 **recompute 抢占**（v1 无 SWAPPED）。**Chunked prefill** 把长 prompt 切片与 decode 混批。**Prefix cache** 用链式 block hash 共享物理块。**PD 分离**走 `KVConnector`，异步拉 KV 时进 `WAITING_FOR_REMOTE_KVS`。
-
----
-
-*(来源: interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md)*
-
-### 1. PagedAttention
-
-### 1.1 动机
-
-| 问题 | 连续分配 | PagedAttention |
-|------|----------|----------------|
-| 碎片 | 按 max_len 预留，短请求浪费 | 固定 block 池按需分配 |
-| 动态 batch | 长度不一难拼 | block table 映射 |
-| 前缀共享 | 难 | 同 hash → 共享物理块 |
-
-### 1.2 三层结构
-
-**(A) 调度层物理池** — `vllm/v1/core/block_pool.py`
-- `KVCacheBlock`：`block_id` / `ref_cnt` / `_block_hash` / 空闲链表
-- `BlockPool`：`blocks[]` + `free_block_queue`（LRU 驱逐）+ `cached_block_hash_to_block`
-
-**(B) KV 接口** — `vllm/v1/core/kv_cache_manager.py`
-- `allocate_slots()` 失败 → 触发抢占
-- `get_computed_blocks()` → prefix 命中
-- `usage` → KV 水位 0~1
-
-**(C) Worker 映射** — `vllm/v1/worker/block_table.py`
-```
-block_table[req_row, logical_block_idx] = physical_block_id
-slot = physical_block_id * block_size + offset_in_block
-```
-Triton `_compute_slot_mapping_kernel` 算 slot；`PagedAttention.write_to_paged_cache` 散射写 KV。
-
-默认 `block_size=16`（`config/cache.py`）；Motor/Conductor 侧常配 **128**。
-
-### 1.3 对照
-
-| | vLLM v1 | SGLang | MindIE |
-|--|---------|--------|--------|
-| 结构 | 每请求 block table 行 | Radix tree + page allocator | `block_tables` 数组 |
-| 前缀 | 链式 block hash | `RadixCache.match_prefix` | `PrefixCachePlugin` |
-
----
-
-*(来源: interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md)*
-
-### 2. Continuous Batching 状态机
-
-### 2.1 vLLM v1 状态（`vllm/v1/request.py`）
-
-```
-WAITING
-WAITING_FOR_STRUCTURED_OUTPUT_GRAMMAR
-WAITING_FOR_REMOTE_KVS      # PD 异步拉 KV
-RUNNING
-PREEMPTED                   # v1 无 SWAPPED
-FINISHED_*
-```
-
-队列：`waiting` / `skipped_waiting` / `running`（`scheduler.py`）。
-
-**重要**：v1 **只有 recompute 抢占**，无 CPU swap。MindIE C++ 仍保留 `SWAP | RECOMPUTE`（`fcfs_policy.cpp`）。
-
-### 2.2 每步 `schedule()` 流程
-
-路径：`vllm/v1/core/sched/scheduler.py`
-
-```
-1. token_budget = max_num_scheduled_tokens
-2. 先扫 running：扣 budget，allocate_slots 失败 → 抢占队尾/低优先级
-3. 再扫 waiting：受 budget、max_num_seqs、KV 块约束
-4. 输出 SchedulerOutput（block_ids、num_scheduled_tokens、preempted_req_ids）
-```
-
-设计哲学（源码注释 ~398–407）：**没有独立 prefill/decode phase**；只维护 `num_computed_tokens` 追赶 `num_tokens_with_spec`。
-
-### 2.3 抢占（`_preempt_request`）
-
-```python
-_free_request_blocks(request)
-request.status = PREEMPTED
-request.num_computed_tokens = 0   # 全部重算
-waiting.prepend_request(request)
-```
-
-权衡：实现简单、无 PCIe 搬运；长 prompt 重算代价高。MindIE 用 `maxPreemptCount` 限制 swap 次数后回退 recompute。
-
----
-
-*(来源: interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md)*
-
-### 3. 三大预算旋钮
-
-路径：`vllm/config/scheduler.py`
-
-| 参数 | 默认（测试基线） | 含义 |
-|------|------------------|------|
-| `max_num_batched_tokens` | 2048（生产常 8192+） | 单步 token 总量上限 |
-| `max_num_seqs` | 128 | 单步并发序列上限 |
-| `enable_chunked_prefill` | **True** | 允许 prefill 分块 |
-| `watermark` | 0.0 | 接纳新请求时保留空闲块比例 |
-| `long_prefill_token_threshold` | 0（禁用） | 长 prompt 单步上限 |
-
-消耗逻辑：
-```python
-num_new_tokens = min(remaining, token_budget, long_prefill_threshold?)
-# chunked 关闭时：waiting 若 num_new_tokens > budget → break（整段原子）
-```
-
-**面试速算**：`block_size=16`，`num_gpu_blocks=10000`，`max_model_len=32K` → 单序列最多 2048 块；满长序列理论并发约 4~5（实际更少）。
-
----
-
-*(来源: interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md)*
-
-### 4. Chunked Prefill
-
-### 为什么需要
-长 prompt 一步占满 budget → decode 饥饿 → TPOT P99 差。
-
-### 怎么做
-- `request.is_prefill_chunk = True`（`num_computed_tokens < num_tokens`）
-- 同一步 `running` 可混 chunked-prefill 与 decode
-- Attention：`chunked_prefill_paged_decode.py` 按 `query_len` 分流
-
-### TTFT / TPOT 权衡
-
-| | ON | OFF |
-|--|----|-----|
-| TTFT | 变慢（多步完成 prompt） | 首步可能一次算完 |
-| TPOT | 稳定 | 长 prefill 期间 decode 饿死 |
-| 吞吐 | 高 | 锯齿 |
-
-SGLang：`chunked_prefill_size`；MindIE：`SplitfusePlugin`。
-
----
-
-*(来源: interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md)*
-
-### 5. Prefix Caching
-
-### 哈希链（`kv_cache_utils.py`）
-```
-block_hash = H(parent_hash, tokens_in_block, extra_keys)
-```
-`extra_keys`：LoRA / multimodal / `cache_salt`。链式保证第 N 块唯一确定前缀。
-
-### 命中后为何还要重算末 token
-`max_cache_hit_length = num_tokens - 1`——采样需要 logits；且 `num_computed_tokens` 需 block 对齐，尾块可能整块重算。
-
-### 写入与驱逐
-满块 → `cache_full_blocks()`；`ref_cnt==0` 才可 LRU 驱逐。故意不去重以保证 block ID append-only。
-
----
-
-*(来源: interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md)*
-
-### 6. PD / 远程 KV 衔接
-
+- `DecidePDPriority`：PnD 场景综合 Chunked Prefill、Layerwise、空闲 Block 比例等，选择 `PREFILL_FIRST` / `DECODE_FIRST` / `MIX`。  
+- `SchedulingBudget`：受 `maxPrefillTokens`、`maxSeqLen`、`maxPrefillBatchSize`、`maxBatchSize` 等限制。  
+- Policy 输出分 `prefillPolicy_` 与 `decodePolicy_`，按优先级执行。
+
+**关键预算旋钮对比**
+| 参数 | vLLM v1 | MindIE |
+|------|---------|--------|
+| Token 总量 | `max_num_batched_tokens` | `maxPrefillTokens` / `maxSeqLen` |
+| 并发序列数 | `max_num_seqs` | `maxPrefillBatchSize` / `maxBatchSize` |
+| Chunked 开启 | `enable_chunked_prefill` | `enableChunkedPrefill`（MIX 模式） |
+| 空闲块水位 | `watermark` | 空闲 Block 低于 5% 总量保留 → Decode |
+
+### 3.4 抢占与回退机制
+| 模式 | vLLM v1 | MindIE |
+|------|---------|--------|
+| RECOMPUTE | 将 request 置为 `PREEMPTED`，`num_computed_tokens=0`，加回 waiting 队首 | `PreemptionMode::RECOMPUTE` 退回 waiting，Parallel Sampling 不支持 |
+| SWAP | **无**，仅 recompute | `SWAP` 将 KV 换出至 CPU，需 CPU 内存预算；可配置 `maxPreemptCount` 限制 swap 次数 |
+
+- vLLM v1 设计选择：纯 recompute 避免 PCIe 搬运，简化实现；代价是长 prompt 重算开销大。
+- MindIE：优先 Swap，配置允许则 Recompute；Swap 失败后可继续 Recompute。
+
+### 3.5 Chunked Prefill 与混批调度
+**目的**：避免长 prompt 独占一步全部 token 预算，导致 decode 饥饿。
+
+**vLLM v1 实现**：  
+- `request.is_prefill_chunk = True` 当 `num_computed_tokens < num_tokens`。  
+- 同一步中，running 可同时包含 chunked-prefill 与 decode 请求。  
+- Attention kernel (`chunked_prefill_paged_decode.py`) 根据 `query_len` 分流。
+- 关闭 chunked 时，waiting 请求被视为不可拆分原子任务。
+
+**MindIE 实现**：  
+- `enableChunkedPrefill` 时，PnD 角色返回 `PDPriorityType::MIX`，Policy 同时从三队列取数。  
+- `isLastChunk_` 控制是否加入 placeholder / 输出 token。  
+- 边云 Layerwise 场景下，`LayerwiseDecidePDelay()` 可返回 `PREFILL_TO_DECODE` 或 `PREFILL_SKIP` 以延迟下发 P batch。
+
+### 3.6 Prefix Caching 与调度交互
+- **命中后为何仍需重算 1 token**：`max_cache_hit_length = num_tokens - 1`，因为采样需要最后一个 token 的 logits；且 block 对齐可能导致尾块整体重算。
+- vLLM：`BlockPool` 通过 `cached_block_hash_to_block` 查找，`ref_cnt==0` 才可回收，块 ID 保持稳定。
+- MindIE：C++ `BlockSpaceManager` 利用 `computedLens` / `remoteComputedLens` 感知前缀命中，调度层在分配 Block 时直接从缓存复用。
+
+### 3.7 PD 分离与 KV 传输
+#### vLLM v1 (`vllm/v1/` connectors)
 ```
 waiting → connector.get_num_new_matched_tokens()
-  load_kv_async=True → 只分配块，status=WAITING_FOR_REMOTE_KVS
-  Worker 异步 pull → finished_recving
-  → _update_waiting_for_remote_kv() → 回 WAITING → 下步 forward
+  load_kv_async=True → 仅分块，status=WAITING_FOR_REMOTE_KVS
+  Worker 异步 pull → finished_recving → _update_waiting_for_remote_kv()
+  → 回到 WAITING → 下步 forward
 ```
-
 防死锁：`_inflight_prefill_reserved_blocks` 预留块不可抢占。
-失败：`kv_load_failure_policy=recompute` 回退重算。
 
----
+#### MindIE PDDS 内置调度
+| 节点 | `Schedule()` | `ScheduleTransfer()` |
+|------|-------------|---------------------|
+| P | `SchedulePrefill` → `transferringMap_` | `ReleaseKvPulledBlocks()` 回收已 Pull 的 KV |
+| D | `ScheduleDecode`（running + swapped） | `KVTransferSchedulePolicy::PickPullSeqGroup` → `transferringMap_` |
+| PnD | 标准 FCFS / Chunked | 不调用 Transfer 调度 |
 
-*(来源: interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md)*
+D 节点 Pull 完成后，`KVPulledReqEnterRunningQueue` 将请求从 `transferringMap_` 移入 `running_`。
 
-### 7. 面试 10 题（口述要点）
+### 3.8 多 DP 协调与异步调度（MindIE 特色）
+#### PreScheduler / PostScheduler 跨 DP 同步
+- **PreScheduler**：在 P/D 决策前使用 `ThreadGroupCC::AllGather`（集中式）或 `ProcessGroup::AllGather`（分布式）交换各 DP 的 `pdPriority_`、`waitingSeqGroupNum_`、`runningSeqGroupNum_`。多数票决策：PREFILL_FIRST 节点数 ≥ 半数 → PREFILL。
+- **PostScheduler**：下发前对齐 `maxBatchSize` / `maxSeqLen`（取全局 max），`SyncSeqLenList` 补齐 -1 后 AllGather，再按 batchSizeList 裁剪，保证各 DP batch 一致。
+- 「陪跑」节点（三队列全空）不参与 PD 决策，避免空 rank 影响全局优先级。
 
-**Q1 block table 存什么？**  
-每请求一行，逻辑块→物理块 ID；slot = pid×block_size+offset。
+#### Placeholder Token 异步流水
+开启 `activateAsyncInference` 后允许 2+ outstanding batch：调度器使用占位 token（-1）预写 `outputTokenIds` 并预占 KV slot，Response 线程异步回填真实 token。`CalculatePlaceHolderNum` 在 MTP 场景限制最大占位数，防止持续不命中导致 KV 浪费。
 
-**Q2 为何 v1 无 SWAPPED？**  
-简化为纯 recompute；MindIE/v0 保留 SWAP。权衡：算力 vs PCIe。
+#### Stage Policy 可插拔策略
+| 策略 | 决策逻辑 |
+|------|----------|
+| Prefill‑First | 固定返回 `PREFILL_FIRST` |
+| TPT (吞吐优先) | 基于 decode 浪费时间窗口动态切换 P/D |
+| Latency‑First | 松弛度 + `LatencyPredictor` 回归预测 |
+| Edge‑Cloud | 边云 Layerwise：跟踪 P/D batch 计数，配合延迟下发 |
+| Flex 时分 | FlexP/FlexD/FlexPnD 单实例多角色时分复用 |
 
-**Q3 batched_tokens vs max_seqs？**  
-前者限 token 总量，后者限并发数；可 128×1 decode 或 1×2048 prefill。
+## 4. 框架对比
+### 4.1 vLLM vs MindIE
+| 维度 | vLLM v1 | MindIE |
+|------|---------|--------|
+| 语言 | Python (`vllm/v1/core/sched/`) | C++ (`src/scheduler/`) |
+| 接口 | 单一 `Scheduler` 类 | `IScheduler` 多态 + `MakeScheduler` 工厂 |
+| 队列模型 | waiting / running（无 swapped） | waiting_ / running_ / swapped_ / transferringMap_ |
+| 调度阶段 | 无独立 prefill/decode，纯 `num_computed_tokens` 追赶 | 通过 `DecidePDPriority` + StagePolicy 显式决策 |
+| 抢占 | 仅 RECOMPUTE | RECOMPUTE / SWAP，可限制 swap 次数 |
+| Chunked Prefill | 基于 token budget 流式 partial prefill | `MIX` 模式 + `isLastChunk_` |
+| Prefix Cache | 链式 hash + `BlockPool` LRU 驱逐 | C++ `BlockSpaceManager` 直接支持 computed blocks |
+| PD 分离 | `WAITING_FOR_REMOTE_KVS` + connector 异步拉取 | 内置 `PDDSPolicy` + `KVTransferSchedulePolicy` + 跨 DP 同步 |
+| 多 DP 协调 | 依赖 Data Parallel 广播或 Ray | Pre/Post Scheduler 通过 AllGather 显式同步 |
+| 异步调度 | 默认同步，Pipeline Parallel 另有机制 | Placeholder Token（-1）预占 KV，支持 outstanding batch |
+| 边云/层状 | 无内置能力 | `LayerwiseFcfsPolicy` + P 延迟下发 + 双 BlockManager |
+| 工程扩展 | Python 生态迭代快，V1 统一核心 | C++ 低开销，昇腾原生 Block 管理，华为分布式推理一站式 |
 
-**Q4 chunked 如何与 decode 同批？**  
-无阶段概念；先扫 running 再 waiting；kernel 按 query_len 分流。
+**结论**：vLLM 优势在于 Python 层快速演进和社区丰富的 PD 方案集成；MindIE 则针对昇腾 NPU、多机多 DP 和边云场景，提供了更厚重的工程化扩展。
 
-**Q5 前缀全命中为何还算 1 token？**  
-要 logits 采样；且 block 对齐可能重算尾块。
+## 5. 面试要点
+### 5.1 常见追问
+#### Q: Block table 存什么？
+- 每请求一行，行内存储「逻辑块索引 → 物理块 ID」的映射。
+- 物理 slot = `physical_block_id × block_size + offset`。
+- vLLM 默认 `block_size=16`，MindIE 可配置（生产常 128）。
 
-**Q6 block hash 怎么保证安全共享？**  
-链式 hash + extra_keys 隔离 + ref_cnt；不去重保 ID 稳定。
+#### Q: 为什么 vLLM v1 没有 SWAPPED 状态？
+- 设计简化为纯 recompute 抢占，避免 PCIe 换入换出开销。
+- 代价：长 prompt 重算成本高；MindIE/v0 保留 SWAP 用于 CPU 暂存。
 
-**Q7 watermark 干什么？**  
-接纳 WAITING 时留空闲块，防 thrashing。
+#### Q: `max_num_batched_tokens` 与 `max_num_seqs` 分别控制什么？
+- 前者限制单步 token 总量（可同时包含 128×1 decode 或 1×2048 prefill）。
+- 后者限制并发序列数量，防止 batch 过大导致调度抖动。
 
-**Q8 WAITING_FOR_REMOTE_KVS？**  
-异步拉 KV 期间不进 RUNNING；完成后 promote。
+#### Q: Chunked Prefill 如何与 decode 混批？
+- 调度器不区分阶段，先扫 running（含未完成的 prefill chunk），再扫 waiting。
+- Attention kernel 根据 `query_len` 分别走 prefill 或 decode 路径。
+- TTFT 会因分块而增加，但 TPOT 更稳定，整体吞吐更高。
 
-**Q9 抢占对 SLA？**  
-长 prompt recompute 贵 → 控 budget、开 chunked、设 watermark。
+#### Q: 前缀命中后为何还要重算末 token？
+- 采样需要最后一个 token 的 logits，`max_cache_hit_length = num_tokens - 1`。
+- block 对齐时，尾块可能需整块重算；该设计保证 logits 正确且逻辑简单。
 
-**Q10 vLLM hash cache vs SGLang radix？**  
-hash map 简单；radix 可节点分裂、更细粒度（HiCache）。
+#### Q: PD 分离中 wating 请求如何转换为 RUNNING？
+- vLLM：进入 `WAITING_FOR_REMOTE_KVS`，Worker 异步 pull 完成后 promote。
+- MindIE：D 节点通过 `KVTransferSchedulePolicy::PickPullSeqGroup` 将请求放入 `transferringMap_`，Pull 完成调用 `KVPulledReqEnterRunningQueue` 移入 `running_`。
 
----
+#### Q: MindIE 的 Placeholder Token 机制有什么用？
+- 开启异步推理时，用 -1 预写 token 和预占 KV slot，使 NPU 不必等待 response 线程。
+- 可保持多 batch outstanding，提升硬件利用率，但需限制占位数避免 KV 浪费。
 
-*(来源: interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md)*
+#### Q: 多 DP 场景下如何保证批次一致？
+- MindIE 使用 PreScheduler 同步优先级和队列长度，多数票决定 P/D 模式。
+- PostScheduler 通过 AllGather 对齐 maxBatchSize、seqLenList 并补齐，确保各 DP 输入 shape 完全一致。
 
-### 附录：源码索引
+### 5.2 口述话术
+“大模型推理使用 PagedAttention 将 KV 切为 block，通过 block table 映射，让调度器可以像操作系统一样管理虚拟页。Continuous Batching 下调度器每步从 running 和 waiting 队列中选请求，受 token 预算和并发数限制；长 prompt 用 chunked prefill 分块混批防止 decode 饿死。如果 KV 不够就抢占——vLLM v1 直接 recompute，MindIE 还可以 swap 到 CPU。在 PD 分离部署中，D 节点异步拉取 KV 并在收到后进入 running。MindIE 还引入了 Pre/Post Scheduler 保证多 DP 决策一致性，以及 Placeholder token 实现异步流水线。”
 
-| 主题 | 路径 |
-|------|------|
-| 调度主循环 | `vllm/v1/core/sched/scheduler.py` |
-| 请求状态 | `vllm/v1/request.py` |
-| KV 分配 | `vllm/v1/core/kv_cache_manager.py` |
-| 物理块池 | `vllm/v1/core/block_pool.py` |
-| Block hash | `vllm/v1/core/kv_cache_utils.py` |
-| Worker 映射 | `vllm/v1/worker/block_table.py` |
-| 调度配置 | `vllm/config/scheduler.py` |
-| MindIE 抢占 | `MindIE-LLM/src/scheduler/policy/fcfs_policy.cpp` |
+## 6. 延伸阅读
+### 6.1 相关主题
+- Prefix Caching 与 Block 回收
+- SGLang RadixAttention 调度
+- 昇腾 NPU 算子融合与 KV Pool 布局
+- Flex 混布与角色切换
 
-*(来源: interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md)*
-
-## 面试要点
-
-**PagedAttention + Continuous Batching + Scheduler + Chunked Prefill**
-
-# PagedAttention + Continuous Batching + Scheduler + Chunked Prefill
-
-> 基于 `vllm/v1/` 真实源码；对照 `sglang/`、`MindIE-LLM/`。
-> 目标：把「vLLM 加速配置」从背名单升级为「能讲清旋钮背后的调度语义」。
-
----
-
-*(来源: interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md)*
-
-## 源文件索引
-
-- wiki/repos/mindie-pyserver/scheduler.md — MindIE-LLM Scheduler 调度器
-- wiki/raw/articles/pyserver/scheduler_deep_analysis.md — Scheduler 调度器深度分析
-- interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md — PagedAttention + Continuous Batching + Scheduler + Chunked Prefill
+### 6.2 源文件
+| 文件路径 | 标题 | 类型 |
+|----------|------|------|
+| `wiki/repos/mindie-pyserver/scheduler.md` | MindIE-LLM Scheduler 调度器 | 架构说明 |
+| `wiki/raw/articles/pyserver/scheduler_deep_analysis.md` | Scheduler 调度器 — 深度分析 | 深度分析 |
+| `interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md` | PagedAttention + Continuous Batching + Scheduler + Chunked Prefill | 面试专题文档 |

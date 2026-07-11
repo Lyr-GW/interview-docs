@@ -1,299 +1,153 @@
 # DeepSeek 模型与组织
-
-> 来源: 4 files | 最后更新: 2026-07-11
-
-## 核心概念
-
-> **DeepSeek-V4-Pro 旗舰 MoE 模型** | 类型: model | 标签: `model`, `llm`, `open-source`
-
-# DeepSeek-V4-Pro
-*(来源: wiki/ai/models/deepseek-v4-pro.md)*
-
-> **DeepSeek-V4-Flash 高效 MoE 模型** | 类型: model | 标签: `model`, `llm`, `open-source`
-
-# DeepSeek-V4-Flash
-*(来源: wiki/ai/models/deepseek-v4-flash.md)*
-
-> **DeepSeek 深度求索** | 类型: organization | 标签: `company`, `lab`, `open-source`
-
-# DeepSeek
-*(来源: wiki/ai/organizations/deepseek.md)*
-
-
---- Page 1 ---
-DeepSeek-V4:
-Towards Highly Efficient Million-Token Context Intelligence
-DeepSeek-AI
-research@deepseek.com
-Abstract
-We present a preview version of DeepSeek-V4 series, including two strong Mixture-of-
-Experts (MoE) language models — DeepSeek-V4-Pro with 1.6T parameters (49B activated) and
-DeepSeek-V4-Flash with 284B parameters (13B activated) — both supporting a context length of
-one million tokens. DeepSeek-V4 series incorporate several key upgrades in architecture and op-
-timization: (1) a hybrid attention architecture that combines Compressed Sparse Attention (CSA)
-and Heavily Compressed Attention (HCA) to improve long-context efficiency; (2) Manifold-
-Constrained Hyper-Connections (mHC) that enhance conventional residual connections; (3)
-and the Muon optimizer for faster convergence and greater training stability. We pre-train
-both models on more than 32T diverse and high-quality tokens, followed by a comprehensive
-post-training pipeline that unlocks and further enhances their capabilities. DeepSeek-V4-Pro-
-Max, the maximum reasoning effort mode of DeepSeek-V4-Pro, redefines the state-of-the-art for
-open models, outperforming its predecessors in core tasks. Meanwhile, DeepSeek-V4 series are
-highly efficient in long-context scenarios. In the one-million-token context setting, DeepSeek-
-V4-Pro requires only 27% of single-token inference FLOPs and 10% of KV cache compared
-with DeepSeek-V3.2. This enables us to routinely support one-million-token contexts, thereby
-making long-horizon tasks and further test-time scaling more feasible. The model checkpoints
-are available athttps://huggingface.co/collections/deepseek-ai/deepseek-v4.
-SimpleQA
-Verified
-(Pass@1)
-HLE
-(Pass@1)
-Apex
-Shortlist
-(Pass@1)
-Codeforces
-(Rating)
-SWE
-Verified
-(Resolved)
-Terminal
-Bench 2.0
-(Acc)
-Toolathlon
-(Pass@1)
-0
-20
-40
-60
-80
-100Accuracy / Pass@1 (%)
-57.9
-46.245.3
-75.6
-37.7
-40.039.8
-44.4
-90.2
-85.9
-78.1
-89.1
-32063168
-3052
-80.680.880.6
-67.9
-65.4
-75.1
-68.5
-51.8
-47.2
-54.6
-48.8
-Knowledge & Reasoning Agentic Capabilities
-DeepSeek-V4-Pro-Max Claude-Opus-4.6-Max GPT-5.4-xHigh Gemini-3.1-Pro-High
-0 256 512 768 1024
-Token Position (K)
-0.0
-0.2
-0.4
-0.6
-0.8
-1.0
-1.2Single-Token FLOPs (T)
-3.7× lower
-9.8× lower
-DeepSeek-V3.2
-DeepSeek-V4-Pro
-DeepSeek-V4-Flash
-0 256 512 768 1024
-Sequence Length (K)
-0
-10
-20
-30
-40
-50Accumulated KV Cache (GB)
-9.5× smaller
-13.7× smaller
-DeepSeek-V3.2
-DeepSeek-V4-Pro
-DeepSeek-V4-Flash
-Figure 1 | Left: benchmark performance of DeepSeek-V4-Pro-Max and its counterparts.Right:
-inference FLOPs and KV cache size of DeepSeek-V4 series and DeepSeek-V3.2.
-*(来源: wiki/raw/papers/deepseek-v4-2026.md)*
-
-## 深入分析
-
-### Key Specifications
-
-| Property | Value |
-|---|---|
-| Total Parameters | 1.6T |
-| Activated Parameters | 49B per token |
-| Context Length | 1 million tokens |
-| Architecture | Transformer + DeepSeekMoE |
-| Attention | Hybrid CSA/HCA (interleaved) |
-| Optimizer | Muon (most params), AdamW (embeddings, norms) |
-| Training Tokens | 33T |
-| Layers | 61 |
-| Hidden Dimension | 7168 |
-| Routed Experts per Layer | 384 (1 shared + 384 routed, 6 active per token) |
-| Expert Hidden Dimension | 3072 |
-| MTP Depth | 1 |
-| Factorization | mHC expansion factor = 4 |
-
-### Attention Configuration
-- **CSA**: compression rate m=4, indexer query heads=64, indexer head dim=128, top-k=1024
-- **HCA**: compression rate m'=128
-- **Query heads** nh=128, head dim c=512, query compression dim dc=1536
-- **Output groups** g=16, intermediate dim dg=1024
-- **SWA window** nwin=128
-
-*(来源: wiki/ai/models/deepseek-v4-pro.md)*
-
-### Performance
-
-DeepSeek-V4-Pro-Max (max reasoning effort mode) achieves:
-
-- **Knowledge**: Outperforms all open-source models on SimpleQA-Verified (57.9%) by ~20 points absolute. Trails Gemini-3.1-Pro.
-- **Reasoning**: Surpasses GPT-5.2 and Gemini-3.0-Pro on standard reasoning. Trails GPT-5.4 and Gemini-3.1-Pro by ~3-6 months.
-- **Agent**: On par with Kimi K2.6 and GLM-5.1; outperforms Claude Sonnet 4.5 internally.
-- **Long-Context**: Surpasses Gemini-3.1-Pro on MRCR and CorpusQA at 1M tokens. Behind Claude Opus 4.6 on MRCR.
-- **Math**: First open model to match GPT-5.4 on Codeforces (3206 rating, rank #23 among humans).
-- **Formal Math**: 120/120 on Putnam-2025 (frontier regime).
-- **Code Agent**: Approaches Claude Opus 4.5 on internal R&D coding benchmark (67% pass rate vs 73%).
-
-*(来源: wiki/ai/models/deepseek-v4-pro.md)*
-
-### Efficiency
-
-At 1M-token context, DeepSeek-V4-Pro requires only **27%** of single-token inference FLOPs and **10%** of KV cache compared to DeepSeek-V3.2. ^[raw/papers/deepseek-v4-2026.md]
-
-*(来源: wiki/ai/models/deepseek-v4-pro.md)*
-
-### Reasoning Modes
-
-The model supports three reasoning effort modes:
-- **Non-think**: Fast intuitive responses (<think> summary)
-- **Think (High)**: Conscious logical analysis with thinking tokens
-- **Think (Max)**: Maximum reasoning with special system prompt encouraging exhaustive deliberation
-
-These are differentiated by length penalties and context windows during RL training, and use specialized response formats with <think>/</think> delimiters. ^[raw/papers/deepseek-v4-2026.md]
-
-*(来源: wiki/ai/models/deepseek-v4-pro.md)*
-
-### Tool-Call Schema
-
-V4 introduces a new XML-based tool-call format using the `|DSML|` special token and XML-encoded parameters, which reduces escaping failures and tool-call errors compared to JSON. ^[raw/papers/deepseek-v4-2026.md]
-
-*(来源: wiki/ai/models/deepseek-v4-pro.md)*
-
-### DSpark 推理加速
-
-2026 年 6 月，DeepSeek 为 V4 系列部署了 DSpark 投机解码框架（非架构变更，而是推理层工程优化）。在 MTP-1 基线上，用户生成速度提升 57%–78%（Pro）/ 60%–85%（Flash），高并发场景有效吞吐翻 4 倍。详见 [[dspark]]。^[raw/articles/deepseek-dspark-jxz-2026.md]
-
----
-
-**Related pages:** [[deepseek]], [[deepseek-v4-flash]], [[compressed-sparse-attention]], [[heavily-compressed-attention]], [[manifold-constrained-hyper-connections]], [[muon-optimizer]], [[on-policy-distillation]], [[dspark]], [[deepspec]]
-
-*(来源: wiki/ai/models/deepseek-v4-pro.md)*
-
-### Key Specifications
-
-| Property                 | Value                                           |
-| ------------------------ | ----------------------------------------------- |
-| Total Parameters         | 284B                                            |
-| Activated Parameters     | 13B per token                                   |
-| Context Length           | 1 million tokens                                |
-| Architecture             | Transformer + DeepSeekMoE                       |
-| Attention                | Hybrid CSA/HCA (interleaved)                    |
-| Optimizer                | Muon (most params), AdamW (embeddings, norms)   |
-| Training Tokens          | 32T                                             |
-| Layers                   | 43                                              |
-| Hidden Dimension         | 4096                                            |
-| Routed Experts per Layer | 256 (1 shared + 256 routed, 6 active per token) |
-| Expert Hidden Dimension  | 2048                                            |
-| MTP Depth                | 1                                               |
-| Factorization            | mHC expansion factor = 4                        |
-
-### Attention Configuration
-- **CSA**: compression rate m=4, indexer query heads=64, indexer head dim=128, top-k=512
-- **HCA**: compression rate m'=128
-- **Query heads** nh=64, head dim c=512, query compression dim dc=1024
-- **Output groups** g=8, intermediate dim dg=1024
-- **SWA window** nwin=128
-
-*(来源: wiki/ai/models/deepseek-v4-flash.md)*
-
-### Performance
-
-DeepSeek-V4-Flash-Max achieves comparable performance to GPT-5.2 and Gemini-3.0-Pro on reasoning tasks, despite its much smaller parameter count. On most agent evaluations it trails its larger sibling V4-Pro but matches on simpler tasks. ^[raw/papers/deepseek-v4-2026.md]
-
-### Efficiency
-
-At 1M-token context, V4-Flash requires only **10%** of single-token FLOPs and **7%** of KV cache compared to DeepSeek-V3.2. Even V4-Flash-Base outperforms DeepSeek-V3.2-Base across the majority of benchmarks despite having far fewer activated parameters. ^[raw/papers/deepseek-v4-2026.md]
-
-*(来源: wiki/ai/models/deepseek-v4-flash.md)*
-
-### Use Cases
-
-Flash is positioned as the cost-optimized variant for production deployments where per-token cost matters. It supports the same three reasoning modes (Non-think, Think, Think Max) and the same tool-call schema as V4-Pro.
-
----
-
-**Related pages:** [[deepseek]], [[deepseek-v4-pro]], [[compressed-sparse-attention]], [[heavily-compressed-attention]], [[manifold-constrained-hyper-connections]], [[muon-optimizer]]
-
-*(来源: wiki/ai/models/deepseek-v4-flash.md)*
-
-### Key Facts
-
-- **Founded:** 2023 (as the AI research division of High-Flyer)
-- **Headquarters:** Hangzhou, China
-- **Known for:** Open-weight LLMs, cost-efficient training, architectural innovation
-- **Key models:** DeepSeek-V2, DeepSeek-V3, DeepSeek-V3.2, DeepSeek-R1, DeepSeek-V4-Pro, DeepSeek-V4-Flash
-
-*(来源: wiki/ai/organizations/deepseek.md)*
-
-### Model Series
-
-- **DeepSeek-V2** (2024): Mixture-of-Experts architecture, economical and efficient. ^[raw/papers/deepseek-v4-2026.md]
-- **DeepSeek-V3** (2024-12): 671B total parameters, 37B activated — the predecessor to V4. ^[raw/papers/deepseek-v4-2026.md]
-- **DeepSeek-V3.2** (2025): Refinement of V3, used as the baseline comparison in the V4 paper. ^[raw/papers/deepseek-v4-2026.md]
-- **DeepSeek-R1** (2025): Reasoning model that established test-time scaling paradigm for open models. ^[raw/papers/deepseek-v4-2026.md]
-- **DeepSeek-V4-Pro** (2026): 1.6T total params (49B activated), introduces CSA/HCA hybrid attention, mHC, Muon optimizer.
-- **DeepSeek-V4-Flash** (2026): 284B total params (13B activated), cost-efficient architecture.
-
-*(来源: wiki/ai/organizations/deepseek.md)*
-
-### Infrastructure
-
-DeepSeek developed several infrastructure components for the V4 series:
-- **MegaMoE**: Open-source fused CUDA mega-kernel for MoE expert parallelism (component of DeepGEMM). ^[raw/papers/deepseek-v4-2026.md]
-- **DSec (DeepSeek Elastic Compute)**: Production-grade sandbox platform for agentic AI post-training and evaluation. ^[raw/papers/deepseek-v4-2026.md]
-- **3FS**: Fire-Flyer File System — distributed filesystem used as storage backend. ^[raw/papers/deepseek-v4-2026.md]
-- **DSpark**: 置信度调度投机解码框架，半自回归生成 + 硬件感知调度，V4 推理提速 60%–85%。^[raw/articles/deepseek-dspark-jxz-2026.md]
-- **DeepSpec**: 全栈推测性解码训练与评估开源代码库，支持 DSpark/DFlash/Eagle3，面向 Qwen3/Gemma。^[raw/articles/deepseek-dspark-jxz-2026.md]
-
-*(来源: wiki/ai/organizations/deepseek.md)*
-
-### Philosophy
-
-DeepSeek emphasizes open-source release of model checkpoints and technical reports. The V4 series checkpoints are available at [huggingface.co/collections/deepseek-ai/deepseek-v4](https://huggingface.co/collections/deepseek-ai/deepseek-v4). ^[raw/papers/deepseek-v4-2026.md]
-
-The lab's approach combines architectural innovation with infrastructure co-design to achieve state-of-the-art performance while keeping training and inference costs manageable.
-
----
-
-**Related pages:** [[deepseek-v4-pro]], [[deepseek-v4-flash]], [[deepseek-moe]], [[compressed-sparse-attention]], [[heavily-compressed-attention]], [[manifold-constrained-hyper-connections]], [[muon-optimizer]], [[dspark]], [[deepspec]]
-
-*(来源: wiki/ai/organizations/deepseek.md)*
-
-## 面试要点
-
-*该主题暂无专门的面试要点文件*
-
-## 源文件索引
-
-- wiki/ai/models/deepseek-v4-pro.md — DeepSeek-V4-Pro 旗舰 MoE 模型
-- wiki/ai/models/deepseek-v4-flash.md — DeepSeek-V4-Flash 高效 MoE 模型
-- wiki/ai/organizations/deepseek.md — DeepSeek 深度求索
-- wiki/raw/papers/deepseek-v4-2026.md — Untitled
+> 覆盖 8 个知识点 | 来源 4 个文件 | 更新于 2026-07-11
+
+## 1. 一句话总结
+DeepSeek 是由量化对冲基金 High‑Flyer 孵化的中国 AI 研究公司，以开源高效大模型著称；其最新 DeepSeek‑V4 系列通过混合压缩注意力（CSA/HCA）、流形约束超连接（mHC）和 Muon 优化器三项架构创新，在 100 万 token 长度上把推理 FLOPs 和 KV 缓存压缩至上一代 V3.2 的 10%–27%，并以 49B 激活参数在知识、推理、数学、代码等核心任务上逼近甚至超越前沿闭源模型。
+
+## 2. 核心原理
+### 2.1 问题背景
+随着推理模型和长时程任务（如深度代码代理、跨文档分析）的兴起，标准注意力机制的**二次计算复杂度**成为超长上下文处理的根本瓶颈。即使参数量足够大，高昂的推理成本和巨大的 KV 缓存也会阻碍测试时扩展和实际部署。同时，业界急需既能保持强大通用能力、又能在百万 token 级别高效运行的开放模型。
+
+### 2.2 方案概述
+DeepSeek‑V4 系列通过 **“架构‑优化‑基础设施”三位一体**的设计来打破长上下文效率壁垒：
+
+- **注意力**：把 CSA（压缩稀疏注意力）和 HCA（重度压缩注意力）**交错混合**，在序列维度大幅压缩 KV 缓存，同时保留局部窗口密集注意力。
+- **连接机制**：用 **mHC** 替代普通残差连接，约束残差映射在特定流形上，提升信号传播稳定性和模型表达能力。
+- **训练**：引入 **Muon 优化器**加速收敛、增强训练稳定；后训练采用 **先独立培养领域专家（强化学习），再通过 on‑policy distillation 统一融合**的两阶段流水线。
+- **基础设施**：配合 MegaMoE/CUDA 大核融合、TileLang DSL、FP4 量化训练、异质 KV 缓存等实现工程上的极致效率。
+
+整体架构仍保留 Transformer + DeepSeekMoE + MTP（Multi‑Token Prediction）的经典框架，只在关键环节做重构。
+
+## 3. 实现细节
+### 3.1 组织概况与模型谱系
+- **DeepSeek** 成立于 2023 年，总部位于杭州，是 High‑Flyer 量化对冲基金的子公司。
+- **理念**：坚持开源权重和技术报告，兼顾架构创新与基础设施协同设计。
+- **主要模型路线**：
+  - DeepSeek‑V2（2024）：MoE 架构，经济高效。
+  - DeepSeek‑V3（2024.12）：671B 参数，37B 激活，V4 的前身。
+  - DeepSeek‑R1（2025）：推理模型，开创测试时扩展范式。
+  - DeepSeek‑V3.2（2025）：V3 的工程精炼版，作为 V4 论文的基线。
+  - **DeepSeek‑V4‑Pro（2026）**：1.6T 总参/49B 激活，旗舰模型。
+  - **DeepSeek‑V4‑Flash（2026）**：284B 总参/13B 激活，成本优化版。
+
+### 3.2 DeepSeek‑V4 架构与核心创新
+#### 3.2.1 混合注意力：CSA + HCA
+- **CSA（压缩稀疏注意力）**：压缩率 `m=4`，先把序列维度压缩为 1/4，再用 DeepSeek Sparse Attention（DSA）进行稀疏注意力；内置索引查询头 `top‑k=1024(Pro)/512(Flash)`，在保持检索能力的同时极大降低缓存。
+- **HCA（重度压缩注意力）**：压缩率 `m'=128`，对 KV 做更激进的压缩后走密集注意力，用于处理全局依赖。
+- **混合方式**：CSA 层与 HCA 层**交错分布**，确保长程信息和局部信息的平衡。
+- **额外细节**：保留滑动窗口注意力（窗口 128）以加强局部建模；查询头数 128/64，头维 512，输出分组 16/8，中间维度 1024/1024（Pro/Flash）。
+
+#### 3.2.2 流形约束超连接（mHC）
+- 把 Transformer 块间的残差连接升级为**超连接**，并将残差映射**约束到特定流形**上，相比于朴素 HC 能进一步提高深层信号传播的稳定性，同时保留模型表达能力。
+- 在训练中通过**权重重计算与融合内核**降低了 mHC 的显存和时间开销。
+
+#### 3.2.3 Muon 优化器
+- 对大部分参数使用 Muon 优化器，仅 embedding 和 norm 层采用 AdamW。
+- Muon 通过**牛顿‑舒尔茨迭代**近似正交化更新，带来更快的收敛速度和更好的训练稳定性，同时提升最终模型质量。
+
+#### 3.2.4 DeepSeekMoE 与 MTP
+- **MoE**：延续细粒度路由专家+共享专家设计。主要变化：
+  - 路由亲和度函数由 `Sigmoid` 改为 `Sqrt(Softplus(·))`。
+  - 取消路由目标节点数限制，并彻底重分配并行策略。
+  - 前几个 Transformer 块的稠密 FFN 替换为基于 **Hash 路由**的 MoE 层（依据 token ID 决定专家）。
+  - 负载均衡继续采用无辅助损失策略，辅以序列级平衡损失。
+- **MTP**：保留 V3 的 1 层多 token 预测模块，无修改。
+
+#### 3.2.5 模型规格对比（Pro vs Flash）
+
+| 属性 | DeepSeek‑V4‑Pro | DeepSeek‑V4‑Flash |
+|------|----------------|------------------|
+| 总参数量 | 1.6T | 284B |
+| 每 token 激活参数 | 49B | 13B |
+| 上下文长度 | 1M tokens | 1M tokens |
+| 层数 | 61 | 43 |
+| 隐藏维度 | 7168 | 4096 |
+| 路由专家数 | 384（1 共享 + 384 路由，6 激活） | 256（1 共享 + 256 路由，6 激活） |
+| 专家隐藏维度 | 3072 | 2048 |
+| 训练 Token 数 | 33T | 32T |
+| 注意力查询头数 | 128 | 64 |
+| CSA top‑k | 1024 | 512 |
+| 输出分组数 | 16 | 8 |
+
+#### 关键代码路径
+- `DeepSeekMoE`：路由计算涉及 `Sqrt(Softplus())` 亲和度函数与 Hash 路由策略。
+- `mHC` 实现：通过重计算和融合内核在 `training_framework` 中调用。
+- 推理框架：异质 KV 缓存管理、磁盘暂存策略以支持共享前缀复用。
+
+#### 数据流
+1. 输入 token → embedding → 若干个 Transformer 块（CSA/HCA 注意力 + DeepSeekMoE，经 mHC 残差连接）→ 预测头 + MTP 模块 → 输出。
+2. CSA 路径：输入 → 压缩投影 → DSA 稀疏注意力 → 解压；HCA 路径：输入 → 高压缩 → 密集注意力。
+3. MoE 路径：token → 路由选择 top‑k 专家 → 各专家 FFN → 加权聚合。
+
+### 3.3 训练与后训练
+- **预训练**：Flash 训练 32T token，Pro 33T；原始支持 1M 上下文。Flash‑Base 在多数基准已超越 V3.2‑Base。
+- **后训练流水线**：
+  1. **专家培养**：针对数学、代码、代理、指令遵循等域，先后进行 SFT 和 GRPO 强化学习，各自产出专精模型。
+  2. **统一融合**：通过 **On‑Policy Distillation（OPD）**，让学生模型（统一模型）最小化与各教师专家的反向 KL 散度，整合多域能力。
+- **基础设施**：
+  - FP4 量化感知训练（MoE 专家权重和索引器 QK 路径）。
+  - 混合 ZeRO 策略适配 Muon 优化器。
+  - 两阶段上下文并行应对压缩注意力。
+  - 弹性计算沙盒 DSec 用于代理 AI 训练和评估。
+
+### 3.4 推理效率与工具格式
+- 在 1M token 上下文，V4‑Pro 单 token FLOPs 仅为 V3.2 的 **27%**，KV 缓存为 **10%**；V4‑Flash 更是降至 **10%** FLOPs 和 **7%** 缓存。
+- 支持三种推理模式：**Non‑think**（快速直觉）、**Think（High）**（有意识逻辑分析）、**Think（Max）**（极限推理），通过 RL 训练中的长度惩罚和上下文窗口区分。
+- 工具调用：使用 `|DSML|` 特殊 token 和 XML 编码参数的新 schema，降低转义失败率与工具调用错误。
+
+## 4. 框架对比
+### 4.1 DeepSeek‑V4‑Pro vs DeepSeek‑V4‑Flash
+| 比较维度 | V4‑Pro | V4‑Flash |
+|---------|--------|---------|
+| 定位 | 旗舰级全面能力 | 成本优化、高性价比 |
+| 知识评测 | 大幅领先所有开源模型，直逼 Gemini‑3.1‑Pro | 参数小导致知识任务较弱 |
+| 推理能力 | 超越 GPT‑5.2/Gemini‑3.0‑Pro；略逊 GPT‑5.4/Gemini‑3.1‑Pro（约 3‑6 月差距） | 与 GPT‑5.2/Gemini‑3.0‑Pro 相当（给予更多思考预算时） |
+| 代理任务 | 与 Kimi‑K2.6、GLM‑5.1 持平，内部评估优于 Claude Sonnet 4.5 | 在复杂任务上落后 Pro，简单任务持平 |
+| 长上下文 | 1M token 下超越 Gemini‑3.1‑Pro，MRCR 不如 Claude Opus 4.6 | 同架构下更轻量，同样支持 1M |
+| 数学/代码 | Codeforces 评级 3206（全球第 23 名），Putnam 满分 120/120 | 未单独报告此类极限指标 |
+| 成本效率 | 推理成本较 V3.2 骤降，但绝对算力仍高 | 更低单 token 成本，适合大批量生产部署 |
+
+### 4.2 与 DeepSeek‑V3.2 的效率对比
+在 1M 上下文设定下，V4 相对 V3.2：
+- 推理 FLOPs：Pro 只有 V3.2 的 27%，Flash 仅 10%。
+- KV 缓存：Pro 为 V3.2 的 10%，Flash 为 7%。
+- 基础模型性能：V4‑Flash‑Base 已全面优于 V3.2‑Base，而 Pro‑Base 进一步树立新标杆。
+
+## 5. 面试要点
+### 5.1 常见追问
+#### Q: V4 在长上下文上效率提升如此巨大的关键是什么？
+- 混合压缩注意力（CSA+HCA）通过不同压缩率配合稀疏/密集机制，大幅削减 KV 缓存尺寸。
+- 查询压缩（CSA 的索引器和 HCA 压缩）减少需要计算的注意力头维度。
+- 路由专家使用 FP4 精度，进一步降低计算和存储（未来硬件可使 FP4 算力翻倍）。
+
+#### Q: mHC 和普通残差连接有什么本质区别？
+- 普通残差是逐元素加法；mHC 首先借鉴了 Hyper‑Connections 的多路显式信息流设计，然后引入流形约束，强制残差映射落在某个特定几何流形上。
+- 这样能更好地控制深层网络的信号下降与爆炸，在保持表达力的同时提升训练稳定性。
+
+#### Q: 为什么后训练要用 On‑Policy Distillation（OPD）？
+- 独立训练的专家擅长各自领域，但直接合并会相互干扰。
+- OPD 让学生模型用自己的策略采样，再最小化与教师专家分布的反向 KL 散度，既能整合多域专长，又避免模型退化为单一模型。
+
+#### Q: V4‑Pro 和 Flash 激活参数相差 4 倍，性能差距如何？
+- 知识类任务高下立判，Pro 显著更强；推理类如果在 Flash 上增加思考预算，可追平甚至接近 Pro；代理类在复杂场景下 Pro 优势明显，简单任务两者相当。
+- 本质是模型容量和思考量的 trade‑off。
+
+### 5.2 口述话术
+“DeepSeek 是一家注重开源和架构创新的中国 AI 实验室。它的 V4 系列主打百万 token 高效推理，创新点有三：用 CSA 和 HCA 混合注意力把 KV 缓存压缩到原来的十分之一，引入流形约束超连接增强深层训练稳定性，以及用 Muon 优化器加速收敛。旗舰 Pro 版本 1.6T 参数里只激活 49B，在数学和代码中达到竞赛级水平。后训练则是先培养多个领域专家，再用 on‑policy distillation 融合成一个统一模型，兼顾了多任务能力。整个系统通过 MoE 融合内核、FP4 量化等基础设施优化，真正做到了长上下文实用化。”
+
+## 6. 延伸阅读
+### 6.1 相关主题
+- 混合压缩注意力（CSA/HCA）的详细设计
+- mHC：流形约束超连接原理
+- Muon 优化器在大模型训练中的应用
+- On‑Policy Distillation 技术
+- DeepSpec 与 DSpark 投机解码加速
+- MegaMoE/DeepGEMM 等底层算子
+
+### 6.2 源文件
+| 文件路径 | 标题 | 类型 |
+|---------|------|------|
+| wiki/ai/models/deepseek-v4-pro.md | DeepSeek‑V4‑Pro | 模型规格页 |
+| wiki/ai/models/deepseek-v4-flash.md | DeepSeek‑V4‑Flash | 模型规格页 |
+| wiki/ai/organizations/deepseek.md | DeepSeek 组织 | 组织简介 |
+| wiki/raw/papers/deepseek-v4-2026.md | DeepSeek‑V4 技术报告 | 论文全文 |
