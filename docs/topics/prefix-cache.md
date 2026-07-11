@@ -85,15 +85,20 @@ hash_combine(seed, val):
 #### 数据流
 ```mermaid
 flowchart LR
-    A[新请求 input_ids] --> B[C++ BlockManager<br/>前缀匹配]
-    B --> C[计算 computed_block_lens<br/>+ remote_computed_block_lens]
+    A[新请求 input_ids] --> B[C++ BlockManager
+        前缀匹配]
+    B --> C[计算 computed_block_lens
+        + remote_computed_block_lens]
     C --> D[protobuf 序列化 → Python]
-    D --> E[PrefixCachePlugin<br/>model_inputs_update]
+    D --> E[PrefixCachePlugin
+        model_inputs_update]
     E --> F{有缓存命中?}
-    F -->|是| G[get_prefix_kvcache_from_mempool<br/>→ 截断 input_ids]
+    F -->|是| G[get_prefix_kvcache_from_mempool
+        → 截断 input_ids]
     F -->|否| H[正常推理]
     G --> I[Forward 跳过已缓存部分]
-    I --> J[put_prefix_kvcache_to_mempool<br/>新 block 写入分布式存储]
+    I --> J[put_prefix_kvcache_to_mempool
+        新 block 写入分布式存储]
 ```
 ### 3.4 SCP（Sequence Context Parallelism）适配
 MindIE 深度适配序列并行场景（sp_size > 1 或 cp_size > 1）：

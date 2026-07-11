@@ -30,7 +30,8 @@ flowchart TB
     subgraph Coord["Coordinator — Worker 进程"]
         ROUTER[Router · SeparatePDRouter]
         SC[AsyncSchedulerClient]
-        POLICY["KvCacheAffinityPolicy v2<br/>top_k=3"]
+        POLICY["KvCacheAffinityPolicy v2
+        top_k=3"]
         TOK[TokenizerManager]
         CAC[ConductorApiClient]
         SHM_R[Workload SHM Reader]
@@ -48,12 +49,16 @@ flowchart TB
         PN[Prefill Instance #N · DP0/DP1]
     end
     REQ --> ROUTER
-    SC <-->|"ALLOCATE_ONLY RPC<br/>candidates[0..2]"| SS
-    CAC -->|"HTTP /query<br/>prompt token_ids"| IDX
-    IDX -.->|"ZMQ KV Event<br/>block hash 上报"| P1
+    SC <-->|"ALLOCATE_ONLY RPC
+        candidates[0..2]"| SS
+    CAC -->|"HTTP /query
+        prompt token_ids"| IDX
+    IDX -.->|"ZMQ KV Event
+        block hash 上报"| P1
     IDX -.->|"ZMQ KV Event"| P2
     IDX -.->|"ZMQ KV Event"| PN
-    SHM_R -.->|"ZMQ SUB<br/>实时负载推送"| P1
+    SHM_R -.->|"ZMQ SUB
+        实时负载推送"| P1
     SS -.->|"SHM 写回"| SHM_R
     SC -->|"最终落点"| P1
 ```
@@ -128,18 +133,24 @@ $$
 ```mermaid
 flowchart TB
     subgraph Engine["推理引擎面（vLLM-Ascend）"]
-        PE["Prefill 实例<br/>kv_producer"]
-        DE["Decode 实例<br/>kv_consumer"]
-        MC["MultiConnector<br/>[0]Layerwise [1]Store"]
+        PE["Prefill 实例
+        kv_producer"]
+        DE["Decode 实例
+        kv_consumer"]
+        MC["MultiConnector
+        [0]Layerwise [1]Store"]
     end
     subgraph Pool["KV 池服务（独立 Pod）"]
-        MM["mooncake_master :50088<br/>三级存储 + 驱逐 + 租约"]
+        MM["mooncake_master :50088
+        三级存储 + 驱逐 + 租约"]
     end
     PE -->|"layerwise 逐层直传 KV"| DE
-    MC -->|"AscendStoreConnector<br/>PUT/GET KV"| MM
+    MC -->|"AscendStoreConnector
+        PUT/GET KV"| MM
     MM -.->|"HBM 满 → 溢出"| DRAM[(DRAM)]
     DRAM -.->|"可选下沉"| SSD[(SSD)]
-    MM -.->|"Prometheus 指标"| METRICS["MetricsCollector<br/>kv_pool_* 指标族"]
+    MM -.->|"Prometheus 指标"| METRICS["MetricsCollector
+        kv_pool_* 指标族"]
 ```
 
 | 组件 | 角色 |
