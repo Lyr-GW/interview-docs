@@ -30,22 +30,15 @@
 ```mermaid
 graph TB
     subgraph "路由层"
-        A1[Motor Coordinator
-        KV亲和调度] --> A2[Mooncake Conductor
-        前缀索引]
-        A3[semantic-router
-        强弱模型分发]
+        A1[Motor Coordinator KV亲和调度] --> A2[Mooncake Conductor 前缀索引]
+        A3[semantic-router 强弱模型分发]
     end
     subgraph "计算层"
-        B1[Prefill实例
-        compute-bound] --> B2[Decode实例
-        memory-bound]
+        B1[Prefill实例 compute-bound] --> B2[Decode实例 memory-bound]
     end
     subgraph "传输/存储层"
-        C1[Mooncake Transfer Engine
-        RDMA零拷贝]
-        C2[Mooncake Store
-        分布式KV池]
+        C1[Mooncake Transfer Engine RDMA零拷贝]
+        C2[Mooncake Store 分布式KV池]
     end
     A2 -.注册/查询命中.-> B1
     B1 --> C1 --> B2

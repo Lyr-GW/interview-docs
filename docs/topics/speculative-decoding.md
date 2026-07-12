@@ -39,18 +39,12 @@ MindIE 在 DeepSeek V3 主模型上增加固定的 MTP 层（layer 61），以 `
 ```mermaid
 flowchart TB
     subgraph MindIE_MTP[端到端投机推理链路 — MindIE MTP]
-        A[Scheduler / Engine
-        llm_engine.cpp]
-        B[PluginManager
-        generate_token]
-        C[MtpPlugin
-        mtp_plugin.py]
-        D[DecodingPolicy + CacheEngine
-        decoding_policy.py]
-        E[GeneratorTorch → ModelRunner
-        主模型 + MTP 子模型]
-        F[DeepseekV3MtpLayer
-        deepseek_v3_mtp.py]
+        A[Scheduler / Engine llm_engine.cpp]
+        B[PluginManager generate_token]
+        C[MtpPlugin mtp_plugin.py]
+        D[DecodingPolicy + CacheEngine decoding_policy.py]
+        E[GeneratorTorch → ModelRunner 主模型 + MTP 子模型]
+        F[DeepseekV3MtpLayer deepseek_v3_mtp.py]
         G[plugin_verify: 贪心比对 无损]
         A --> B --> C --> D --> E --> F --> G
     end
@@ -99,19 +93,13 @@ vLLM 将投机解码抽象为 **Speculator**（草稿生成）+ **统一 Rejecti
 
 ```mermaid
 flowchart TB
-    A[Scheduler
-        num_lookahead_slots=k]
-    B[SpecDecodeWorker
-        spec_decode_worker.py]
+    A[Scheduler num_lookahead_slots=k]
+    B[SpecDecodeWorker spec_decode_worker.py]
     C[Top1Proposer → batch 拆分]
-    D[MultiStepWorker / NGram / Medusa / MLP / DFlash / DSpark
-        proposer 族]
-    E[MQAScorer / BatchExpansion
-        target scoring]
-    F[RejectionSampler
-        rejection_sampler.py]
-    G[accepted + bonus token
-        有损随机验证]
+    D[MultiStepWorker / NGram / Medusa / MLP / DFlash / DSpark proposer 族]
+    E[MQAScorer / BatchExpansion target scoring]
+    F[RejectionSampler rejection_sampler.py]
+    G[accepted + bonus token 有损随机验证]
     A --> B --> C --> D --> E --> F --> G
 ```
 - **AutoRegressiveSpeculator**（Eagle/MTP/Gemma4）：草稿逐 token 串行生成，需多次前向。

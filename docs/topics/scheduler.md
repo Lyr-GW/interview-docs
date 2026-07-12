@@ -35,13 +35,11 @@ flowchart TB
     subgraph ENGINE_LAYER[ENGINE LAYER]
         direction TB
         IScheduler[IScheduler 接口]
-        PrePost[PreScheduler / PostScheduler
-        跨 DP 同步模块]
+        PrePost[PreScheduler / PostScheduler 跨 DP 同步模块]
     end
 
     subgraph POLICY_LAYER[POLICY LAYER]
-        Policies[StagePolicy | FcfsPolicy | PDDSPolicy | LayerwiseFcfs
-        KVTransferPolicy]
+        Policies[StagePolicy | FcfsPolicy | PDDSPolicy | LayerwiseFcfs KVTransferPolicy]
     end
 
     subgraph QUEUE_MODEL[QUEUE MODEL]
@@ -49,8 +47,7 @@ flowchart TB
     end
 
     subgraph BLOCK_MGMT[Block Space Management]
-        BlockSpaceManager[BlockSpaceManager
-        NPU + CPU Blocks]
+        BlockSpaceManager[BlockSpaceManager NPU + CPU Blocks]
     end
 
     IScheduler --> Policies
@@ -85,11 +82,9 @@ flowchart TB
 **MindIE** `src/scheduler/scheduler.cpp::Schedule()`
 ```mermaid
 flowchart TB
-    A[Schedule] --> B[DecidePDPriority needSync
-        ← PreScheduler 跨 DP 同步]
+    A[Schedule] --> B[DecidePDPriority needSync ← PreScheduler 跨 DP 同步]
     B --> C[PrepCandidates pdPriorityType, budget]
-    C --> D[Policy.Apply budget, data
-        -- prefillPolicy_ / decodePolicy_]
+    C --> D[Policy.Apply budget, data -- prefillPolicy_ / decodePolicy_]
     D --> E[BackfillConcurrentQueue policyOutput]
     E --> F[ConvertToSchedulerOutput budget, policyOutput]
     F --> G[PostScheduler::SyncBatchInfo AllGather]
