@@ -1,202 +1,113 @@
 # KV Cache 亲和调度与池化
-> 覆盖 12 个知识点 | 来源 13 个文件 | 更新于 2026-07-11
+> 覆盖 12 个知识点 | 来源 8 个文件 | 更新于 2026-07-12
 
 ## 1. 一句话总结
-在多实例（PD 分离/混部）部署下，将请求通过**调度面（亲和路由）**打到已缓存最长相同前缀的 Prefill 节点，并通过**数据面（池化存储）**让 KV Cache 跨节点共享、分级驻留，从而避免重复 prefill，将端到端有效前缀命中率从 ~10% 提升到 ~88%，在典型场景下实现 TTFT 减 70%+、E2E 时延减 50%。
+在 PD 分离、多 Prefill 副本部署下，KV Cache 亲和调度把请求路由到已缓存最长相同 token 前缀的节点，减少重复 prefill 计算、下降 TTFT；KV 池化则把单卡 HBM 缓存扩展成跨节点分级共享池，抬高容量命中率。二者乘法叠加（命中率 = 路由命中 × 容量命中）才能实现生产级收益——客户 4K 上下文场景 TTFT 降约 70%、E2E 降约 50%。核心创新：unified/load_gated 双模式亲和 → Worker top-k 提案 → 中心 Scheduler 权威负载重选，双层防 herding；Mooncake Master 高水位批量驱逐 + 租约 TTL 保池化正确性。
 
 ## 2. 核心原理
+
 ### 2.1 问题背景
-- **前缀缓存碎片化**：单实例 vLLM/SGLang 的自动前缀缓存仅在本地 HBM 生效。多副本做 round-robin/随机路由时，相同前缀请求被均匀打散到不同实例，每个实例都要重复 prefill，集群整体缓存命中率随实例数线性下降（N 实例时 ≈ 1/N）。Prefill 是 TTFT 的主项，长前缀反复重算直接打爆 TTFT。
-- **HBM 容量天花板**：单卡 HBM 只能存有限 token 的 KV cache。热点前缀容易被 LRU 驱逐，下一次复用又得重算。同时 P/D 分离架构下 Prefill 完成后需把 KV 传给 Decode，点对点直连导致时序耦合、P 端显存占用，无法解耦。
-- **并发 burst 下的羊群效应**：多 Worker 并发调度时，若所有 Worker 只看「谁的缓存前缀最长」，会把同前缀的突发流量全灌进同一个热点 endpoint，造成局部过载。
+大规模 LLM 在线推理普遍采用 **Prefill / Decode 分离（PD Disaggregation）**，Prefill 计算密集，Decode 内存带宽密集。同系统 prompt、tools schema、历史轮次前缀在多实例间高度重复：
+- **随机路由** → 每次请求可能落到不同 Prefill 节点，重复 prefill 相同前缀 → 算力浪费、TTFT 恶化。
+- **单卡 HBM 限制** → 本地 prefix cache 容量极有限，热点前缀易被 LRU 驱逐，下一次复用又得重算。
+- **PD 时序耦合** → 无池化时 P 算完必须实时等 D 在线 → 直连传输锁死显存与时序。
 
 ### 2.2 方案概述
-MindIE-PyMotor 提供「调度面（KV 亲和）+ 数据面（KV 池化）」的组合方案：
-- **调度面（KV 亲和/控制面）**：Coordinator 将请求本地 tokenize（与引擎严格一致），查询 Mooncake Conductor 的全局前缀索引（由各实例的 KV Events 实时构建），拿到各 Prefill 实例/DP rank 的缓存命中长度。然后用 `unified`（亲和-负载加权融合）或 `load_gated`（先负载门控再比亲和）两种策略打分，选出 top-k 候选上报给中心 Scheduler，Scheduler 用权威负载账本在候选集内重选最终落点，防止并发 herding。
-- **数据面（KV 池化/传输面）**：通过 Mooncake Master 将 KV Cache 抽象为跨节点的三级存储池（GPU HBM → DRAM → SSD/远端）；MultiConnector 组合 Layerwise（逐层直传 P→D 压低 TTFT）与 Store（写池解耦，释放 P 端显存、支持跨请求复用）；高水位批量驱逐 + 租约 TTL 保证容量管理与正确性。
+MindIE-PyMotor（Motor）在调度面通过 **Mooncake Conductor** 全局 KV 前缀索引，把请求 tokenize 后查询各实例各 DP rank 的缓存命中长度，再用 unified（亲和-负载加权融合）或 load_gated（先筛低负载再比前缀）打分，选出最优 Prefill 落点；数据面通过 **Mooncake Store** 把 KV 抽象成跨节点分级共享池（HBM → DRAM → 远端），解耦 P→D 传输并抬高容量命中率。
 
-**联合效果**：端到端有效前缀命中率 $h = h_{reuse} \times P_{route} \times P_{pool}$。亲和负责抬高路由命中 $P_{route}$，池化负责抬高容量命中 $P_{pool}$，两者缺一则乘积坍塌。代码交汇于 `prefill_cost = max(0, isl - overlap_credit × matched_tokens)`。
+**三层角色分工：** Conductor 回答“缓存在哪”（订阅引擎 KV Events 维护前缀表）；Worker 回答“谁综合最优”（亲和 + 本地负载视图打分）；Scheduler 做最终仲裁（权威新鲜负载账本防 herding）。
+
+```mermaid
+graph TB
+    Client["客户端请求<br/>(messages/tools)"]
+    Client --> Router["Coordinator Worker"]
+    subgraph Worker["Worker 侧：亲和打分（提案）"]
+        Router --> TM["TokenizerManager<br/>apply_chat_template → token ids"]
+        TM --> Policy["KvCacheAffinityPolicy<br/>unified / load_gated"]
+        Policy -->|"POST /query"| Conductor["Mooncake Conductor<br/>PrefixCacheTable"]
+        Conductor -->|"每实例每 DP matched_tokens"| Policy
+    end
+    subgraph Sched["Scheduler 侧：权威仲裁"]
+        Policy -->|"top-k 候选 + prefill_cost"| Arbiter["SchedulerServer<br/>fresh workload ledger 全局重排"]
+    end
+    Arbiter -->|"最终落点"| P1["vLLM Prefill Instance"]
+    P1 -->|"KV Events (ZMQ)"| Conductor
+    P1 -->|"写 KV 入池"| Pool[("KV 池<br/>Mooncake Master")]
+    Pool -->|"异步读"| D1["Decode Instance"]
+```
 
 ## 3. 实现细节
-### 3.1 调度面：KV Cache 亲和调度
-#### 3.1.1 核心组件与职责
-系统横跨四层，职责分离：
 
-```mermaid
-flowchart TB
-    subgraph Client["Client / Gateway"]
-        REQ[推理请求 chat / completion]
-    end
-    subgraph Coord["Coordinator — Worker 进程"]
-        ROUTER[Router · SeparatePDRouter]
-        SC[AsyncSchedulerClient]
-        POLICY["KvCacheAffinityPolicy v2 top_k=3"]
-        TOK[TokenizerManager]
-        CAC[ConductorApiClient]
-        SHM_R[Workload SHM Reader]
-    end
-    subgraph Conductor["Mooncake Conductor — 全局 KV 索引"]
-        IDX[Prefix Indexer :13333]
-    end
-    subgraph Sched["Scheduler — 权威账本"]
-        SS[SchedulerServer]
-        LEDGER[(workload ledger + commit lock)]
-    end
-    subgraph Prefill["Prefill 执行面 — vLLM / SGLang"]
-        P1[Prefill Instance #1 · DP0/DP1]
-        P2[Prefill Instance #2 · DP0/DP1]
-        PN[Prefill Instance #N · DP0/DP1]
-    end
-    REQ --> ROUTER
-    SC <-->|"ALLOCATE_ONLY RPC
-        candidates[0..2]"| SS
-    CAC -->|"HTTP /query
-        prompt token_ids"| IDX
-    IDX -.->|"ZMQ KV Event
-        block hash 上报"| P1
-    IDX -.->|"ZMQ KV Event"| P2
-    IDX -.->|"ZMQ KV Event"| PN
-    SHM_R -.->|"ZMQ SUB
-        实时负载推送"| P1
-    SS -.->|"SHM 写回"| SHM_R
-    SC -->|"最终落点"| P1
-```
+### 3.1 Tokenize 前置：调度层拿到与引擎一致的 token ids
+**为什么必须本地 tokenize：** Conductor 按 token block 对齐做前缀匹配，chat template 与 tools 注入会改变 token 序列。Coordinator 若用字符级近似或缺失 tools，`longest_matched` 会系统性偏错，亲和调度反帮倒忙。
 
-| 组件 | 级别 | 角色 |
-|------|------|------|
-| Mooncake Conductor | 外部索引 | 订阅各 DP 的 ZMQ KV Events，维护全局前缀表，暴露 `/query` |
-| vLLM Prefill | 执行面 | 发布 KV Event (ZMQ PUB)，执行计算 |
-| ConductorApiClient | Coordinator | HTTP 薄封装：register/unregister/query |
-| KvCacheAffinityPolicy v2 | Coordinator | 核心策略：tokenize → query → 双模式评分 → top-k |
-| TokenizerManager | Coordinator | HF tokenizer 单例，与引擎一致 |
-| AsyncSchedulerClient | Coordinator | 策略分发，上报 top-3 候选 |
-| SchedulerServer | 中央 Scheduler | 权威负载重选 + commit allocate |
-| Workload SHM Reader | Coordinator | ZMQ SUB 推送，评分前热补丁 |
+**实现要点：**
+- `TokenizerManager`（单例）用 HuggingFace `AutoTokenizer` 加载与引擎**同一模型路径**的 tokenizer，调 `apply_chat_template(messages, tools, add_generation_prompt=True)`。
+- tokenize 结果缓存在 `req_info.token_ids`，一次 tokenize 三处复用：Conductor 前缀查询、`isl` 参与亲和打分、`calculate_demand_workload` 用真实 token 数记账。
+- **fail-closed**：tokenize 失败返回 `[]`，调度整体回退 LoadBalance——宁可放弃亲和，也不拿半对序列误导 Conductor。
+- **短 prompt 快路径**：prompt 短于 1 个 KV block 时跳过 HTTP 查询（Conductor 只索引整块），直接按全零命中排序。
 
-#### 3.1.2 双模式评分算法
-所有 endpoint 的评分都从 `_collect_load_candidates` 产生的三元组出发生成：`(load_cost, matched_tokens, prefill_cost)`，其中 `prefill_cost = max(0, isl - overlap_credit × matched_tokens)`。
+### 3.2 双模式亲和评分（v2，当前生产使用）
+KvCacheAffinityPolicy v2 的通用层 `_collect_load_candidates` 先构建每个 endpoint 的 `(load_cost, matched_tokens, prefill_cost)` 三元组，然后按配置模式排序：
 
-**Unified 模式（默认）**：软加权融合，越低越好。
-
+**Unified 模式（默认推荐）—— 软融合，全局取最小：**
 $$
-\text{score} = \text{prefill\_load\_scale} \times \max(0, \text{isl} - \text{overlap\_credit} \times \text{matched\_tokens})
-      + \text{load\_weight} \times \text{workload\_score}
+\text{score} = \text{prefill\_load\_scale} \times \max(0, \text{isl} - \text{overlap\_credit} \times \text{matched\_tokens}) + \text{load\_weight} \times \text{workload\_score}
 $$
+- `overlap_credit` 默认 1.0 → 命中 1 个 token 就少算 1 个 prefill。
+- `load_weight` 默认 1.0 → 两项共享 token 量纲，物理含义是“1 token 排队负载 ≈ 1 token 待算 prefill”。
+- 关键性质：无缓存的空闲 endpoint **也能赢过**有缓存但忙的热点，天然防 herding。
+- 参数调优：`load_weight=0` 退化为纯亲和；`overlap_credit=0` 退化为纯负载均衡。
 
-- `load_weight=0` → 纯前缀贪心；`overlap_credit=0` + `load_weight=1` → 纯负载均衡。
-- 关键性质：没有缓存命中的空闲 endpoint 也可能胜出，避免热前缀 herding。
+**Load-Gated 模式—— 硬约束，先筛后选：**
+1. Stage 1（负载门）：保留 `load_gate_topn`（默认 2）个最轻载 endpoint。
+2. Stage 2（亲和排）：只在门内按最长前缀命中排序（平局取更闲），返回 top-k。
+- 亲和**永远不能**把请求拉到“最闲集合”之外——适合严控负载长尾的场景。
 
-**Load-Gated 模式**：两阶段硬约束：
+### 3.3 Worker 提案 + Scheduler 权威仲裁（防 herding 的三版演进）
+多 Worker 并发 burst 时，所有 Worker 本地都会算出同一个“亲和最优” endpoint → 全部灌过去 → 热点打爆。Motor 从 overlay 本地补丁演进到全网权威仲裁：
 
-1. Stage 1（负载门）：按负载排序，保留 Top-N 最低负载 endpoint（`load_gate_topn` 默认 2）。
-2. Stage 2（亲和排）：在门控集合内按 `(matched_tokens DESC, load_cost ASC)` 排序取 top_k。
+| 版本 | 方案 | 问题 | 代表 PR |
+|------|------|------|---------|
+| V1（已废弃） | Worker 本地 in-flight overlay | 单 Worker 有效，跨 Worker 无效，TTL 难调 | — |
+| V2 | Worker 提 top-k（k=3）候选，Scheduler 在候选集内重选 | k 可能截断全局最优 | #210 |
+| V3（unified 最终态） | Worker 上报全量 prefill_cost + 权重，Scheduler 全局重算完整 unified 分数 | 最优；load_gated 保持 V2 固定 top-k（硬界不能松绑） | #304 |
 
-| 维度 | Unified | Load-Gated |
-|------|---------|------------|
-| 核心思路 | 线性加权，全局 argmin | 负载门过滤 → 亲和排序 |
-| 负载影响 | 软影响：忙但命中高仍可能胜出 | 硬约束：超出 topn 直接排除 |
-| 适用场景 | 负载均匀，前缀复用为主 | 负载波动大，严格限流 |
+**V3 的精髓：** `score = scale × prefill_cost + weight × load` 中，prefill_cost（亲和的数学）不随时间变化、Worker 已算完；load（负载的新鲜值）由 Scheduler 权威账本补上。Scheduler 不需要 prompt、不需要再查 Conductor，一次 O(endpoints) 扫描就得到全局 min。
 
-#### 3.1.3 分布式决策：Worker top-k 提案 + Scheduler 权威重选
-多 Worker 进程并发时，本地负载视图可能滞后，导致 burst 全部 hit 同一热点。PR#210 引入三级演进：
+### 3.4 KV 池化：MultiConnector 双通道与三级存储
+池化数据面用 **MultiConnector** 组合两条通道，分别满足实时性与解耦性：
 
-**V1（已移除）：本地 in-flight overlay** —— 每个 Worker 本地叠加未确认的负载，但只作用单进程、TTL 难调、跨 Worker 无效。
+| 通道 | Connector | 优点 | 代价 |
+|------|-----------|------|------|
+| 快路径 | `MooncakeLayerwiseConnector` | 按层流水直传 P→D，首 token 等待短 | 需 P/D 同时在线 |
+| 持久层 | `AscendStoreConnector` | P 写完即释放显存、跨节点共享、可溢出到 DRAM/SSD | 多一跳存储 RTT |
 
-**V2（PR#210）：top-k 候选 + Scheduler 重选**：
-- Worker：Conductor 查询 + 本地打分 → 提出 best-first 排序的 top-k 候选（k=3）。
-- Scheduler：在 ALLOCATE 慢路径中，用**权威 workload ledger** 在候选集内选最低负载者。
-- 保证：比候选集更优的「全局最轻但亲和差的 endpoint」不会被越界选取。
+`kv_transfer_params` 元数据（`remote_engine_id`、`remote_block_ids` 等）由 Coordinator 透传，告诉 D“去哪取 KV”。
 
-**V3（PR#304）：unified 全量上报 + 全局重排**：
-- 利用 `score = prefill_load_scale × prefill_cost + load_weight × load` 的可分解性，Worker 上报每个 endpoint 的 `prefill_cost`（亲和折扣后的待算量，不随时间变化），Scheduler 用自己的新鲜负载重算完整 unified 分数，做全局 min。
-- Scheduler 无需再次 tokenize/查 Conductor，只需一次 O(endpoints) 扫描。平局偏向更低 prefill_cost。
-- load_gated 模式保持固定 top-k 提案不变（硬负载上界不可被软分松绑）。
+**驱逐机制：**
+- 高水位触发：占用率 ρ ≥ `eviction_high_watermark_ratio`（默认 0.9）→ 批量驱逐 `eviction_ratio × C`（默认 0.1）。
+- 租约 TTL（默认 11000ms）：KV 写入后在 TTL 内保证不被驱逐，大于 `max(T_decode, ASCEND_CONNECT_TIMEOUT, ASCEND_TRANSFER_TIMEOUT)`，杜绝 D 还没读完就被淘汰。
 
-**三级降级链**：kv_cache_affinity（超时/无数据/tokenize 失败） → load_balance（全局最小负载 + 实例压力感知） → round_robin 兜底。亲和是增强路径，不是单点。
+**release_kv ≠ 删除池中数据：** `release_kv` 只是回收 Prefill 本地 HBM，池中 KV 由租约 + 水位独立管理。
 
-#### 3.1.4 关键代码路径
-- `motor/coordinator/scheduler/policy/kv_cache_affinity.py`：`KvCacheAffinityPolicy.select_endpoint_candidates_from_list()` / `_select_with_load()` / `_select_load_gated()`；`TokenizerManager`
-- `motor/coordinator/api_client/conductor_api_client.py`：`ConductorApiClient.register_post()` / `query_conductor()`
-- `motor/coordinator/scheduler/runtime/scheduler_client.py`：`_AFFINITY_CANDIDATE_TOPK = 3`
-- `motor/coordinator/scheduler/runtime/scheduler_server.py`：`_select_lowest_load_among_candidates()` / global unified 重算
-- `motor/coordinator/domain/workload_calculator.py`：prefill 负载用真实 `len(token_ids)` 记账
+### 3.5 KV Events：精确路由的数据底座
+vLLM/SGLang 在 block 存入/驱逐时通过 ZMQ PUB 发布 KV Events（`BlockStored` / `BlockRemoved` / `AllBlocksCleared`），**只传元数据（block_hash、medium）不传张量**。Mooncake Conductor 订阅后维护全局 PrefixCacheTable，使 `/query` 返回的 `longest_matched` 与引擎真实缓存一致，包括`BlockRemoved` 驱逐感知。
 
-#### 3.1.5 Tokenize 前置与 Conductor 交互
-- **TokenizerManager**：单例加载与引擎相同模型目录的 HF tokenizer，`apply_chat_template(messages, tools, ...)`，保证 tools 注入对齐。失败返回 `[]`，fail-closed 降级。
-- **Conductor 注册**：实例上线时，对每个 KVA 角色实例（`ROLE_P` / `ROLE_U`）的每个 endpoint（即 DP rank）调 `POST /register`，上报 `instance_id`、ZMQ 地址、`block_size` 等，让 Conductor 订阅该 DP 的事件流。
-- **Conductor 查询**：`POST /query(token_ids, block_size)`，返回每实例每 DP 的 `longest_matched`（最长连续命中 token 数）及可选的 `GPU/CPU/DISK` 分层命中。
-- **快路径**：若 `len(token_ids) < block_size`，跳过 HTTP 往返，直接走全零匹配（Conductor 按整块哈希，子块 prompt 不可能命中）。
+**对齐要求：** `block_size`、hash 算法、tokenizer、`PYTHONHASHSEED` 必须与引擎一致，否则匹配长度全 0。
 
-### 3.2 数据面：KV 池化
-#### 3.2.1 架构与组件
-```mermaid
-flowchart TB
-    subgraph Engine["推理引擎面（vLLM-Ascend）"]
-        PE["Prefill 实例 kv_producer"]
-        DE["Decode 实例 kv_consumer"]
-        MC["MultiConnector [0]Layerwise [1]Store"]
-    end
-    subgraph Pool["KV 池服务（独立 Pod）"]
-        MM["mooncake_master :50088 三级存储 + 驱逐 + 租约"]
-    end
-    PE -->|"layerwise 逐层直传 KV"| DE
-    MC -->|"AscendStoreConnector
-        PUT/GET KV"| MM
-    MM -.->|"HBM 满 → 溢出"| DRAM[(DRAM)]
-    DRAM -.->|"可选下沉"| SSD[(SSD)]
-    MM -.->|"Prometheus 指标"| METRICS["MetricsCollector kv_pool_* 指标族"]
-```
+### 3.6 联合调度：亲和 × 池化的乘法命中率
+端到端有效命中率 $h = h_{\text{reuse}} \times P_{\text{route}} \times P_{\text{pool}}$，是乘法链，任一因子缺失即坍塌：
 
-| 组件 | 角色 |
-|------|------|
-| mooncake_master | 池化主进程，管理三级存储、水位驱逐、租约 |
-| AscendStoreConnector | vLLM 插件，P 写（lookup_rpc_port="0"）、D 读（"1"） |
-| MooncakeLayerwiseConnector | P→D 逐层直传，不经 Master，压低 TTFT |
-| MultiConnector | 组合 [0]Layerwise 快路径 + [1]Store 持久化 |
+| 因子 | 含义 | 谁负责 |
+|------|------|--------|
+| $h_{reuse}$ | 业务上可复用的前缀比例 | 负载特性 |
+| $P_{route}$ | 请求被路由到持有该前缀实例的概率 | **KV 亲和**（Conductor 全局索引） |
+| $P_{pool}$ | 该前缀在被复用前仍驻留的概率 | **KV 池化**（分级存储+租约） |
 
-#### 3.2.2 驱逐与租约
-- **高水位批量驱逐**：占用率 $\ge$ `eviction_high_watermark_ratio` (默认 0.9) 时，一次驱逐 `eviction_ratio × 总容量` (默认 0.1)，避免频繁单条操作。
-- **租约 TTL**：写入 KV 后，在 `default_kv_lease_ttl`（默认 11s）内保证不被驱逐，确保 D 端能读到。TTL 必须大于 Decode 耗时与传输超时。
-- **release_kv**：Prefill 完成后 Coordinator 通知 P 端可回收本地 HBM，但**不删除池中数据**；池内生命周期由 TTL + 驱逐独立控制。
+**最反直觉的点：** 只开池化收益≈0——虽然池子里有 KV，但随机路由把请求送到一个本地索引查不到该前缀的实例，仍然全量 prefill。亲和提供的全局路由才把“池里有”变成“路由得到”。
 
-#### 3.2.3 关键代码与配置路径
-- `motor/coordinator/vllm_config.py`：`_process_multi_connector/_process_store_connector`
-- 部署生成器：`motor/deployer/lib/generator/kv_pool.py`、`kv_conductor.py`
-- 用户配置：`kv_cache_pool_config` (全局段大小、水位、驱逐比、TTL) → `mooncake_master` 启动参数
-- 指标：`kv_pool_size`、`kv_pool_ratio`、`kv_pool_eviction` 等
-
-### 3.3 亲和 × 池化：联合部署与收益模型
-#### 3.3.1 为何必须叠加
-有效命中率 $h = h_{reuse} \times P_{route} \times P_{pool}$ 是**乘法**，任一因子接近 0 则整体坍塌。
-- 只开池化、随机路由：池里有 KV 但请求落错实例 → `matched_tokens=0` → 全量 prefill。
-- 只开亲和、无池化：路由对了但单卡 HBM 超限前缀被驱逐 → `overlap_credit≈0`（取不回） → 全量 prefill。
-
-#### 3.3.2 联合流程
-```mermaid
-flowchart TB
-    REQ["请求到达"] --> TOK["Tokenize（对齐 vLLM + tools）"]
-    TOK --> Q["亲和：查 Conductor 全局前缀索引"]
-    Q --> SCORE["亲和打分 → top-k 候选"]
-    SCORE --> SCHED["Scheduler 在 top-k 内按新鲜负载重选"]
-    SCHED --> PREFILL["落点 Prefill 实例"]
-    PREFILL --> HIT{"命中前缀?"}
-    HIT -->|"是：池化搬 KV"| LOAD["从 HBM/DRAM/远端池载入已算 KV（不重算）"]
-    HIT -->|"否：算缺口"| CALC["prefill 剩余 token"]
-    LOAD --> WRITE["写 KV 入池 + 打租约"]
-    CALC --> WRITE
-    WRITE --> DEC["P→D：Layerwise 直传 + Store 池化"]
-    DEC --> OUT["Decode 出 token"]
-```
-
-计算交汇：`prefill_cost = max(0, isl - overlap_credit × matched_tokens)`。`matched_tokens` 由亲和提供，`overlap_credit` 靠池化兑现（命中部分必须能从池中取回才免算）。
-
-#### 3.3.3 部署配置共存
-一份 `user_config.json` 同时包含：
-- `scheduler_type = "kv_cache_affinity"` （调度面）
-- `kv-events-config` （P 发 KV Event）
-- `kv_transfer_config`: `MultiConnector` (Layerwise + Store)
-- `kv_cache_pool_config` (段大小/水位/驱逐/TTL)
-- `kv_conductor_config.http_server_port = 13333`
+**代码交汇点：** `prefill_cost = max(0, isl - overlap_credit × matched_tokens)`，`matched_tokens` 由亲和提供，`overlap_credit` 的兑现靠池化搬回 KV。
 
 ## 4. 框架对比
 
@@ -251,180 +162,95 @@ MindIE-PyMotor（路径 `MindIE-PyMotor/motor/coordinator/scheduler/policy/kv_ca
 
 KV 缓存利用率度量的是显存/块池压力，不等于"前缀还在"：
 
-```
 kv_usage = u_kv ≈ used_kv_blocks / capacity
-```
 
 亲和把同前缀请求打到同一台 → 该机利用率升高 → LRU 驱逐 → **高 M 自我失效**。因此利用率是亲和的**稳定性约束**，不是普通负载装饰项。
 
-各框架的利用率处理方式：
-
-| 框架 | 利用率进调度？ | 方式 | 细节 |
-|------|----------------|------|------|
-| **llm-d** | ✅ 软加权 | `kv-cache-utilization-scorer` 权重 2.0 | 与 prefix/queue 并列打分，偏好更低利用率；线性偏好低占用，未与 uncached tokens 耦合 |
-| **Dynamo** | ✅ 硬门控 | busy 阈值 + overlap credit 衰减 | `active_decode_blocks_threshold` 超阈移出候选；`overlap_score_credit_decay` 衰减过热 worker 的 overlap |
-| **AIBrix** | △ 独立策略 | `least-kv-cache` / PD decode scorer | 默认 `prefix-cache` 只用 running 数，不用利用率 |
-| **SGLang/vLLM** | ❌ | 字符级负载或 token 计数 | cache_aware 不涉及利用率 |
-| **Motor** | ❌ | SHM workload 非 usage% | 有 `kv_cache_usage_perc` 指标但仅观测，不进 `KvCacheAffinityPolicy` |
-
-**三种用法对照**：
-
-```
-① 软加权（llm-d）
-   S += λ · (1 - kv_usage)        # 与 prefix/queue 并列
-
-② 硬门控（Dynamo）
-   if used_blocks > threshold: 剔除候选   # block occupancy
-
-③ 独立策略（AIBrix least-kv-cache）
-   argmin(gpu_cache + cpu_cache)  # 不与 prefix 融合
-```
-
-**普遍缺失**：`free_blocks < uncached_tokens` 硬约束；`u_kv × M` 的有效命中衰减；GPU 满但 L2/L3 有副本时的分层处理。
+| 框架 | 利用率进调度？ | 方式 |
+|------|----------------|------|
+| **llm-d** | ✅ 软加权 | `kv-cache-utilization-scorer` 权重 2.0 |
+| **Dynamo** | ✅ 硬门控 | busy 阈值 + overlap credit 衰减 |
+| **AIBrix** | △ 独立策略 | `least-kv-cache` / PD decode scorer |
+| **SGLang/vLLM** | ❌ | 仅字符级负载 |
+| **Motor** | ❌ | SHM workload，`kv_cache_usage_perc` 仅观测 |
 
 ### 5.2 两类假命中
 
-```
-类型 A · 驱逐滞后（假阳性）
-  索引仍写「W 有前缀 S」，引擎已 BlockRemoved
-  → 按高 M 打到 W → 实际全量/大部重算
+- **类型 A · 驱逐滞后（假阳性）**：索引仍写「W 有前缀 S」，引擎已 BlockRemoved → 按高 M 打到 W，实际全量重算
+- **类型 B · 事件空窗**：路由决策领先 BlockStored 到达 → 假阴性打散；若开 speculative TTL 则可控假阳性
 
-类型 B · 事件空窗（假阴性 + speculative 可控假阳性）
-  路由已决策，BlockStored 尚未进索引
-  → 多为假阴性（兄弟请求看不见新缓存，打散）
-  → 若开 speculative：TTL 内可控假阳性（假定会写入）
-```
-
-| | 类型 A（驱逐滞后） | 类型 B（事件空窗） |
-|--|---------------------|---------------------|
-| **主因** | 未订 Removed / 丢事件 / Cleared 未实现 / approx 不知驱逐 | 决策领先元数据 |
-| **高利用率时** | Removed 风暴，更严重 | 写入更密，空窗更密 |
-| **解药** | Removed + Cleared + replay | speculative / predicted TTL |
-
-二者与利用率**正反馈耦合**：满 → 驱逐多 → 假命中多 → 更满。
+二者与利用率正反馈：满 → 驱逐多 → 假命中多 → 更满。
 
 ### 5.3 各框架驱逐/空窗覆盖度
 
 | 框架 | Removed | Cleared | Speculative | 默认假命中风险 |
 |------|---------|---------|-------------|----------------|
 | **llm-d precise** | ✅ | ✅ | ✅ ~2s TTL | 低 |
-| **llm-d approx** | ❌ | ❌ | ❌ | **高**（本地 LRU） |
 | **Dynamo precise** | ✅ | ✅ | ✅ predicted TTL | 低 |
-| **Dynamo approx** | ❌ | TTL prune | 120s TTL | 中 |
-| **AIBrix Event Sync** | ✅ | ❌ 空实现 | ❌ | 中（Cleared 缺口） |
-| **AIBrix 默认** | ❌ | ❌ | ❌ | **高** |
-| **SGLang/vLLM cache_aware** | ❌ | ❌ | ❌ | **高**（字符树） |
-| **Mooncake Conductor** | ✅ 规范 | ✅ 规范 | ❌ | 事件延迟型 |
-| **Motor + Conductor** | 经 Conductor | 经 Conductor | ❌ | 中（无 TTL / 未用利用率） |
+| **AIBrix Event Sync** | ✅ | ❌ 空实现 | ❌ | 中 |
+| **SGLang/vLLM cache_aware** | ❌ | ❌ | ❌ | **高** |
+| **Motor + Conductor** | 经 Conductor | 经 Conductor | ❌ | 中 |
 
-### 5.4 假命中三类缓解策略
-
-```
-① 事件真值：Stored + Removed + Cleared + replay
-② 空窗填补：speculative / predicted 短 TTL（路由后假定写入）
-③ 近似认命：本地树/LRU，用时间换正确性（高 churn 下假阳系统性）
-```
-
-| 框架代表 | ① 事件真值 | ② 空窗填补 | ③ 近似认命 |
-|----------|-----------|-----------|-----------|
-| llm-d precise | ✅ | ✅ ~2s | — |
-| Dynamo | ✅ | ✅ predicted | 可选 120s approx |
-| AIBrix sync | ✅ Removed；❌ Cleared | ❌ | 默认走 ③ |
-| SGLang/vLLM | ❌ | ❌ | ✅ 主路径 |
-| Motor | ✅ 经 Conductor | ❌ | — |
-
-### 5.5 耦合全景：为何要一起看
-
-```
-亲和 → 热机利用率↑ → 驱逐↑ → Removed 增多 / 执行前等待变长
-                         → 类型 A 假阳 + 类型 B 空窗同时恶化
-                         → 若仍用裸 M 高权重 → 正反馈
-```
-
-完整形态（目标，非单一框架已实现）：
-
-```
-M̂(w) = Index(w) · SurvivalPrior(u_kv, waiting, ISL−M) · SpeculativeState
-score = f(M̂, load, waiting, …)
-```
-
-### 5.6 对 Motor / 自研的启示
+### 5.4 对 Motor 的启示
 
 | 优先级 | 动作 | 对标 |
 |--------|------|------|
-| **P0** | 确认 Conductor Removed/Cleared/replay 生产开启 | llm-d/Dynamo 正确性底座 |
-| **P1** | scrape `kv_cache_usage_perc` 进 `unified` 低权重，或高水位硬门 | llm-d ① / Dynamo ② |
-| **P1** | 路由后短 TTL speculative（或 Conductor 侧预测条目） | llm-d/Dynamo ② |
-| **P2** | 观测「路由预期 M − 引擎实际 prefix hit」假命中率 | 闭环 |
-| **P2** | 高利用率时衰减 `overlap_credit` 或提高 Explore | Dynamo decay 思想 |
+| **P0** | 确认 Removed/Cleared/replay 生产开启 | llm-d/Dynamo |
+| **P1** | `kv_cache_usage_perc` 进 `unified` 或高水位硬门 | llm-d/Dynamo |
+| **P1** | 路由后短 TTL speculative | llm-d/Dynamo |
+| **P2** | 观测假命中率 + 高利用率衰减 `overlap_credit` | 闭环 |
 
 ---
 
-## 6. 面试要点
-### 6.1 常见追问
-#### Q: 为什么要做 KV 亲和调度？
-- 多副本时，普通负载均衡会把相同前缀请求打散，每个实例都要重复 prefill，缓存命中率崩溃，TTFT 恶化。
-- 亲和路由通过全局索引把请求送到已缓存最长前缀的节点，避免重复 prefill。
-- MindIE 使用 Mooncake Conductor 作为精确 prefix indexer，查询 `longest_matched` 对齐引擎缓存。
+## 5. 面试要点
 
-#### Q: Motor 的 unified 和 load_gated 怎么选？
-- **unified**（默认）：prefill_cost 和负载加权融合（`α×prefill_cost + β×load`），允许空闲但缓存少的 endpoint 胜出，适合负载较均匀、追求整体命中率最大化的场景。
-- **load_gated**：先筛出 Top-N 最闲 endpoint，再在里面比亲和，硬保证请求只进低负载集合，适合对延迟长尾敏感、必须防止热点过载的场景。
+### 5.1 常见追问
 
-#### Q: 多个 Coordinator Worker 并发时怎么防止 herd？
-- 旧方案：本地 in-flight overlay 只能作用本进程，TTL 难调，跨 Worker 无效。
-- 新方案：Worker 提出亲和 top-k 候选（best-first），中央 Scheduler 用权威负载账本在候选集内重选最低负载者（PR#210）；而后进一步演化为 unified 全量上报 prefill_cost，Scheduler 全局重算完整分数（PR#304）。
-- 核心：Scheduler 持有 commit lock 下的新鲜负载，打散 stale-view burst；且不越出 Worker 提交的亲和候选边界。
+#### Q: 为什么把 tokenize 放在调度层？开销不大吗？
+- 前缀匹配必须在 token 空间做，chat template、tools 注入会让字符前缀与 token 前缀分叉，字符级近似（SGLang router 的做法）对不齐引擎 16-token block 边界。
+- 开销是毫秒级 CPU，且一次 tokenize 三处复用：查 Conductor、算亲和分、按真实 token 数记负载账——第三点还顺手解锁了入口长度预校验（超 context 直接拒绝）。
 
-#### Q: 只开池化不开亲和会怎样？
-- 池子里有所需 KV，但请求被随机路由到未缓存该前缀的实例，该实例本地查不到，仍然全量 prefill。
-- 有效命中率受路由命中 $P_{route} \approx 1/N$ 限制，整体 h 仍低。
+#### Q: 亲和粒度是实例级还是更细？
+- DP rank 级。vLLM DP 部署下每个 DP rank 有独立 KV 池，注册时每个 endpoint 按“基础端口 + rank”单独上报 kv-events 端点，Conductor 返回 `DP: {rank: matched_tokens}`，打分和最终落点都精确到 (instance, endpoint)。
 
-#### Q: 池化的驱逐如何保证正确性？
-- 租约 TTL：写入 KV 时打上 TTL（默认 11s），在 TTL 内保证不被驱逐，覆盖 Decode 读取窗口。
-- 水位批量驱逐：当占用率超过高水位（90%），批量驱逐 10% 容量；驱逐时优先淘汰 TTL 过期或 LRU 冷块。
-- 若 D 端读失败（如 TTL 过期、网络异常），触发 recompute 兜底，不影响服务可用性。
+#### Q: 多个 Worker 并发时，同前缀请求会不会都打到一个实例？
+- 这正是我们迭代了三版解决的问题：本地 overlay → top-k 候选 + Scheduler 重选（V2,#210）→ 全量 candidate + Scheduler 全局重排（V3,#304）。V3 利用 unified 分数的可分解性——prefill_cost（亲和）不随时间变、Worker 算完；load（负载新鲜值）由 Scheduler 权威账本补上，一次全局 min 就打破所有 Worker 同时看中同一热点。
 
-#### Q: 字符级 (cache_aware) 和 token/block 级 (precise) 亲和有什么本质区别？
-- 字符级（SGLang/vLLM Router `cache_aware`）：存 raw text，不 tokenize；优点是零开销、无外部依赖；缺点是对不齐引擎 block 边界，chat template/tools 注入会导致字符前缀与 token 前缀分叉，且不知道引擎内部驱逐，假阳性常见。
-- token/block 级（Motor, llm-d precise, Dynamo）：在调度层用与引擎一致的 tokenizer 做 tokenize，按 block 哈希查全局索引，结果与引擎内部缓存一致；代价是调度层 CPU 开销和组件依赖，但准确度和防驱逐假命中能力更强。
+#### Q: Conductor 挂了/慢了怎么办？
+- 查询超时设 0.2s 快速失败，整条亲和路径返回 None，调度回退 LoadBalance → 再失败 round_robin。——亲和是优化不是依赖，可用性不受影响。Conductor 重启后有 `/services` 对账重注册补状态；kv-events 有 `replay_endpoint` 重放机制。
 
-#### Q: 昇腾 NPU 上怎么做 KV 传输？
-- 数据面使用 Mooncake Transfer Engine 的 `ascend` 后端：同构时 HCCL TransportMem 点对点搬 KV（与 TP 的集合通信 HCCL AllReduce 不同）；异构（如 910B Prefill + H20 Decode）时走 HBM→DRAM 聚合 + RDMA 流水线。
-- 上层通过 `MooncakeLayerwiseConnector`（P→D 逐层直传）或 `AscendStoreConnector`（写池/读池）接入。
+#### Q: 只开KV池化、不开亲和，行不行？
+- 收益≈0。虽然池子里有这份 KV，但随机路由把请求送到一个本地索引查不到该前缀的实例，引擎仍然全量 prefill。Conductor 全局路由才把“池里有”变成“路由得到、查得到”，将容量命中率转化为实际免除 prefill 的 `overlap_credit`。
 
-### 6.2 口述话术
-**30 秒版**：MindIE 用 Mooncake Conductor 做全局 KV 前缀路由，Coordinator 本地 tokenize 后查最长匹配，按「亲和收益 + 实时负载」统一打分，选出 top-k 候选由中心 Scheduler 用权威负载账本做最终裁决，防止并发打爆热点。数据面配合 KV 池化让缓存跨节点可达且不被过早驱逐。乘积效应使有效命中率从 ~10% 提高到 ~88%，典型长上下文短输出场景 TTFT 降 70%+。
+#### Q: 有了 L3 远程池化，还要亲和调度吗？
+- 要。远程命中仍有 RDMA/PCIe 搬运成本；把请求打到本地 HBM 已热缓存的机器仍是 TTFT 最低——池化降的是 miss 惩罚上界，亲和降的是延迟下界，两者叠加才逼近最优。
 
-**联合口径（1 分钟）**：
-1. **分层**：亲和是调度面（路由），池化是数据面（存储/传输），互不替代。
-2. **乘法命中**：$h = h_{reuse} \times P_{route} \times P_{pool}$，任一为 0 则坍塌，必须叠加。
-3. **最反直觉**：只开池化收益≈0（随机路由落错实例，本地查不到 KV）；只开亲和容量有限（HBM 满即驱逐）。
-4. **收益归因**：$P_{route}$ 归亲和，$P_{pool}$ 与免重算/低开销归池化，防羊群归亲和中的负载项和 Scheduler 重选。
-5. **边界**：强依赖「长输入 + 短输出 + 高前缀复用」；长输出会稀释 E2E 降幅。
+### 5.2 口述话术（30 秒版）
+> Motor 在 PD 分离下用 Mooncake Conductor 做 Prefill 的精确前缀路由：Coordinator 先 tokenize（对齐引擎），查 Conductor 拿各实例各 DP 的最长前缀命中，按 unified（亲和-负载加权融合，token 统一量纲）打分，提全量 prefill_cost 给中心 Scheduler，Scheduler 用权威新鲜负载账本全局重排、防 herding。Conductor 不可用或 tokenize 失败则回退 LoadBalance。池化侧数据面由 Mooncake Master 做跨节点分级存储，高水位批量驱逐 + 租约 TTL 保证 D 端一定读到。两者乘法叠加，客户场景 TTFT 降约 70%。
 
-## 7. 延伸阅读
-### 7.1 相关主题
-- MindIE-PyMotor 调度策略设计文档（PR #134, #210, #304 等）
-- Mooncake 论文：*Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving* (FAST '25 Best Paper)
-- vLLM Automatic Prefix Caching 设计
-- SGLang RadixAttention 与 HiCache
-- llm-d precise prefix-cache routing
+## 6. 延伸阅读
 
-### 7.2 源文件
+### 6.1 相关主题
+- [专题 04：KV cache 亲和调度 / prefix-aware routing 与 Mooncake 架构](interview/interview-review/04-KV亲和调度与Mooncake专题.md)
+- [专题 12：PyMotor KV 亲和性调度特性全解（源码 + PR 演进 + 简历素材）](interview/interview-review/12-PyMotor-KV亲和性调度特性全解与简历素材.md)
+- [专题 15：vLLM Router 与 SGLang 的 KV 亲和性设计与实现](interview/interview-review/15-vLLM-Router与SGLang-KV亲和性设计调研.md)
+- [KV 知识专题 00：概念与分层模型](interview/kv%20knowledge/00-概念与分层模型.md)
+- [KV 知识专题 01：框架对比总表](interview/kv%20knowledge/01-框架对比总表.md)
+- [KV 知识专题 09：ZMQ KV Events 详解](interview/kv%20knowledge/09-ZMQ-KV-Events详解.md)
 
+### 6.2 源文件
 | 文件路径 | 标题 | 类型 |
 |----------|------|------|
-| wiki/repos/mindie-pymotor/kv-affinity.md | KV Cache 亲和调度 | 技术文档 |
-| wiki/repos/mindie-pymotor/kv-pool.md | KV 池化：意义与实现细节 | 技术文档 |
-| wiki/repos/mindie-pymotor/kv-pool-and-affinity.md | KV 池化 × KV 亲和 联合调度 | 技术文档 |
-| wiki/raw/articles/pymotor/kv_cache_affinity_deep_analysis.md | KV Cache Affinity 深度技术分析报告 | 深度分析 |
-| wiki/raw/articles/pymotor/kv_cache_affinity_report.md | KV Cache 亲和性调度：技术介绍与竞品分析 | 竞品报告 |
-| wiki/raw/articles/pymotor/kv_cache_affinity_summary_interview.md | MindIE-PyMotor KV Cache 亲和调度 面试速览 | 面试速览 |
-| wiki/raw/articles/pymotor/pr210_kv_affinity_topk_candidates_deep_analysis.md | PR #210 KV 亲和 top-k 候选深度分析 | PR 分析 |
-| interview/interview-review/04-KV亲和调度与Mooncake专题.md | 专题 04：KV cache 亲和调度与 Mooncake 架构 | 面试专题 |
-| interview/interview-review/12-PyMotor-KV亲和性调度特性全解与简历素材.md | 专题 12：PyMotor KV 亲和性调度特性全解 | 面试专题 |
-| interview/interview-review/15-vLLM-Router与SGLang-KV亲和性设计调研.md | 专题 15：vLLM Router 与 SGLang KV 亲和性设计调研 | 调研专题 |
-| interview/kv knowledge/00-概念与分层模型.md | 00 · 概念与分层模型 | 知识体系 |
-| interview/kv knowledge/01-框架对比总表.md | 01 · 框架对比总表 | 知识体系 |
-| interview/kv knowledge/06-vLLM-Mooncake-Motor.md | 06 · vLLM / Mooncake / Motor | 知识体系 |
+| `wiki/repos/mindie-pymotor/kv-affinity.md` | KV Cache 亲和调度 | 主文档 |
+| `wiki/repos/mindie-pymotor/kv-pool.md` | KV 池化：意义与实现细节 | 主文档 |
+| `wiki/repos/mindie-pymotor/kv-pool-and-affinity.md` | KV 池化 × KV 亲和 联合调度 | 主文档 |
+| `wiki/raw/articles/pymotor/kv_cache_affinity_deep_analysis.md` | 深度技术分析报告 (Spec V2) | 源码分析 |
+| `wiki/raw/articles/pymotor/kv_cache_affinity_report.md` | 技术介绍与竞品分析报告 | 竞品分析 |
+| `wiki/raw/articles/pymotor/kv_cache_affinity_summary_interview.md` | KV Cache 面试速览 | 面试素材 |
+| `wiki/raw/articles/pymotor/pr210_kv_affinity_topk_candidates_deep_analysis.md` | PR #210 — top-k 候选 + Scheduler 权威重选 | PR 分析 |
+| `interview/interview-review/04-KV亲和调度与Mooncake专题.md` | 专题 04：KV cache 亲和调度与 Mooncake 架构 | 面试专题 |
+| `interview/interview-review/12-PyMotor-KV亲和性调度特性全解与简历素材.md` | 专题 12：PyMotor KV 亲和性调度特性全解 | 面试专题 |
+| `interview/interview-review/15-vLLM-Router与SGLang-KV亲和性设计调研.md` | 专题 15：vLLM Router 与 SGLang KV 亲和性设计 | 竞品分析 |
+| `interview/kv knowledge/00-概念与分层模型.md` | 概念与分层模型 | 知识文档 |
+| `interview/kv knowledge/01-框架对比总表.md` | 框架对比总表 | 知识文档 |
+| `interview/kv knowledge/02-llm-d.md` 至 `11-KV缓存利用率与假命中.md` | llm-d / Dynamo / AIBrix / SGLang / vLLM / 亲和池化交互 / 选型 / KV Events / 昇腾 / 利用率与假命中 | 知识文档 |

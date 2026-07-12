@@ -1,3 +1,9 @@
+## 2026-07-12
+
+- **新增主题**: kv-cache-affinity
+- **更新主题**: kv-cache-affinity (1 files added, 4 files changed), inference-frameworks (1 files changed)
+- 共计: 2 topics updated
+
 ## 2026-07-11
 
 - **新增主题**: kv-cache-affinity, flash-attention, scheduler, function-call-structured-output, prefix-cache, http-server, deepseek-models, inference-frameworks, quantization-pd-separation, profiling, k8s-infra, pymotor-architecture, attention-techniques, training-techniques, agent-tooling, llm-probing, interview-strategy

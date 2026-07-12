@@ -1,10 +1,10 @@
 # Interview Docs — 统一文档库
 
-> 自动生成于 2026-07-11 | 18 topics, 88 source files | 智能合成 v2
+> 自动生成于 2026-07-12 | 18 topics, 89 source files | 智能合成 v2
 
 ## 主题导航
 
-- [KV Cache 亲和调度与池化](topics/kv-cache-affinity.md) — 21 sources
+- [KV Cache 亲和调度与池化](topics/kv-cache-affinity.md) — 22 sources
 - [投机推理 (MTP / DSpark)](topics/speculative-decoding.md) — 8 sources
 - [Flash Attention 与算子加速](topics/flash-attention.md) — 3 sources
 - [调度器与 Continuous Batching](topics/scheduler.md) — 3 sources
