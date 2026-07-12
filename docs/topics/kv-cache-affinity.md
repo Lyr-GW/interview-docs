@@ -241,8 +241,127 @@ MindIE-PyMotor（路径 `MindIE-PyMotor/motor/coordinator/scheduler/policy/kv_ca
 | 降级策略 | 短请求 fast path；无 Conductor 时无法精确路由 | approximate 模式：固定 block + rolling hash，无真实驱逐信息 | --no-router-kv-events 近似预测，默认 TTL 120s | 负载失衡 → least-request；无事件时用本地表或 Redis | cache_aware 无事件，仅凭历史路由树猜测 | 无路由降级；卸载层可退化至仅 GPU 缓存 |
 | 核心创新 | 直接查询分布式精确索引，权威账本防 herding | 可插拔 EPP 打分框架 + speculative indexing 填补事件空窗 | 代价函数统一层权重与 overlap，统一 KVBM 四级传输 | Gateway 亲和与自研 L1/L2 卸载完全解耦，CRD 管理 L2 集群 | 引擎内完整三级池化与路由脱钩，提供极致本地缓存性能 | L1 APC + 可插拔 Connector 生态，与 Mooncake TE 深度集成 |
 
-## 5. 面试要点
-### 5.1 常见追问
+---
+
+## 5. KV 缓存利用率与假命中
+
+亲和调度中，**match 分数**只回答"哪个实例前缀最长"，但两个决定高负载稳定性的因素常被忽略：**KV 缓存利用率**（选中的热机会不会溢出）和**假命中**（索引告诉你命中、实际已被驱逐）。
+
+### 5.1 KV 缓存利用率：亲和的稳定性约束
+
+KV 缓存利用率度量的是显存/块池压力，不等于"前缀还在"：
+
+```
+kv_usage = u_kv ≈ used_kv_blocks / capacity
+```
+
+亲和把同前缀请求打到同一台 → 该机利用率升高 → LRU 驱逐 → **高 M 自我失效**。因此利用率是亲和的**稳定性约束**，不是普通负载装饰项。
+
+各框架的利用率处理方式：
+
+| 框架 | 利用率进调度？ | 方式 | 细节 |
+|------|----------------|------|------|
+| **llm-d** | ✅ 软加权 | `kv-cache-utilization-scorer` 权重 2.0 | 与 prefix/queue 并列打分，偏好更低利用率；线性偏好低占用，未与 uncached tokens 耦合 |
+| **Dynamo** | ✅ 硬门控 | busy 阈值 + overlap credit 衰减 | `active_decode_blocks_threshold` 超阈移出候选；`overlap_score_credit_decay` 衰减过热 worker 的 overlap |
+| **AIBrix** | △ 独立策略 | `least-kv-cache` / PD decode scorer | 默认 `prefix-cache` 只用 running 数，不用利用率 |
+| **SGLang/vLLM** | ❌ | 字符级负载或 token 计数 | cache_aware 不涉及利用率 |
+| **Motor** | ❌ | SHM workload 非 usage% | 有 `kv_cache_usage_perc` 指标但仅观测，不进 `KvCacheAffinityPolicy` |
+
+**三种用法对照**：
+
+```
+① 软加权（llm-d）
+   S += λ · (1 - kv_usage)        # 与 prefix/queue 并列
+
+② 硬门控（Dynamo）
+   if used_blocks > threshold: 剔除候选   # block occupancy
+
+③ 独立策略（AIBrix least-kv-cache）
+   argmin(gpu_cache + cpu_cache)  # 不与 prefix 融合
+```
+
+**普遍缺失**：`free_blocks < uncached_tokens` 硬约束；`u_kv × M` 的有效命中衰减；GPU 满但 L2/L3 有副本时的分层处理。
+
+### 5.2 两类假命中
+
+```
+类型 A · 驱逐滞后（假阳性）
+  索引仍写「W 有前缀 S」，引擎已 BlockRemoved
+  → 按高 M 打到 W → 实际全量/大部重算
+
+类型 B · 事件空窗（假阴性 + speculative 可控假阳性）
+  路由已决策，BlockStored 尚未进索引
+  → 多为假阴性（兄弟请求看不见新缓存，打散）
+  → 若开 speculative：TTL 内可控假阳性（假定会写入）
+```
+
+| | 类型 A（驱逐滞后） | 类型 B（事件空窗） |
+|--|---------------------|---------------------|
+| **主因** | 未订 Removed / 丢事件 / Cleared 未实现 / approx 不知驱逐 | 决策领先元数据 |
+| **高利用率时** | Removed 风暴，更严重 | 写入更密，空窗更密 |
+| **解药** | Removed + Cleared + replay | speculative / predicted TTL |
+
+二者与利用率**正反馈耦合**：满 → 驱逐多 → 假命中多 → 更满。
+
+### 5.3 各框架驱逐/空窗覆盖度
+
+| 框架 | Removed | Cleared | Speculative | 默认假命中风险 |
+|------|---------|---------|-------------|----------------|
+| **llm-d precise** | ✅ | ✅ | ✅ ~2s TTL | 低 |
+| **llm-d approx** | ❌ | ❌ | ❌ | **高**（本地 LRU） |
+| **Dynamo precise** | ✅ | ✅ | ✅ predicted TTL | 低 |
+| **Dynamo approx** | ❌ | TTL prune | 120s TTL | 中 |
+| **AIBrix Event Sync** | ✅ | ❌ 空实现 | ❌ | 中（Cleared 缺口） |
+| **AIBrix 默认** | ❌ | ❌ | ❌ | **高** |
+| **SGLang/vLLM cache_aware** | ❌ | ❌ | ❌ | **高**（字符树） |
+| **Mooncake Conductor** | ✅ 规范 | ✅ 规范 | ❌ | 事件延迟型 |
+| **Motor + Conductor** | 经 Conductor | 经 Conductor | ❌ | 中（无 TTL / 未用利用率） |
+
+### 5.4 假命中三类缓解策略
+
+```
+① 事件真值：Stored + Removed + Cleared + replay
+② 空窗填补：speculative / predicted 短 TTL（路由后假定写入）
+③ 近似认命：本地树/LRU，用时间换正确性（高 churn 下假阳系统性）
+```
+
+| 框架代表 | ① 事件真值 | ② 空窗填补 | ③ 近似认命 |
+|----------|-----------|-----------|-----------|
+| llm-d precise | ✅ | ✅ ~2s | — |
+| Dynamo | ✅ | ✅ predicted | 可选 120s approx |
+| AIBrix sync | ✅ Removed；❌ Cleared | ❌ | 默认走 ③ |
+| SGLang/vLLM | ❌ | ❌ | ✅ 主路径 |
+| Motor | ✅ 经 Conductor | ❌ | — |
+
+### 5.5 耦合全景：为何要一起看
+
+```
+亲和 → 热机利用率↑ → 驱逐↑ → Removed 增多 / 执行前等待变长
+                         → 类型 A 假阳 + 类型 B 空窗同时恶化
+                         → 若仍用裸 M 高权重 → 正反馈
+```
+
+完整形态（目标，非单一框架已实现）：
+
+```
+M̂(w) = Index(w) · SurvivalPrior(u_kv, waiting, ISL−M) · SpeculativeState
+score = f(M̂, load, waiting, …)
+```
+
+### 5.6 对 Motor / 自研的启示
+
+| 优先级 | 动作 | 对标 |
+|--------|------|------|
+| **P0** | 确认 Conductor Removed/Cleared/replay 生产开启 | llm-d/Dynamo 正确性底座 |
+| **P1** | scrape `kv_cache_usage_perc` 进 `unified` 低权重，或高水位硬门 | llm-d ① / Dynamo ② |
+| **P1** | 路由后短 TTL speculative（或 Conductor 侧预测条目） | llm-d/Dynamo ② |
+| **P2** | 观测「路由预期 M − 引擎实际 prefix hit」假命中率 | 闭环 |
+| **P2** | 高利用率时衰减 `overlap_credit` 或提高 Explore | Dynamo decay 思想 |
+
+---
+
+## 6. 面试要点
+### 6.1 常见追问
 #### Q: 为什么要做 KV 亲和调度？
 - 多副本时，普通负载均衡会把相同前缀请求打散，每个实例都要重复 prefill，缓存命中率崩溃，TTFT 恶化。
 - 亲和路由通过全局索引把请求送到已缓存最长前缀的节点，避免重复 prefill。
@@ -274,7 +393,7 @@ MindIE-PyMotor（路径 `MindIE-PyMotor/motor/coordinator/scheduler/policy/kv_ca
 - 数据面使用 Mooncake Transfer Engine 的 `ascend` 后端：同构时 HCCL TransportMem 点对点搬 KV（与 TP 的集合通信 HCCL AllReduce 不同）；异构（如 910B Prefill + H20 Decode）时走 HBM→DRAM 聚合 + RDMA 流水线。
 - 上层通过 `MooncakeLayerwiseConnector`（P→D 逐层直传）或 `AscendStoreConnector`（写池/读池）接入。
 
-### 5.2 口述话术
+### 6.2 口述话术
 **30 秒版**：MindIE 用 Mooncake Conductor 做全局 KV 前缀路由，Coordinator 本地 tokenize 后查最长匹配，按「亲和收益 + 实时负载」统一打分，选出 top-k 候选由中心 Scheduler 用权威负载账本做最终裁决，防止并发打爆热点。数据面配合 KV 池化让缓存跨节点可达且不被过早驱逐。乘积效应使有效命中率从 ~10% 提高到 ~88%，典型长上下文短输出场景 TTFT 降 70%+。
 
 **联合口径（1 分钟）**：
@@ -284,15 +403,15 @@ MindIE-PyMotor（路径 `MindIE-PyMotor/motor/coordinator/scheduler/policy/kv_ca
 4. **收益归因**：$P_{route}$ 归亲和，$P_{pool}$ 与免重算/低开销归池化，防羊群归亲和中的负载项和 Scheduler 重选。
 5. **边界**：强依赖「长输入 + 短输出 + 高前缀复用」；长输出会稀释 E2E 降幅。
 
-## 6. 延伸阅读
-### 6.1 相关主题
+## 7. 延伸阅读
+### 7.1 相关主题
 - MindIE-PyMotor 调度策略设计文档（PR #134, #210, #304 等）
 - Mooncake 论文：*Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving* (FAST '25 Best Paper)
 - vLLM Automatic Prefix Caching 设计
 - SGLang RadixAttention 与 HiCache
 - llm-d precise prefix-cache routing
 
-### 6.2 源文件
+### 7.2 源文件
 
 | 文件路径 | 标题 | 类型 |
 |----------|------|------|
