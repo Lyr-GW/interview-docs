@@ -1,6 +1,6 @@
 # Interview Docs — 统一文档库
 
-> 自动生成于 2026-07-12 | 18 topics, 89 source files | 智能合成 v2
+> 自动生成于 2026-07-13 | 18 topics, 91 source files | 智能合成 v2
 
 ## 主题导航
 
@@ -8,7 +8,7 @@
 - [投机推理 (MTP / DSpark)](topics/speculative-decoding.md) — 8 sources
 - [Flash Attention 与算子加速](topics/flash-attention.md) — 3 sources
 - [调度器与 Continuous Batching](topics/scheduler.md) — 3 sources
-- [Function Call 与结构化输出](topics/function-call-structured-output.md) — 4 sources
+- [Function Call 与结构化输出](topics/function-call-structured-output.md) — 6 sources
 - [Prefix Cache 前缀缓存](topics/prefix-cache.md) — 2 sources
 - [HTTP 服务层架构](topics/http-server.md) — 4 sources
 - [DeepSeek 模型与组织](topics/deepseek-models.md) — 4 sources
