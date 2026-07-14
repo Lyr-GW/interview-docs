@@ -1,3 +1,9 @@
+## 2026-07-14
+
+- **更新主题**: function-call-structured-output (1 files removed)
+- **删除文件**: interview-review/14-FunctionCall与结构化输出交叉专题.md (no longer exists)
+- 共计: 1 topics updated
+
 ## 2026-07-13
 
 - **新增主题**: function-call-structured-output
