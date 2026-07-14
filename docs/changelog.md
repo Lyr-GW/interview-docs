@@ -1,3 +1,9 @@
+## 2026-07-15
+
+- **更新主题**: kv-cache-affinity (1 files changed), function-call-structured-output (1 files removed), inference-frameworks (2 files changed)
+- **删除文件**: interview-review/14-FunctionCall与结构化输出交叉专题.md (no longer exists)
+- 共计: 3 topics updated
+
 ## 2026-07-14
 
 - **更新主题**: kv-cache-affinity (1 files changed), function-call-structured-output (1 files removed)
