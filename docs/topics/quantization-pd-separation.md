@@ -1,208 +1,184 @@
-# 量化与 **PD 分离**
-> 覆盖 14 个知识点 | 来源 1 个文件 | 更新于 2026-07-11
+# 性能分析与调优
+> 覆盖 22+ 个知识点 | 来源 2 个文件 | 更新于 2026-07-21
 
 ## 1. 一句话总结
-量化通过低精度表示压缩模型，减少显存、带宽与算力开销，典型选择为延迟场景的 W4A16 和吞吐场景的 FP8；PD 分离将 Prefill 与 Decode 分布至异构节点，消除资源争抢并实现独立扩缩容，核心代价是 **KV Cache** 传输链路，必须权衡传输与重算成本。
+性能调优采用“先分层定位，再抓 profiler”的心法，从服务 metrics (L1) 到 GPU kernel (L4) 逐层排查，通过决策树快速锁定瓶颈，结合 TTFT 五段分解、nsys/msprof 时间线分析等手段，实现吞吐提升和延迟优化，避免盲目深入底层。
 
-
-!!! abstract "30 秒速览"
-    - **核心原理**
-    - **实现细节**
-    - **框架对比**
-    - **面试要点**
-    - 问题背景
-    - 方案概述
-
----
 ## 2. 核心原理
 ### 2.1 问题背景
-大模型推理面临三重瓶颈：
-- **显存墙**：权重和 KV Cache 占用巨大，限制单卡并发数。
-- **带宽墙**：Decode 小 batch 时主要时间花费在从 HBM 读取权重，计算单元利用率低。
-- **计算墙**：Prefill 大 batch 需要极高算力，但 Decode 并发会抢占资源，导致延迟抖动（TTFT 与 TPOT 互相干扰）。
-
-量化在三个维度同时削减开销；PD 分离通过把 compute-bound 的 Prefill 和 memory-bound 的 Decode 拆分到不同节点，彻底消除干扰，并为两个阶段分别配置最优硬件。
+大模型推理服务常面临吞吐上不去、P99 延迟尖刺、GPU 利用率低等问题。瓶颈可能隐藏在排队、KV 缓存饱和、调度、kernel 效率或通信等不同层面。直接使用 nsys/msprof 等底层工具容易迷失方向，缺乏系统化的假设与定位方法。
 
 ### 2.2 方案概述
-- **量化方案**：将 FP16/BF16 权重、激活或 KV Cache 转换为 INT8/FP8/INT4/FP4 等低精度格式，结合反量化 Kernel 或专用 Tensor Core 指令，实现显存 ÷2~÷4、带宽和算力收益。根据 batch 特性和业务目标选择不同格式（W4A16 侧重延迟，FP8 侧重吞吐与训练衔接）。
-- **PD 分离方案**：调度器将请求的 Prefill 阶段发送到算力型 Prefill 节点，完成后将 KV Cache 传输至内存带宽型 Decode 节点继续生成；支持 Handoff（串行）和 Concurrent（并行）两种同步模式，并可与 **Prefix Cache** 协同仅传输增量 KV。
+采用四层分析框架（L1‑L4）：
+- **L1 服务层**：通过 Prometheus metrics 零成本获取吞吐、延迟、排队等宏观指标。
+- **L2 资源/排队层**：检查等待队列、KV 缓存利用率、抢占次数，识别饱和度领先指标。
+- **L3 引擎调度层**：分析迭代步形态、前缀命中率、事件时间线。
+- **L4 内核/通信层**：使用 nsys（NVIDIA）或 msprof（昇腾）进行 GPU 时间线和 kernel 分析。
 
+先验证假设后定向剖面，避免无假设的全量 profiling。
 
----
 ## 3. 实现细节
-### 3.1 量化收益模型与格式选型
-量化收益来自三个机制：
+### 3.1 四层分析框架
+- **L1 服务层**：vLLM 通过 `GET /metrics`（`vllm:` 前缀），Motor 通过 `/metrics?type=full|instance|role|dp|node`。
+- **L2 资源/排队层**：关键信号包括 `num_requests_waiting`、`waiting_by_reason`、`kv_cache_usage_perc`、`num_preemptions`。
+- **L3 引擎调度层**：`iteration_tokens_total`、`prefix_cache_hits`、`request_prefill_kv_computed_tokens`，分段 `queue/prefill/decode/inference_time_seconds`，以及事件 `QUEUED→SCHEDULED→NEW_TOKENS`。
+- **L4 Kernel/通信层**：NVIDIA 用 nsys 时间线 + ncu 单 kernel，昇腾用 msprof 或 `ms_service_profiler`。
 
-| 收益 | 机制 | 受益阶段 |
-|------|------|--------|
-| 显存 | 权重/KV 字节变小 | 全阶段 |
-| 带宽 | HBM 读取量下降 | **Decode 小 batch** |
-| 算力 | 低精度 Tensor Core 峰值更高 | **大 batch Prefill** |
+#### 数据流
+Prometheus 拉取指标 → 观察排队与 KV 饱和 → 必要时进入引擎调度分析 → 最后抓取 nsys/msprof 时间线进行 kernel 级定位。
 
-典型格式选型口诀：  
-**小 batch 延迟 → W4A16；大吞吐 → FP8；极致压缩 → FP4/NVFP4。**
+### 3.2 关键 Metrics 速查
+| 指标 | 口径 |
+|------|------|
+| `time_to_first_token_seconds` | TTFT（含前端 arrival） |
+| `request_time_per_output_token_seconds` | 请求级平均 TPOT |
+| `request_queue_time_seconds` | 排队时间 |
+| `request_prefill_time_seconds` | 引擎内 prefill 时间 |
+| `prefix_cache_hits/queries` | 前缀命中率 |
+| `generation_tokens_total` | 输出 token 总数（计算 TPS） |
+| `kv_cache_usage_perc` | KV 缓存使用率 |
+| `num_requests_waiting` | 等待队列长度 |
+| `waiting_by_reason` | 等待原因（capacity / deferred） |
+| `num_preemptions` | 抢占次数 |
 
-| 格式 | 显存 | 带宽 | 算力 | 适用场景 |
-|------|------|------|------|--------|
-| W8A8 | ÷2 | ✓ | ✓（FP8 TC） | 大吞吐 |
-| W4A16 | ÷4 | ✓（decode） | ✗（需反量化） | 延迟敏感小 batch |
-| FP8 | ÷2 | ✓ | ×2 | 新默认；训练即 FP8 无损衔接 |
-| FP4/NVFP4 | ÷4+ | ✓ | ×4 | Blackwell；需 block scale |
+PromQL 示例：
+```promql
+histogram_quantile(0.99, rate(vllm:time_to_first_token_seconds_bucket[5m]))
+```
 
-#### 关键代码路径
-vllm/model_executor/layers/quantization/
-  __init__.py
-  fp8.py
-  auto_gptq.py
-  auto_awq.py
-  kv_cache.py
-  utils/fp8_utils.py
-  utils/marlin_utils.py
-  utils/nvfp4_utils.py
-vllm/config/cache.py          # cache_dtype
-vllm/v1/kv_cache_interface.py # KVQuantMode
-### 3.2 GPTQ vs AWQ
+### 3.3 吞吐上不去决策树
+```text
+TPS 低？
+├─ waiting≈0, running 小 → 流量不足，加并发
+├─ waiting↑, running 顶不住
+│   ├─ kv_usage>0.9 / preemptions>0 → 调 utilization 或减 max_seqs / 加卡
+│   └─ deferred → 查 PD KV / LoRA
+├─ running 满但 GPU util<60%
+│   ├─ 小步 decode → launch-bound → CUDA Graph / 加大 batch
+│   ├─ CPU 段高 → 异步调度 / 采样 offload
+│   └─ PD KV 抖动 → PCIe 争用
+├─ GPU 高但 TPS 低
+│   ├─ prefill 占比高 → chunked / PD / prefix
+│   ├─ 命中率低 → APC + Motor KVA
+│   └─ 通信长 → 换并行 / overlap
+└─ 配置：batched_tokens / chunked / prefix / utilization
+```
 
-| | GPTQ | AWQ |
-|--|------|-----|
-| 思想 | Hessian 加权最小化重构误差 | Activation-aware：保护激活幅度大的通道 |
-| vLLM 后端 | Marlin（`auto_gptq.py`） | Marlin/Exllama（`auto_awq.py` + `_REVERSE_AWQ_PACK_ORDER`） |
-| 一句话 | 数学最小化误差 | 保护对 logits 影响大的通道——LLM 上 AWQ 往往更稳 |
+### 3.4 P99 TTFT 尖刺决策树
+```text
+先五段分解
+├─ 分钟级周期 → GC / 探针 / 日志轮转
+├─ 与流量峰吻合 → 排队 / 长 prefill 未 chunked / Conductor 超时
+├─ 不规则 → 抢占锯齿 / 缓存驱逐 / CG 重捕获 / schema 冷编译
+└─ 硬件 → 降频 / NUMA / PCIe 争用
+```
+对齐方法：将尖刺时刻与 waiting、kv_usage、preemptions、hit_rate 叠加，锁定问题层后再抓 profiler。
 
-### 3.3 FP8 落地四要素
-1. **Scale**：static（校准集）或 dynamic（per-tensor/token/block）；`fp8_utils.py::input_to_float8`。
-2. **量化粒度**：per-tensor（快）→ per-channel → block 128×128（DeepSeek 甜点）。
-3. **KV Cache FP8**：`CacheConfig.cache_dtype` 与 `KVQuantMode` 控制；scale 在 `quantization/kv_cache.py` 管理。 CLI：`--kv-cache-dtype fp8`。
-4. **Accumulator 精度**：attention 内部累加器必须保持 FP32，输出前再 clamp 到 FP8（`triton_unified_attention.py`）。
+### 3.5 GPU Profiler 使用（nsys / msprof）
+**nsys 时间线解读**：
+| 现象 | 诊断 | 优先动作 |
+|------|------|----------|
+| GPU 大片空隙 | launch / CPU-bound | 优化 Graph、异步，**勿先换 kernel** |
+| 密集短 kernel | launch overhead | 算子融合 / Graph |
+| FlashAttn/GEMM 占比高 | prefill 主要耗时 | 考虑 chunked prefill、PD、量化 |
+| NCCL/HCCL 长 | TP 通信瓶颈 | 调整并行度或 overlap |
+| H2D/D2H 长 | KV 传输 / 输入 / 采样回传 | 拓扑优化、chunk、亲和调度 |
 
-#### 关键代码路径
-vllm/model_executor/layers/quantization/fp8.py
-vllm/model_executor/layers/quantization/utils/fp8_utils.py
-vllm/model_executor/layers/quantization/kv_cache.py
-vllm/v1/kv_cache_interface.py
-vllm/v1/attention/backends/triton_unified_attention.py
-### 3.4 精度验收与回归流程
-**三层验收**：
-1. 烟雾测试：PPL 偏离 < 阈值。
-2. 标准 Benchmark：MMLU / GSM8K / HumanEval（数学和代码最敏感）。
-3. 业务 A/B 实验：线上真实流量对比。
+**昇腾 msprof**：方法论与 nsys 同构，关注 Host 空隙、H2D、HCCL、Cube/Vector 占比，整图下发延迟。工具名不同，逻辑一致。
 
-**归因方法**：关量化二分 → 分项开（权重 / 激活 / KV）→ 逐层 KL 散度或余弦相似度定位 outlier → 混合精度排除首尾层 / norm / router 层。
+### 3.6 Motor TTFT 五段分解
+精确定位首 token 延迟瓶颈：
+```text
+TTFT = T_tokenize + T_conductor + T_queue + T_prefill + T_delivery
+```
+| 段 | 典型量级 | 观测锚点 |
+|----|----------|----------|
+| tokenize | 4K≈**6ms** | TokenizerManager |
+| Conductor | ms 级，超时 **0.2s** | `conductor_api_client.py` |
+| 排队 | 峰时数百 ms | `request_queue_time_seconds` |
+| prefill | **主项**，命中可大幅降低 | `prefill_time` + `cached_tokens` |
+| 回传 | ms 级 | tracing `set_time_first_token` |
 
-**上线策略**：影子流量 → 金丝雀 → 可回滚。
+**A/B 验证**：KVA 开关对比，同流量 ≥10k 请求，归因 ΔTTFT ≈ Δprefill（主）+ Δqueue（次）。高前缀重复率（>80%）时，代表性测算显示 TTFT 可下降约 70%，但该数字为机制推导的测算口径，非客户原始日志。
 
-### 3.5 PD 分离的三个第一性原理
-1. **干扰消除**：Prefill compute-bound 持续数百 ms，Decode memory-bound 在混部时被饿死，拆分后延迟可预测。
-2. **资源异构**：P 需要高 TFLOPS；D 需要高内存带宽与并发 slot，二者硬件配置不同。
-3. **独立扩缩容**：按输入长度 / 输出长度比例分别弹性伸缩 P 池和 D 池。
+### 3.7 结构化输出对 TPOT 影响补测（简历数据缺口）
+固定模型、并发、输出长度及 schema，预热 ≥50 次。  
+- A: 关闭结构化  B: 开启 xgrammar  
+- 主指标：`request_time_per_output_token_seconds` P50/P99  
+- 预期：TPOT 增量 **<1%~3%**；冷编译 TTFT +100–200ms；热缓存 <1ms  
+- Profiler 验证：观察 bitmask apply 与 FA decode 的时间占比。
 
-**负优化场景**：短 prompt、卡数少、无 RDMA 环境、传输开销 > 重算收益时，PD 分离不盈利。
-
-与 **Chunked Prefill** 的关系：**同题不同解**。Chunked Prefill 在同一节点内把长 Prefill 切块与 Decode 交错调度，低成本消除长尾抢占；PD 分离是彻底隔离+独立扩缩，代价是 KV 传输链路。
-
-### 3.6 Handoff vs Concurrent 传输模式
-
-| 模式 | 切换点 | D 能否提前跑 | Motor 能力项 |
-|------|--------|--------------|------------------|
-| **Handoff** | P 全部完成 + KV 就绪再调 D | **不能**（`WAITING_FOR_REMOTE_KVS`） | `prefill_handoff_decode`（Mooncake/NIXL） |
-| **Concurrent / Layerwise** | P/D 同时启动，逐层同步 | 可提前启动 forward，每层 `wait_for_layer_load` | `concurrent_engine_sync`（MoRIIO/Layerwise） |
-
-- Handoff 下 TTFT = T_prefill + T_transfer。
-- Concurrent 下 TTFT ≈ max(T_prefill, T_transfer)，对长 Prefill 延迟改善明显。
-
-#### 关键代码路径
-vllm/v1/core/scheduler.py
-vllm/v1/engine/unified_pd.py  # Handoff 串行 vs Concurrent 并行路由
-### 3.7 Motor 调度与路由事实
-- `_KVA_ROLES = {ROLE_P, ROLE_U}` —— D 节点不注册 Conductor（`conductor_api_client.py`）。
-- KVA 调度仅作用于 P 节点：`kv_cache_affinity.py` 检查 `role==ROLE_P`。原因：Prefix 索引只在写入侧有意义，D 只消费。
-- **Capability 检查**：P/D capability 无交集 → 返回 503（`dispatch.py`）。
-- **路由**：`unified_pd.py` 根据请求模式选择 Handoff 串行或 Concurrent 并行路径。
-
-### 3.8 传输 vs 重算临界点分析
-量化公式：
-|KV| ≈ 2 × L × N_layers × H × dtype_bytes
-T_transfer = |KV|/BW + T_handshake
-T_recompute ≈ L × t_prefill_per_token
-传优于算当 `T_transfer < T_recompute`。
-
-**关键认知**：PD 分离的核心收益是**干扰消除与独立扩缩**，并非「传比算快」。  
-数量级示例：70B，L=8K，80 层，H=8192，FP16 → |KV|≈21 GB；100 Gbps 有效带宽约 10 GB/s → 传输约 2 s，而同配置 Prefill 可能仅 200–800 ms——此时传输更慢，但 D 池不被 P 阻塞，仍可能整体更优。  
-Layerwise 传输与 Delta 传输（只传未命中 Suffix）可大幅改善临界点。
-
-### 3.9 PD 与 Prefix Cache 协同
-KVA 选最长前缀 P → P 只算 suffix → 传 delta KV → D 消费
-- SGLang Decode 端显式发送 delta indices。
-- vLLM 通过 `get_num_new_matched_tokens` 传递 metadata，connector 据此传输增量 KV。
-
-
----
 ## 4. 框架对比
-### 4.1 vLLM MooncakeConnector vs SGLang chunk overlap vs MoRIIO
+### 4.1 nsys vs msprof
+| 维度 | nsys (NVIDIA) | msprof (昇腾) |
+|------|---------------|---------------|
+| 采集方式 | CLI 或 NVTX 插桩 | 命令行或 `ms_service_profiler` |
+| 时间线分析 | GPU 空隙、kernel 时长、H2D/D2H、NCCL | Host 空隙、H2D、HCCL、Cube/Vector 占比 |
+| 适用生态 | CUDA | 昇腾 NPU |
+| 共同点 | 均需先缩小范围再使用，避免大海捞针 | 方法论一致：定位 CPU bound、通信、计算瓶颈 |
 
-| 维度 | vLLM MooncakeConnector | SGLang chunk overlap | MoRIIO |
-|------|------------------------|----------------------|--------|
-| 传输粒度 | 所有层 batch 传（`request_finished` 后），`save_kv_layer`/`wait_for_layer_load` 空实现 | 按 chunked-prefill chunk 边界传（非逐层），D 仍等全部 Success 才 decode | 真正的逐层流式：P/D 同时启动，每层 sync |
-| Overlap 位置 | 传输完全在 P 完成后开始 | Overlap 在 P 侧（与计算重叠） | P/D 同时运行，最大 overlap |
-| 实现落地 | NIXL 后端批量传输 | Scheduler 内按 chunk 触发 send | 论文原型，要求 engine 级并发 |
-
-
----
 ## 5. 面试要点
 ### 5.1 常见追问
-#### Q: PD 分离与 Chunked Prefill 有何不同？
-- Chunked Prefill 在同一节点内将长 Prefill 切块与 Decode 交错，成本低，适合中小规模。
-- PD 分离将 P 和 D 完全拆分到不同节点，彻底消除干扰、独立扩缩容，代价是 KV 传输链路。两者可组合使用。
+#### Q: 吞吐上不去第一步看什么？
+- 先拉 `/metrics`：检查 `num_requests_waiting` vs `running`、`kv_cache_usage_perc`、`num_preemptions`。
+- 若 waiting≈0 且 running 小 → 加并发。
+- 若 waiting 高 → 检查 KV 饱和或 deferred 原因。
 
-#### Q: MooncakeConnector 为何没实现逐层传输？
-- vLLM 中 `save_kv_layer` / `wait_for_layer_load` 为空实现，传输在 `request_finished` 后批量完成。  
-- 真正逐层流式由 MoRIIO 方案实现，要求引擎级支持并发同步，而 Mooncake 优先保证可靠性。
+#### Q: TTFT 与 prefill_time 的区别？
+- TTFT 包含 tokenize、排队、Conductor 等前端耗时，是端到端指标。
+- `request_prefill_time_seconds` 仅计引擎内实际 prefill 计算时间。
 
-#### Q: SGLang chunk overlap 是逐层传输吗？
-- 不是。SGLang 按 chunked-prefill chunk 边界传输，D 侧仍需等待所有 chunk 成功后开始 decode，overlap 仅存在于 P 侧（传输与下一 chunk 计算重叠）。
+#### Q: waiting_by_reason 取值含义？
+- `capacity`：因 KV 缓存或最大并发数限制而等待。
+- `deferred`：因 LoRA 加载或 KV transfer 等异步操作而等待。
 
-#### Q: D 节点为何不注册 Conductor？
-- KVA 角色集合 `{ROLE_P, ROLE_U}` 不含 D；Prefix 索引仅写入侧（P）有维护价值，D 只消费已命中前缀的 KV。
+#### Q: 前缀缓存命中率高，但 TTFT 没有下降，为什么？
+- 缓存命中在其他实例（无本地亲和）。
+- Conductor 查询超时回退到无缓存路径。
+- 命中长度不足一个 block，无法复用。
 
-#### Q: Handoff 与 Concurrent 如何影响首 Token 时延（TTFT）？
-- Handoff：TTFT = T_prefill + T_transfer。
-- Concurrent / Layerwise：TTFT ≈ max(T_prefill, T_transfer)，P 和 D 并行，可显著降低长 prompt 下的 TTFT。
+#### Q: nsys 看到 GPU 大片空白，怎么办？
+- 典型的 launch bound / CPU bound，应优先优化 CPU 端调度（CUDA Graph、异步 launch），而不是换 kernel。
 
-#### Q: D 侧 KV 传输期间请求处于什么状态？
-- `WAITING_FOR_REMOTE_KVS`，表示 Decode 已调度但等待远端 KV 就绪。
+#### Q: 昇腾环境如何做 profiling？
+- 使用 msprof 工具，关注 Host 空隙、H2D、HCCL、Cube/Vector 占比，方法论与 nsys 一致。
 
-#### Q: Prefix Cache 与 PD 分离如何协同？
-- KVA 选定最长前缀 P 节点，P 只计算 suffix，传输 delta KV。vLLM 通过 `get_num_new_matched_tokens` 告知 connector 只传增量，SGLang 显式处理 delta indices。
+#### Q: 周期性 P99 TTFT 尖刺如何排查？
+- 对齐尖刺时刻的 waiting、kv_usage、preemptions、hit_rate 等指标，确定问题层次。
+- 常见原因：GC/探针/日志轮转（分钟级周期）、长 prefill 未 chunked、CUDA Graph 重捕获等。
 
-#### Q: PD 分离失败处理机制是什么？
-- **fail-closed**：P 节点 capability 与 D 节点无交集时，Motor 返回 503（`dispatch.py`）。  
-- 分布式层面可配合 Rescheduler / ScaleP2D 将请求迁移至备选节点。
+#### Q: Motor TTFT 下降 70% 是怎么实现的？
+- 这是基于机制的代表性测算：APC+KVA 提高前缀命中，主砍 prefill 段，queue 间接降低。
+- 条件：高前缀重复率（>80%）。最坏情况收益甚微。**强调是测算口径，非客户原始日志**。
 
-#### Q: 哪些场景下 PD 分离是负优化？
-- 短 prompt（传输占比大）、卡数少（独立扩缩无意义）、无 RDMA（传输带宽低）、传输时间 > 重算收益时，应优先混部或直接重算。
+#### Q: 结构化输出对 TPOT 的影响？
+- 预热后增量通常 <1%~3%，冷编译 TTFT 增加 100–200ms；profiler 显示 bitmask apply 占单步 <3%。
+- MindIE 编译缓存为 FIFO/100 条（非 LRU/128）。
 
-#### Q: 如何估算传输与重算的临界点？
-- 计算 `|KV| ≈ 2 × L × layers × hidden × dtype_bytes`，除以有效带宽得到 T_transfer；再对比重算时间 T_recompute ≈ L × t_per_token。传输 < 重算时宜传，否则宜重算；但主收益是干扰消除和独立扩缩，非纯粹速度对比。
+#### Q: GPU 利用率 90% 但 TPS 仍低，怎么排查？
+- 应走“GPU 高但 TPS 低”分支：排查 prefill 占比、前缀命中率、通信时间线，而非盲目加并发。
 
 ### 5.2 口述话术
-**量化选型**：  
-“如果服务是延迟敏感的小 batch 场景，我们用 W4A16，decode 阶段省带宽；如果想要最大吞吐，比如离线批量推理，就上 FP8，利用 FP8 Tensor Core 的 2 倍算力，训练侧直接产出 FP8 模型还能做到无损衔接。”
+**分层排查开场白**（可直接背）：
+> “性能调优我的核心心法是：先分层定位，再抓 profiler。L1 看免费 metrics 找方向，L2 查排队和 KV 饱和，L3 看引擎调度形态，最后才用 nsys/msprof 做 kernel 级分析。绝不一开始就上 profiler。”
 
-**精度验收**：  
-“我们做三层验证：PPL 烟雾测试看是否崩掉，数学和代码类 benchmark（GSM8K、HumanEval）最能暴露量化误差，最后上线做业务 A/B。归因的时候先做二分定位是权重、激活还是 KV 出了问题，然后用逐层 KL 散度找出 outlier，再用混合精度把敏感层（比如首尾层、norm、router）保留高精度。”
+**吞吐决策树口述**：
+> “如果 TPS 上不去，我第一眼看 waiting 和 running 的比例。waiting 为零但 running 没打满，就是流量不够；waiting 很高，看 kv_usage 是否超过 90% 或者有抢占，是就调整 utilization 或加卡。如果 running 满了但 GPU 利用率不到 60%，多半是 launch bound，上 CUDA Graph；如果 GPU 利用率高但 TPS 还低，就得看 prefill 占比、命中率和通信时间线了。”
 
-**PD 分离本质**：  
-“PD 分离解决的核心问题是干扰消除和独立扩缩，不是传输比计算快。即便某些配置下传输比重算慢，只要 D 池不被 P 阻塞，总体延迟和吞吐仍然可以更优。短 prompt 或无 RDMA 时我们可能会选择混部或直接重算，一切由临界点分析驱动。”
+**TTFT 五段分析话术**：
+> “TTFT 我拆成五段：tokenize 大约 6 毫秒，Conductor 查询通常几十毫秒，排队高峰可能几百毫秒，prefill 是最大头，最后回传几毫秒。用 KVA 提高前缀命中，主要是砍 prefill 这段，效果可以计算——但我会强调这是机制推导的测算值，不是现场抓的客户日志。”
 
+**破案故事模板（可套用）**：
+> “有一次 P99 TTFT 周期性飙到 3 秒，我先用 metrics 锁定了 prefill 段，L2 没饱和，然后上 msprof 发现 H2D 异常长，最终定位到 KV RDMA 和 H2D 共用 PCIe。修复后通过 chunk 化和拓扑亲和解决，P99 回落。整个过程从 L1 到 L4 逐步排查，没走弯路。”
 
----
 ## 6. 延伸阅读
 ### 6.1 相关主题
-- Mooncake 在 vLLM 与 SGLang 中的实现对比（参见 `docs/interview-review/11-Mooncake在vLLM与SGLang中的实现对比.md`）
-- Chunked Prefill 调度细节与与 PD 分离的配合
+- NVIDIA Dynamo 分布式推理框架（KV 路由与缓存）
+- 投机解码（提高 decode 效率）
+- 量化决策树（FP8/W4A16 选型与验收）
 
 ### 6.2 源文件
-
 | 文件路径 | 标题 | 类型 |
-|--------|------|------|
-| `interview/2026-07-10/03-量化与PD分离深度专题.md` | 量化与 PD 分离深度专题 | 专题文档 |
+|----------|------|------|
+| `interview/2026-07-10/05-Profiling分层排查实战手册.md` | Profiling 分层排查实战手册 | 技术文档 |
+| `interview/2026-07-15/01-P0口述卡-Dynamo投机量化Profiling.md` | P0 口述卡：Dynamo · 投机解码 · 量化 · Profiling (D 部分) | 口述卡/面试准备 |

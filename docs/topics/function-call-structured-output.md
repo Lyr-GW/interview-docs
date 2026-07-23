@@ -1,195 +1,210 @@
 # Function Call 与结构化输出
-> 覆盖 10 个知识点 | 来源 5 个文件 | 更新于 2026-07-15
+> 覆盖 18 个知识点 | 来源 8 个文件 | 更新于 2026-07-23
 
 ## 1. 一句话总结
-让 LLM 输出符合形式规范（JSON Schema / 工具调用格式）的两种路径：**结构化输出**在采样阶段用 token 位掩码硬性屏蔽非法 token（"必然合法"），**Function Call** 是它的特化子集——模型按各厂商原生协议（`<tool_call>` 包 JSON、DSML 等）输出工具调用指令，再由框架解析器转为 OpenAI 兼容的 `tool_calls` 字段；xgrammar 的 **Structural Tag** 机制正将二者收敛为统一体系。
+结构化输出（约束解码）用 xgrammar 在**采样阶段**硬性保证 LLM 输出符合 JSON Schema / 正则等格式；Function Call 是其**特化子集**，通过 TokenizerWrapper 解码层的解析器将各模型族原生协议（XML/DSML）转换为 OpenAI 兼容 `tool_calls`。两者在生成与解析两条路径上独立但可协同 — 约束管 token 合法性，解析器管字段抽取与流式增量；业界正通过 Structural Tag 收敛为“自由文本 ↔ 受约束工具块”的统一机制。
 
 ## 2. 核心原理
 ### 2.1 问题背景
-大语言模型仅靠 prompt 无法保证输出 100% 合法 JSON 或工具调用格式；Agent、数据抽取、API 编排等下游系统必须消费结构化输出，需将"大概率合法"升级为"机制性保证"。
-
-**核心难点**：词表与语法的错位——语法定义在字符/字节层，而模型输出的是 token（一个 token 可能横跨多个语法单元，如 `{"na` 同时消费 `{`、`"`、`na`），引擎必须对 10 万+ 词表的每个 token 判断"接受后是否仍合法"，朴素实现开销巨大。
+- **格式刚性**：下游系统（Agent、数据管线）要求输出 JSON 必须合法，仅靠 prompt 无法 100% 保证。
+- **协议碎片化**：模型厂商没有统一的 Function Call 输出协议 — Qwen3 用 `<tool_call>` XML 包 JSON，DeepSeek V3 用特殊 token 块，V3.2 用 DSML XML。
+- **流式挑战**：开放式协议下，流式增量 token 不可直接解析 JSON，需要补全残缺片段并防标签泄露。
+- **幻觉**：工具调用结束后模型可能继续杜撰回复或推理内容。
 
 ### 2.2 方案概述
-                 Structured Output（任意 JSON Schema，xgrammar 硬约束）
-                        │ 特化
-                        ▼
-                    Tool Call
-                   ┌────┴─────┐
-        路径 A：事后解析          路径 B：约束生成
-        模型自由生成协议文本        grammar 约束采样过程
-        regex/状态机 + JSON 补全   bitmask 屏蔽非法 token
-        软保证（可能解析失败）      硬保证（输出必然合法）
-MindIE 默认走**路径 A**（`ToolCallsProcessor` 事后解析），xgrammar 可选叠加约束 arguments。路径 B 的 engine——xgrammar——将 JSON Schema 转为字节级下推自动机（PDA），把 >99% token 的合法性预计算进缓存；运行时查缓存生成 bitmask，将非法 token 的 logit 置 −inf。
+MindIE 在 `TokenizerWrapper.decode()` 层统一编排 **Reasoning 解析**与 **Tool Call 解析**，形成两条正交路径：
+- **路径 A（事后解析）**：模型自由生成协议文本 → `ToolCallsProcessor` 用正则/状态机 + JSON Completor 提取 → OpenAI 格式，软保证。
+- **路径 B（约束生成）**：xgrammar 将 JSON Schema 编译为字节级下推自动机（PDA），每步生成 `bitmask` 在采样前屏蔽非法 token → 硬保证。
 
-## 3. 实现细节
-### 3.1 ToolCallsProcessor 类体系与解码阶段编排
-MindIE 通过 `TokenizerWrapper.decode()` 统一编排 reasoning 解析与 tool call 解析：
+两者协同：路径 B 保证格式合法，路径 A 负责流式字段抽取。业界进一步用 **Structural Tag** 实现自由文本与约束工具块的动态切换，完美支撑 `tool_choice=auto` 语义。
+
 ```mermaid
-flowchart TB
-    subgraph Encode[请求阶段 Encode]
-        E1[OpenAI API<br/>tools + messages]
-        E2[InputBuilder<br/>Qwen3InputBuilder 注入 tools]
-        E3[apply_chat_template<br/>tokenizer + tools_msg]
-        E4[Token IDs]
-        E1 --> E2 --> E3 --> E4
-    end
-    subgraph Generate[生成阶段 Generate]
-        G1[Text Generator]
-        G2[StructuredOutputManager<br/>可选 xgrammar 约束]
-        G3[Sampler + Bitmask]
-        G4[Output Token Stream]
-        G1 --> G2 --> G3 --> G4
-    end
-    subgraph Decode[解码阶段 Decode]
-        D1[TokenizerWrapper.decode]
-        D2[ReasoningParser 可选]
-        D3[ToolCallsProcessor]
-        D4[OpenAI Response<br/>content + tool_calls]
-        D1 --> D2 --> D3 --> D4
-    end
-    Encode --> Generate --> Decode
+flowchart LR
+    SO[Structured Output<br/>任意 JSON Schema<br/>xgrammar 硬约束]
+    TC[Tool Call]
+    A[路径 A：事后解析<br/>模型自由生成 XML<br/>regex + json_completor<br/>软保证]
+    B[路径 B：约束生成<br/>grammar 约束采样<br/>bitmask 屏蔽非法 token<br/>硬保证]
+
+    SO -->|特化| TC
+    TC --> A
+    TC --> B
 ```
 
-类体系：`ToolCallsProcessor`（基类）→ `ToolCallsProcessorWithXml`（XML 模板 + 流式状态机）→ `ToolCallsProcessorQwen3`（qwen3/qwen3_moe/hermes）、`ToolsCallProcessorDeepseekv3`（deepseek_v2/v3）、`ToolCallsProcessorDeepseekv32`（DSML）。
+## 3. 实现细节
+### 3.1 Function Call 全链路
+一次 OpenAI 工具调用在三段完成：
 
-注册中心 `ToolCallsProcessorManager` 按 `tool_call_parser` 字段路由，使用装饰器 `@register_module` 饿汉式注册。
+```mermaid
+flowchart TD
+    subgraph Encode[请求阶段 Encode]
+        A1[OpenAI API<br/>tools + messages]
+        A2[InputBuilder 注入 tools 到 chat template]
+        A3[apply_chat_template → Token IDs]
+        A1 --> A2 --> A3
+    end
+    subgraph Generate[生成阶段 Generate]
+        B1[Text Generator]
+        B2[StructuredOutputManager<br/>可选 xgrammar 约束]
+        B3[Sampler + Bitmask]
+        B4[Output Token Stream]
+        B1 --> B2 --> B3 --> B4
+    end
+    subgraph Decode[解码阶段 Decode]
+        C1[TokenizerWrapper.decode]
+        C2[ReasoningParser 可选<br/>剥离 <think> → reasoning_content]
+        C3[ToolCallsProcessor<br/>协议文本 → tool_calls]
+        C4[OpenAI Response<br/>content + tool_calls<br/>finish_reason=tool_calls]
+        C1 --> C2 --> C3 --> C4
+    end
+    A3 --> B1
+    B4 --> C1
+```
 
-### 3.2 流式 4-Case 状态机（token ID 计数）
-流式场景下 MindIE 用**token ID 计数**而非正则判断阶段——`_count_tool_tokens` 统计 start/end token ID 出现次数，O(1) 且不受文本截断干扰。
+### 3.2 流式解析：Token 计数状态机 + JSON Completor
+流式场景每步只获得一小段 `delta_text`，MindIE 用**token ID 计数**驱动 4-Case 状态机，避免部分文本在标签/多字节字符处截断导致的误判。
 
 | Case | 条件 | 行为 |
 |------|------|------|
-| Case 1 | start == end，无 end token 在 delta 中 | 返回 `{content: delta_text}` |
-| Case 2 | 新 tool_call 开始（start > end, start 增加） | `current_tool_id++`，返回 start 前的 content |
-| Case 3 | tool_call 进行中（start > end, start 不变） | 提取 `tool_call_portion` → JSON 补全 |
-| Case 4 | tool_call 结束（start == end, end 增加） | 发送最终 arguments delta |
+| Case 1 | `start == end`，无 end token | 返回 `{content: delta_text}` |
+| Case 2 | `start > end` 且 start 刚增加 | `current_tool_id++`，返回 start 前 content |
+| Case 3 | `start > end` 且 start 不变 | 提取 `tool_call_portion` → JSON Completor 补全 |
+| Case 4 | `start == end` 且 end 增加 | 发送最终 arguments delta，结束 |
 
-name 发送采用"攒齐一次性发"，arguments 采用"边生成边发"，符合 OpenAI 流式 `tool_calls` 语义。
+**JSON Completor** 是 MindIE 独有的递归下降补全引擎，不用 `json.loads` 作为主路径：
+- `FillMode.Full`：递归下降 `_parse_object()` 提取完整 key-value，用于函数名尚未出现时推断结构。
+- `FillMode.BraceOnly`：先试 `json.loads`，失败则补齐 `}`，用于函数名已发送后仅补尾部括号。
 
-### 3.3 JSON Completor——递归下降补全器
-流式场景下 arguments JSON 永远残缺，MindIE 自研递归下降解析器，不以 `json.loads` 为主路径：
+流式发送策略：函数名 `name` “攒齐一次性发送”，`arguments` “边生成边发 delta”。
 
-| FillMode | 策略 | 使用时机 |
-|----------|------|----------|
-| `Full` | 递归下降 `_parse_object()` 提取已完成 key-value | name 尚未发送（需推断完整结构） |
-| `BraceOnly` | 先尝试 `json.loads`，失败则补齐 `}` | name 已发送（仅补尾部括号） |
+#### 流式解析失败兜底
+五层软降级，绝不抛异常中断请求：
+1. JSON Completor 内部 `_skip_field` 跳过坏字段，返回尽力而为的部分 dict，不 raise。
+2. `_decode_stream_tool_calls` 包住 JSON Completor 调用，异常时返回 `{}`（本步不发）。
+3. 状态机在信息不足时（name 未完整、arguments 未开始等）返回 `{}`，表示“等下一步”。
+4. `decode_stream` 顶层 try/except → logger.error + 返回 `{}`。
+5. 上层 `tokenizer_wrapper` 若无 `decode_stream` 能力，则直接透传 `{content: delta_text}`；最坏降级为普通文本。
 
-容错：`_skip_field()` 靠括号配平跳过坏字段，`BraceOnly` 失败后数 `{`/`}` 差额补尾括号再试。解析失败时**绝不抛异常**，返回 `{}` 表示"本步无产出、等下一步"。
+### 3.3 多模型族适配器
+通过 `ToolCallsProcessorManager` 注册中心按 `tool_call_parser` 路由：
 
-### 3.4 DeepSeek V3.2 DSML 三阶段与 Hard Cut-off
-`ToolCallsProcessorDeepseekv32` 完全重写解析逻辑：
+| 注册名 | Processor 类 | 原生协议 | 特色 |
+|--------|-------------|---------|------|
+| `qwen3`, `qwen3_moe`, `hermes` | `ToolCallsProcessorQwen3` | `<tool_call>` JSON `</tool_call>` | stop string 检测 |
+| `deepseek_v2`, `deepseek_v3` | `ToolsCallProcessorDeepseekv3` | 特殊 token + \`\`\`json | Token ID 检测 |
+| `deepseek_v32` | `ToolCallsProcessorDeepseekv32` | DSML XML `<invoke>` 标签 | **Hard Cut-off 反幻觉** + Schema-aware type coercion + Snapshot-Diffing |
 
-| 阶段 | 行为 |
-|------|------|
-| P1: Prefix 拦截 | 丢弃部分 start tag，防止标签泄露到 content |
-| P2: Hard Cut-off | 检测到 `</DSML function_calls>` 后**永久返回空 delta**（反幻觉） |
-| P3: Snapshot-Diffing | XML → JSON 字符串 diff 计算 arguments delta |
+**Hard Cut-off**（DeepSeek V3.2）：检测到 `</｜DSML｜function_calls>` 后永久返回空 delta，阻断模型在工具块之后继续幻觉输出。
 
-另有 **Schema-aware type coercion**：`_get_param_type_from_schema()` 从 tools schema 读取参数类型，对数值/布尔字段智能转换。
+### 3.4 结构化输出：xgrammar 约束解码
+xgrammar（CMU Catalyst/MLC，MLSys 2025）将 JSON Schema 转为**字节级下推自动机（PDA）**，JSON 递归结构需要带栈的 PDA 而非有限状态机。
 
-### 3.5 xgrammar 约束解码原理
-JSON Schema ──转换──> EBNF 上下文无关文法（CFG）
-    ──编译──> 字节级下推自动机（byte-level PDA）
-    ──预计算──> adaptive token mask cache
-运行时：PDA 栈状态 ──> token bitmask ──> apply 到 logits ──> 采样
+核心优化：
+- **token 二分类**：>99% 的 token 上下文无关（仅依赖 PDA 栈顶节点），编译期预计算进 `adaptive token mask cache`；<1% 上下文相关 token 运行时用持久化执行栈现场检查。
+- **计算与 GPU 重叠**：mask 生成在 CPU 上，与 GPU 前向并行；bitmask 以 int32 压缩位图传输，一次 `masked_fill_(-inf)` 完成屏蔽。
 
-**核心优化**：token 二分类——
-- **context-independent tokens**（>99%）：仅凭 PDA 栈顶节点即可判合法 → 编译期预计算进 mask cache；
-- **context-dependent tokens**（<1%）：需检查整个栈 → 运行时用持久化执行栈现场检查。
+NPU 侧实现（MindIE）：
+- `apply_token_bitmask_inplace_npu` 使用 `repeat_interleave` + `masked_fill_`（PyTorch/torch_npu 算子组合，非自研 Ascend C kernel）。
+- 与 vLLM 的 Triton fused kernel 不同，设计取向前提是可移植性与快速落地。
 
-mask 生成在 CPU 侧、与 GPU 前向 overlap，bitmask 以 int32 压缩位图传 GPU。
+#### 编译缓存
+- MindIE：规范化 schema 串 SHA-256 为 key，默认容量 **100 条 FIFO**（命中不调序），避免重复编译。简单 schema 编译 5~15ms，复杂 100~200ms，直接打在 TTFT 上。
+- vLLM：缓存下沉给 xgrammar 编译器，按字节上限（默认 512MB）控制，更稳定。
+- 未来方向：条数 + 字节双门限，schema 亲和路由提高多实例缓存命中率。
 
-**编译缓存**：MindIE 对规范化后的 schema 串做 SHA-256 哈希为 key，内存缓存，128 条 LRU 置换，相同 schema 二次请求零编译。vLLM 下沉给 `xgr.GrammarCompiler(cache_enabled=True)` 按字节数上限（默认 512 MB）控制，更稳。
+### 3.5 Function Call 与结构化输出的协同
+- 即使开了约束解码，解析器仍需运行：约束保证 token 合法性，解析负责流式 delta 抽取和字段组装。
+- **Structural Tag**（xgrammar 支持）是 2026 年主流方案：定义 trigger（如 `<tool_call>`），触发后切换到对应 grammar 约束，结束后返回自由文本，完美表达 `tool_choice=auto` 语义。
+- vLLM 已按模型注册 Structural Tag 模板（如 `qwen_3`、`deepseek_v3_2`），MindIE 目前未集成该能力，tool call 与结构化输出两条路未打通。
 
-**副作用**：TTFT 增加（首次编译 5–200 ms）、强约束可能损害输出质量（逼进低概率路径）、投机解码下需多位置 mask 前瞻再整体 rollback。
+### 3.6 失败模式对照
 
-### 3.6 约束与解析的职责正交
-约束解码和输出解析是两条独立路径：
-- **约束解码**在采样阶段限制 token 选择（bitmask → 非法 token logit = −inf）；
-- **ToolCallsProcessor** 在解码阶段将模型输出转为 OpenAI 格式（协议文本 → `tool_calls` 字段）。
+| 失败模式 | 路径 A（事后解析） | 路径 B（约束生成） |
+|---------|-------------------|-------------------|
+| arguments 非法 JSON | JSON Completor 补齐 → 降级空 arguments | 机制上不会发生 |
+| 幻觉工具名 | 解析后校验 → 降级 content | name 约束为枚举，杜绝 |
+| 标签后幻觉 | DSML Hard Cut-off | 结束标签后回自由文本，仍需 stop token |
+| 参数类型错误 | Schema-aware type coercion | schema 限定类型 |
+| 模型不产生调用 | 无法解决 | `required` 强制进入工具分支 |
 
-两者互补：开了约束后 parser 不能省（约束不负责"字段抽取与流式增量"），但约束能简化容错路径（补括号、regex 抢救等兜底逻辑在硬保证下不再触发）。
-
-### 3.7 流式解析失败的兜底五层防线
-1. **JSON Completor 本身不抛异常**：`_skip_field()` 跳过坏字段，`BraceOnly` 失败返回 `{}`；
-2. **`_decode_stream_tool_calls` 内层 try/except**：异常返回 `INIT_RETURN_NONE`（{}）；
-3. **状态机"没把握就不发"守卫**：name 不完整、找不到 delta 位置等全部返回 `{}`；
-4. **`decode_stream` 顶层 try/except**：打印日志，返回 `{}`；
-5. **最外层降级**：若 processor 无 `decode_stream` → 警告 + `{CONTENT: delta_text}` 原样透传；非流式路径正则匹配不到 → `{CONTENT: lines}`。
-
-DSML 专属叠加：Prefix 缓冲（防半截 start tag 泄露）+ Hard Cut-off（永久静默 post-end-tag 幻觉）。
+### 3.7 Agent 循环与 KV 复用
+多步 Agent 循环中 System + Tools 定义前缀高度重复，KV Prefix Cache 命中率极高，可与编译缓存亲和路由形成同构优化。
 
 ## 4. 框架对比
-### 4.1 MindIE vs vLLM Function Call 实现
+### 4.1 MindIE vs vLLM
 
 | 维度 | MindIE | vLLM |
 |------|--------|------|
-| 流式检测 | **token ID 计数**（O(1)，对齐生成粒度） | 每步重解析全量 `current_text`（regex + `partial_tag_overlap`） |
-| 残缺 JSON 处理 | 自研**递归下降** `JSON Completor`（Full/BraceOnly） | 三方库 `partial_json_parser` + dict diff / Hermes 字符串 diff |
-| 与约束解码集成 | 未打通（tool call 走纯解析，结构化输出走全程约束） | **深度集成**：`adjust_request` 把 `tool_choice` 转 guided decoding；structural tag 按模型注册 |
-| 热路径 | 纯 Python | 新模型走 `engine_based_streaming=True` + 引擎级/Rust 适配器 |
-| 反幻觉 | DSML Hard Cut-off | structural tag name 枚举 + stop token |
-| 注册机制 | `ToolCallsProcessorManager.register_module` 饿汉式 | `ToolParserManager.register_lazy_module` 懒加载（40+ 模型） |
+| **Tool Call 流式检测** | Token ID 计数（O(1)，依赖 special token ID） | 文本重解析（regex + partial_tag_overlap，通用但 O(n)） |
+| **JSON 补全** | 自研递归下降 JSON Completor（Full/BraceOnly） | partial_json_parser + dict diff |
+| **约束解码集成** | Tool Call 与结构化输出未打通，无 Structural Tag | **深度集成**：`tool_choice` 转 JSON Schema 约束 + Structural Tag 按模型注册 |
+| **解析失败兜底** | 五层软降级 + DSML Hard Cut-off | try/except → 降级为 content |
+| **多后端** | 仅 xgrammar（抽象层预留但未实现） | auto 链（xgrammar > guidance > outlines），真多后端 |
+| **热路径下沉** | 纯 Python（JSON Completor、DSML 状态机） | 新模型走 `engine_based_streaming=True` + Rust 引擎适配器 |
 
-### 4.2 约束解码后端对比
+一句话定调：MindIE 在 JSON 补全策略、反幻觉（Hard Cut-off）和 Token 级检测上独具特色，但约束解码与解析的协同（Structural Tag）方面尚未对齐 vLLM。
 
-| 后端 | 核心技术 | 表达能力 | 特点 |
-|------|---------|---------|------|
-| **xgrammar** | 字节级 PDA + 预计算 mask cache | CFG（JSON Schema/EBNF/regex） | vLLM/SGLang 默认；C++ 内核，编译快 |
-| **Outlines** | 正则→FSM，token 级状态转移表 | 正则/JSON Schema（递归受限，需展开近似） | 学术起源；查表 O(1)，但编译慢（分钟级） |
-| **Guidance/llguidance** | Earley 解析 + token 前缀树 | CFG，最灵活 | 运行时动态解析，Rust 优化到 ~50 μs |
-| **lm-format-enforcer** | token 级前缀匹配 | JSON Schema/regex | 实现简单，性能一般 |
+### 4.2 其他框架对比
 
-**xgrammar** 走中间路线：PDA 支持完整 CFG（通用性等同 llguidance），又把 99% 判定预计算掉（速度逼近 Outlines）。
-
-### 4.3 Structural Tag——约束与解析的收敛点（vLLM 已实现，MindIE 需补）
-xgrammar 的 **Structural Tag** 机制：定义若干 trigger（如 `<tool_call>`），自由文本段无约束，一旦采样出 trigger 立即切入对应 grammar（按该函数 schema 约束到结束标签），结束后回到自由文本。**一次前向里动态切换"无约束 ↔ 有约束"状态**，完美表达 `tool_choice=auto` 语义，同时兼容 reasoning（`<think>` 块自然处于无约束段）。
-
-vLLM 的 `structural_tag_registry.py` 为 11 个模型族注册了 structural tag 构造器（`qwen_3`、`deepseek_v3_2`、`llama` 等），上游 xgrammar 内置协议模板，推理框架只做编排。**MindIE 尚未引入 structural tag**（tool call 与结构化输出两条路未打通），这是下一步该补的核心能力。
+| 框架 | Tool Call 解析 | 约束解码 | 特点 |
+|------|---------------|---------|------|
+| **vLLM** | ToolParser 体系，dict-level diff | xgrammar / outlines / llguidance | 最广泛模型覆盖，Structural Tag 集成 |
+| **SGLang** | Frontend language + JSON schema | outlines | 编程式 API，前端约束强 |
+| **TGI** | Grammar-based | 内置 grammar | HuggingFace 生态 |
 
 ## 5. 面试要点
 ### 5.1 常见追问
+#### Q: Tool Call 全链路怎么走？
+- Encode：InputBuilder 注入 tools → chat template → token IDs。
+- Generate：模型按原生协议输出，可选 xgrammar 约束。
+- Decode：ReasoningParser 剥 `<think>` → ToolCallsProcessor 解析 → `finish_reason=tool_calls`。
+
+#### Q: 为什么每个模型族需要一个适配器？
+- 厂商没有统一 tool call 输出协议：Qwen3 用 XML JSON，DeepSeek V3 用特殊 token 块，V3.2 用 DSML XML。框架本质是“每模型族一个协议适配器”。
+
+#### Q: 流式下 arguments 怎么增量发送？
+- 4-Case 状态机定位阶段 + JSON Completor 两种 FillMode 补全残缺 JSON + `DeltaToolCall` 增量；函数名攒齐一次性发，arguments 边生成边发。
+
 #### Q: JSON 解析失败怎么处理？
-- JSON Completor 五层软降级：补括号 → regex 抢救 name → 降级空 arguments / 本步返回 `{}` → 顶层 try/except → 最终 `{CONTENT: lines}` 降级为普通 content
-- DSML 额外叠加 Prefix 缓冲 + Hard Cut-off
-- **绝不抛异常中断请求**，根治靠约束生成
+- 五层软降级：JSON Completor 内部不抛异常尽力补全；外层 try/except 返回 `{}` 不发；状态机信息不足时返回 `{}` 等待；顶层异常记录日志返回 `{}`；最坏降级为普通 content。
 
-#### Q: 流式为何用 token ID 计数而不用正则？
-- partial text decode 存在延迟，且文本在任意位置截断（半标签、半多字节字符）会误判
-- token ID 计数 O(1)，且天然对齐生成粒度，不受文本截断干扰
-- vLLM 用文本重解析（O(n) 每步重扫），通用性强但不依赖 special token ID
+#### Q: Hard Cut-off 是什么？
+- DSML 专有：检测到 `</｜DSML｜function_calls>` 结束标签后永久返回空 delta，阻断模型在工具块外继续幻觉输出。
 
-#### Q: Tool Call 和结构化输出什么关系？
-- Tool Call 是结构化输出的特化子集：两条实现路径——事后解析（软保证） vs 约束生成（硬保证）
-- 约束和解析职责正交：约束管 token 合法性（采样阶段），parser 管字段抽取与流式增量（解码阶段）
-- structural tag 是收敛点：把"约束"和"解析"统一为 trigger 驱动的动态切换体系
+#### Q: 约束解码有什么副作用？
+- TTFT 增加（编译耗时）；每步 mask 生成开销（xgrammar 预计算 + overlap 压到 <1%）；强约束可能将模型逼进低概率路径，损害输出质量；与投机解码、异步调度组合时状态回滚正确性成本高；编译产物和 bitmask 占用内存。
 
-#### Q: tool_choice 四种取值如何映射到约束？
-- `none`：无需约束（或屏蔽 start token）
-- forced（具名函数）：单函数 parameters schema 全程约束（退化为普通结构化输出）
-- `required`：各函数 anyOf 并集 + name 枚举化
-- `auto`：需 structural tag——自由文本无约束，触发后切入对应 grammar（最难）
+#### Q: 编译缓存怎么设计？
+- MindIE：SHA-256 规范化 schema 为 key，默认 100 条 FIFO（业务 schema 稳定时 FIFO≈LRU）。vLLM：xgrammar 自带字节上限缓存（512MB）。迭代方向：双门限（字节 + 条数）兜底。
 
-#### Q: 开约束还要 tool parser 吗？
-要。约束保证 token 合法（bitmask），但不负责"字段抽取与流式增量"（name 先整体发、arguments 逐步发、`DeltaToolCall` index 管理），两者职责正交。
+#### Q: 为什么 Tool Call 和结构化输出要一起讲？
+- Tool Call 是结构化输出的特化子集；两条路径互补——约束保证合法性，解析负责流式抽取；Structural Tag 是业界将两者收敛统一的方案。
+
+#### Q: MTP（投机解码）与结构化输出能同时开吗？
+- MindIE 当前 **硬互斥**（`ValidateMtpConstraints` 直接报错）。工程原因：插件层未打通——grammar 无 rollback 接口、bitmask 仅单位置、MTP 不碰 grammar；产品原因：fail-fast 避免“加速但 JSON 破防”。vLLM 通过多位置 mask + rollback 支持组合。
+
+#### Q: 异步调度下结构化输出踩过什么坑？
+- 异步流水线中 mask 生成与状态推进跨线程，导致 mask 落后一拍（stale mask），典型现象为多出一个 `{`。修复：将 mask 生成与 `accept_token` 都收口到 `forward_loop` 线程串行化。
 
 ### 5.2 口述话术
-"这三个特性其实是一条链路：**结构化输出**解决'输出必须合法'，用 xgrammar 把 Schema 编译成 PDA、预计算 token mask cache，采样阶段硬性屏蔽非法 token；**Tool Call** 是它的特化场景——我实现了 Qwen3/DeepSeek 多协议的 `ToolCallsProcessor` 体系，核心是 token ID 计数驱动的 4-Case 流式状态机和自研递归下降 JSON Completor；业界正用 structural tag 把约束和解析收敛到一起，vLLM 已按模型注册 structural tag 模板，这是 MindIE 下一步该补的；而 Agent 多步循环里 System+Tools 前缀高度重复，正是 KV 亲和调度收益最大的负载——tools 注入在 chat template 层，token 级匹配才能精确命中，这也是我们做 token 级匹配的动机。"
+> “在我交付的结构化输出里，xgrammar 把 JSON Schema 编译成字节级 PDA，预计算 99% token 的合法性，运行时每步查缓存 + 极少现场检查，生成 bitmask 在采样器里屏蔽非法 token。针对 Tool Call，我实现了一套可注册的多模型族解析器——Qwen3 用 token 计数状态机 + 自研 JSON Completor 做流式增量发送，DeepSeek V3.2 用 DSML 三阶段 + Hard Cut-off 防幻觉。这两条路在我的代码里是正交的：约束管 token 合法性，解析器管字段抽取；未来演进方向是引入 Structural Tag 把它们统一起来，这也是 vLLM 已经做到的。性能上，bitmask apply 占 TPOT <1%，编译缓存用 SHA-256 做 key 默认 100 条 FIFO，多步 Agent 循环里 System+Tools 前缀高度复用 KV Cache，亲和调度还能进一步提高命中率。”
 
 ## 6. 延伸阅读
 ### 6.1 相关主题
-- KV 亲和调度与 Prefix Cache
-- Agent 多步循环与 KV 复用
-- xgrammar 原理深潜（Schema→PDA→bitmask、vLLM 架构挖潜、性能数值）
-- Reasoning 与 Tool Call 组合解析（Qwen3 `enable_thinking`）
+- `03-结构化输出与约束解码专题.md`：xgrammar 原理深潜、开销数值、副作用
+- `14-FunctionCall专题.md`：Tool Call 全链路、流式状态机、JSON Completor
+- `16-结构化输出复习专题.md`：结构化输出功能点、编译缓存
+- `17-FunctionCall与结构化输出综合专题.md`：Structural Tag、tool_choice 映射、失败模式
+- `02-简历第三层追问弹药.md`：诚实边界与口径红线
 
 ### 6.2 源文件
+
 | 文件路径 | 标题 | 类型 |
 |---------|------|------|
-| wiki/repos/mindie-pyserver/function-call.md | MindIE Function Call 工具调用实现 | 实现分析 |
-| wiki/raw/articles/pyserver/mindie_function_call_deep_analysis.md | MindIE Function Call 深度分析 | 深度分析（含 Agent 生态视野） |
-| interview/interview-review/03-结构化输出与约束解码专题.md | xgrammar 原理、对比、开销与副作用 | 面试专题 |
-| interview/interview-review/14-FunctionCall专题.md | Function Call 独立专题 | 面试专题 |
-| interview/interview-review/16-结构化输出复习专题.md | 结构化输出复习专题 | 面试专题 |
-| interview/interview-review/17-FunctionCall与结构化输出综合专题.md | 交叉与串线综合专题 | 面试专题 |
+| wiki/repos/mindie-pyserver/function-call.md | MindIE Function Call 工具调用实现 | 源码分析 |
+| wiki/raw/articles/pyserver/mindie_function_call_deep_analysis.md | Function Call 深度分析 | 技术报告 |
+| interview/interview-review/03-结构化输出与约束解码专题.md | 结构化输出/约束解码专题 | 面试复习 |
+| interview/interview-review/14-FunctionCall专题.md | FunctionCall 独立专题 | 面试复习 |
+| interview/interview-review/16-结构化输出复习专题.md | 结构化输出独立复习 | 面试复习 |
+| interview/interview-review/17-FunctionCall与结构化输出综合专题.md | 综合专题（交叉与串线） | 面试复习 |
+| interview/interview-review/18-结构化输出模拟面试实录.md | 模拟面试实录 | 面试实录 |
+| interview/2026-07-15/02-简历第三层追问弹药.md | 第三层追问弹药（工程向） | 面试弹药 |

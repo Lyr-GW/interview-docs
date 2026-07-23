@@ -1,196 +1,190 @@
-# **Prefix Cache** 前缀缓存
-> 覆盖 6 个知识点 | 来源 2 个文件 | 更新于 2026-07-11
+# Prefix Cache 前缀缓存
+> 覆盖 12 个知识点 | 来源 5 个文件 | 更新于 2026-07-15
 
 ## 1. 一句话总结
-Prefix Cache（前缀缓存）通过缓存公共前缀（如 system prompt、few-shot examples）的 **KV Cache** 来避免重复计算，降低首 Token 延迟（TTFT）并提升吞吐。MindIE 采用双层架构——C++ 调度层做前缀匹配、Python 插件层做 hash 生成与分布式 KV Store（Mooncake/Memcache）读写；vLLM 则使用纯 Python 实现的 RadixTree 做灵活的单机前缀共享。核心差异在于 MindIE 面向多机分布式部署优先，vLLM 面向单机通用场景优先。
+Prefix Cache 通过缓存公共前缀的 KV Cache 避免重复计算，降低 TTFT 并提升吞吐。MindIE 采用插件式架构，通过滚动哈希链和 Mooncake 分布式 MemPool 实现跨机共享；vLLM 采用内核集成的链式 block hash 方案。两者正交互补：引擎内 APC 负责同实例复用，跨实例亲和（Conductor/Motor）负责把请求路由到已有缓存的机器。
 
-
-!!! abstract "30 秒速览"
-    - **核心原理**
-    - **实现细节**
-    - **框架对比**
-    - **面试要点**
-    - 问题背景
-    - 方案概述
-
-
----
 ## 2. 核心原理
 ### 2.1 问题背景
-LLM 推理中，多个请求往往共享相同的前缀（如长 system prompt、few-shot 示例）。若不缓存，每个请求都需重复计算这部分 KV Cache，导致：
-- **TTFT 过高**：每个请求都要完整走过共享前缀的 prefill 阶段
-- **计算资源浪费**：相同的矩阵乘法被重复执行
-- **吞吐受限**：这些重复计算占用了本可用于真正差异化文本生成的算力
-
-Prefix Cache 的核心目标是：**识别并复用已计算的前缀 KV Cache，让模型只计算差异部分**。
+LLM 推理中，大量请求共享相同的前缀内容（system prompt、few-shot examples、多轮对话历史），每次重复计算这些前缀的 KV Cache 浪费算力。传统方案无缓存时 TTFT 高、吞吐低，且前缀越长浪费越严重。
 
 ### 2.2 方案概述
-所有 prefix cache 方案都遵循“存储-匹配-复用”三阶段模式：
-1. **存储**：将 KV Cache 按 Block 划分，以内容为 Key 存入缓存
-2. **匹配**：新请求到来时，用其 input_ids 查询缓存中已存在的连续前缀
-3. **复用**：命中部分直接写入 NPU/GPU，模型跳过已缓存部分，仅推理差异 Token
+将 KV Cache 按固定 block 切分，对每块计算链式 hash。新请求到达时，沿 block 链查询缓存：命中则直接复用物理块、跳过对应 prefill 计算；未命中则正常计算并将新块写入缓存。MindIE 增加跨机共享能力：C++ 调度层做前缀匹配，Python 插件层做 hash 计算和分布式 mempool 读写。
 
-MindIE 和 vLLM 的核心分歧在于**匹配粒度**与**缓存部署范围**：
-- MindIE：固定 128 Token 粗粒度 Block，原生支持多机分布式共享（Mooncake RDMA）
-- vLLM：默认 16 Token 细粒度 Block，仅支持单机内存共享（RadixTree）
+```mermaid
+flowchart TB
+    subgraph CPP_LAYER["C++ Scheduler Layer"]
+        BlockManager["BlockManager 前缀匹配<br/>→ 计算 computed_block_lens"]
+    end
+    subgraph PY_LAYER["Python Plugin Layer"]
+        PM["PluginManager.generate_token"]
+        PCP["PrefixCachePlugin"]
+        PCP_inner["├── model_inputs_update ← hash 计算 + mempool get<br/>└── PrefixCachePreprocess.update_infer_input ← 截断输入"]
+    end
+    subgraph MEMPOOL["Distributed MemPool"]
+        MemStore["Mooncake / Memcache<br/>Store/Put KV tensors → NPU"]
+    end
+    CPP_LAYER --> PY_LAYER
+    PY_LAYER --> MEMPOOL
+```
 
-
----
 ## 3. 实现细节
-### 3.1 MindIE 架构：双层调度 + 分布式存储
-MindIE 采用 **C++ 调度层 + Python 插件层** 的双层架构：
-- **C++ Scheduler/BlockManager**：负责前缀匹配计算 `computed_block_lens`（本地命中）和 `remote_computed_block_lens`（远程命中），通过 protobuf 序列化传递给 Python 层
-- **Python PrefixCachePlugin**：集成在 PluginManager 的 `generate_token` 流程中，负责 hash 计算、输入截断、MemPool get/put
+### 3.1 Hash 算法：链式滚动哈希
 
-#### 关键代码路径
-- C++ 匹配：`BlockManager` → 计算 `computedLens` → `construct_execute_request.cpp` 序列化
-- Python 解析：`input_metadata_builder.py::parse_para_is_prefill()` 解析 protobuf
-- Hash 逻辑：`prefix_cache_plugin.py::hash_block()` 滚动哈希生成
-- 输入截断：`prefix_cache_preprocess.py::update_infer_input()` 重写 input_ids/position_ids/slots
-- 分布式读写：`mooncake_mempool.py::get/put()` 或 `memcache_mempool.py`
-
-### 3.2 Hash 算法：链式滚动哈希
-MindIE 使用自定义滚动哈希，基于 C++ `std::hash` 兼容性设计：
+MindIE 使用自定义滚动哈希，基于 `hash_combine` 设计：
 
 ```python
 hash_block(prefix_hash, block_tokens):
     seed = 0
-    seed ^= hash_combine(seed, prefix_hash)    # 链式依赖前一个 block
+    seed ^= hash_combine(seed, prefix_hash)     # 链式：前一个 block 的 hash
     for token_id in block_tokens:
-        seed = hash_combine(seed, token_id)    # 增量累加
-    seed = hash_combine(seed, EXTRA_HASH=0)    # 终止符，防长度碰撞
+        seed = hash_combine(seed, token_id)      # 增量累加
+    seed = hash_combine(seed, EXTRA_HASH=0)      # sentinel 终止符
     return seed
 
 hash_combine(seed, val):
     seed ^= hash(val) + 0x9e3779b97f4a7c15 + (seed << 6) + (seed >> 2)
     return 1 if seed == 0 else seed % 2^64
 ```
-**关键特性**：
-- 链式嵌套：每个 Block 的 hash 依赖前一个 Block 的 hash，保证顺序敏感
-- 64-bit 空间：碰撞概率极低，且用于 KV Cache key 无安全需求
-- EXTRA_HASH=0 终止符：防止"abc" + "d" 与 "ab" + "cd" 碰撞
-- **不支持部分匹配**：必须完全匹配连续前缀 Block 序列
 
-### 3.3 两级缓存模型
-**Local Cache（本地命中）**：
-- 本机 NPU 上已有的 Block
-- 仍需查询 MemPool 确认，但无需远程传输
-- 在 `get_prefix_kvcache_from_mempool()` 中刷新
+关键特性：
+- **链式嵌套**：每个 block 依赖前一个 block 的 hash，保证不同顺序产生不同 hash
+- **64-bit 空间**：碰撞概率极低，非加密但用于 KV Cache key 无安全问题
+- **EXTRA_HASH sentinel**：防止不同长度序列碰撞
+- **不支持部分匹配**：必须完全匹配前缀 block 序列
 
-**Remote Cache（远程命中）**：
-- 其他节点（Mooncake cluster）上已有的 Block
-- 通过 RDMA/Ascend Direct 零拷贝写入本机 NPU
-- 计算方式：`remote_computed_blocks` = 全部命中 - `local_computed_blocks`
+vLLM 使用 SHA-256 内容哈希：`block_hash = H(parent_hash, tokens_in_block, extra_keys)`。extra_keys 含 LoRA / multimodal / cache_salt，防止串缓存。链式保证因果性：block i 可复用当且仅当 0..i-1 已在同一 worker。
 
-#### 数据流
-```mermaid
-flowchart LR
-    A[新请求 input_ids] --> B[C++ BlockManager 前缀匹配]
-    B --> C[计算 computed_block_lens + remote_computed_block_lens]
-    C --> D[protobuf 序列化 → Python]
-    D --> E[PrefixCachePlugin model_inputs_update]
-    E --> F{有缓存命中?}
-    F -->|是| G[get_prefix_kvcache_from_mempool → 截断 input_ids]
-    F -->|否| H[正常推理]
-    G --> I[Forward 跳过已缓存部分]
-    I --> J[put_prefix_kvcache_to_mempool 新 block 写入分布式存储]
-```
-### 3.4 SCP（Sequence Context Parallelism）适配
-MindIE 深度适配序列并行场景（sp_size > 1 或 cp_size > 1）：
-- **Block 分布**：Token 按 round-robin 分配到各 SCP 维度（sp × cp）
-- **Hash Key 含 Rank 信息**：`"{hash}_{scp_rank}_{scp_size}_{model_name}"`，防止跨 rank 冲突
-- **computed_blocks 二维**：shape `[batch_size, scp_size]`，每 rank 仅处理自己的维度
-- **Slots 重排**：SCP 的 all-gather 后需重排 slots 顺序
-- **Padding 对齐**：不同 rank 的 Block 数需 padding 到一致
+### 3.2 两级缓存模型
+**Local Cache (computed_blocks)**：本地 NPU 上已有的 block，需查询 MemPool 但无需远程传输。
 
-### 3.5 vLLM 架构：RadixTree 单机共享
-vLLM 的 Automatic Prefix Caching（APC）集成在 BlockManager 中，使用 **RadixTree（压缩前缀树）** 管理所有 KV Cache Block：
-- 树节点存储共享前缀序列，叶子节点关联 Block 引用
-- 新请求通过遍历 RadixTree 自动匹配最长公共前缀
-- 默认 block_size=16，实现细粒度任意长度前缀复用
+**Remote Cache (remote_computed_blocks)**：其他节点（Mooncake cluster）上已有的 block，通过 RDMA/Ascend Direct 传输，命中后直接写入 NPU。
+
+### 3.3 完整数据流
+#### Prefill 阶段
+1. **C++ Scheduler 前缀匹配**：BlockManager 计算 `computed_block_lens` 和 `remote_computed_block_lens`
+2. **InputMetadata 解析**：解析 protobuf 中的 block lens（SCP 场景 reshape 二维）
+3. **PrefixCachePlugin.model_inputs_update()**：从 mempool 拉取 KV Cache，调用 `PrefixCachePreprocess.update_infer_input()` 截断 input_ids、重算 position_ids 和 slots
+
+#### Postprocess 阶段
+- `put_prefix_kvcache_to_mempool()` 遍历 full block，对新建 block 计算 hash 并写入 mempool
+- 每 prefill batch 打印 local/remote hit rate
 
 #### 关键代码路径
-- 前缀匹配：`radix_tree.py::match_prefix()` 返回匹配的 Block 列表
-- Block 分配：`block_manager_v2.py` 在调度时自动处理缓存命中
-- 淘汰策略：RadixTree 内置 LRU，淘汰最久未访问且无引用的 Block
+| 文件 | 职责 |
+|------|------|
+| `prefix_cache_plugin.py` | Plugin 主类：hash 计算、mempool get/put、命中率统计 |
+| `prefix_cache_preprocess.py` | 输入预处理：截断 input_ids/position_ids/slots |
+| `mooncake_mempool.py` | Mooncake 分布式 KV Store（RDMA/Ascend Direct） |
+| `input_metadata.py` | computed_blocks / remote_computed_blocks |
 
-vLLM 使用 **SHA-256 内容哈希** 标识每个 Block，安全性高但计算开销大，实际部署中常被用户关闭以换取更低延迟。
+### 3.4 SCP (Sequence Context Parallelism) 适配
+- Block 按 round-robin 分配到各 scp 维度
+- Hash key 格式：`"{hash}_{scp_rank}_{scp_size}_{model_name}"`
+- computed_blocks 二维 `[batch_size, scp_size]`
+- Slots 需在 all-gather 后重排；不同 rank 的 block 数需 padding 对齐
 
+### 3.5 驱逐与引用计数
+vLLM APC 驱逐机制：
+- 满块 hash 入表，`ref_cnt++` 当请求命中
+- 请求结束 `ref_cnt--`；LRU 候选仅限 `ref_cnt==0`
+- 公共前缀引用计数高 → 比后缀更抗踢
+- vLLM v1 仅 recompute 抢占，无 SWAPPED
 
----
+### 3.6 跨实例亲和：两层关系
+
+```text
+┌─ 层 A：引擎 APC / PrefixCache ──────────────┐
+│  同机链式 hash → 共享物理块 → 跳过 prefill    │
+│  事实源：BlockPool；发 BlockStored/Removed    │
+└────────────────────┬─────────────────────────┘
+                     │ ZMQ 通知面（元数据，不搬张量）
+                     ▼
+┌─ 层 B：跨实例亲和 ──────────────────────────┐
+│  Conductor PrefixCacheTable；Motor 打分路由   │
+│  目的：把请求送到「层 A 存货最长」的实例       │
+└──────────────────────────────────────────────┘
+```
+
+- **机内 prefix cache**：同实例复用物理块，跳过 prefill 计算
+- **跨实例亲和**：路由共址，提高命中概率，但不替代引擎内核
+- **ZMQ 是通知面**：BlockStored/Removed 事件养 Conductor 索引，HTTP `/query` 查询最长匹配
+
 ## 4. 框架对比
 ### 4.1 MindIE vs vLLM
+
 | 维度 | MindIE | vLLM |
 |------|--------|------|
 | **架构风格** | 插件式，通过 PluginManager 集成 | 核心内建，集成在 BlockManager |
-| **核心数据结构** | 滚动哈希链 + Mooncake 分布式 KV Store | RadixTree（压缩前缀树）+ SHA-256 内容哈希 |
-| **Block 大小** | 固定 128 tokens | 默认 16 tokens（可配置） |
-| **Hash 算法** | 自定义滚动哈希（hash_combine + 0x9e3779b9） | SHA-256 内容哈希 |
-| **前缀匹配位置** | C++ BlockManager/Scheduler | RadixTree 自动完成 |
-| **匹配粒度** | 粗粒度（128 Token），仅支持完整 Block 序列匹配 | 细粒度（16 Token），支持任意长度前缀复用 |
-| **输入修改** | Python 层手动截断 input_ids/position_ids/slots | Scheduler 分配 Block 时隐式完成 |
-| **分布式缓存** | 原生支持（Mooncake/Memcache）多机共享 | 无原生支持 |
-| **SCP 支持** | 深度适配 | 无对应概念 |
-| **PD 分离** | 支持 P/D 实例间共享 prefix cache | 需借助外部缓存 |
-| **内存淘汰** | Mooncake/Memcache 内部策略管理 | RadixTree LRU 淘汰 |
-| **配置复杂度** | 高：需配置 MemPool、protobuf、plugin_params | 低：`--enable-prefix-caching` 一个 flag |
+| **核心数据结构** | 滚动哈希链 + Mooncake 分布式 KV Store | 链式 block hash (hash map) |
+| **Block Size** | 固定 128 tokens | 默认 16 tokens |
+| **Hash 算法** | 自定义 hash_combine 滚动哈希 | SHA-256 内容哈希 |
+| **前缀匹配位置** | C++ BlockManager / Scheduler | Scheduler 隐式完成 |
+| **输入修改** | Python 手动截断 input_ids/position_ids/slots | Scheduler 分配 block 时隐式完成 |
+| **分布式缓存** | 原生支持 Mooncake/Memcache 多机共享 | 无原生支持 |
+| **SCP 支持** | 深度适配 (sp_rank, block round-robin) | 无对应概念 |
+| **PD 分离** | 支持 P/D 实例间共享 | 需借助外部缓存 |
+| **内存淘汰** | Mooncake/Memcache 内部策略 | LRU（仅 ref_cnt==0 可逐） |
+| **配置复杂度** | 高：需配置 MemPool、protobuf、plugin | 低：一个 flag 即可启用 |
 
-**适用场景总结**：
-- **MindIE 适合**：多机部署、高并发长前缀复用（few-shot、system prompt）、PD 分离场景、Ascend NPU 生态
-- **vLLM 适合**：单机部署、灵活配置、任意长度前缀复用的通用方案、社区生态丰富
+**设计权衡**：
+- MindIE 适合多机部署、高并发长前缀复用（few-shot、system prompt）、PD 分离场景
+- vLLM 适合单机部署、灵活配置的通用方案
+- MindIE 128 token 块减少 hash 管理开销，但前缀复用率较低
+- vLLM 16 token 块提高前缀复用率，但 hash 计算和管理的开销可能超过收益
 
-
----
 ## 5. 面试要点
 ### 5.1 常见追问
-#### Q: Prefix Cache 的核心原理是什么？如何避免重复计算？
-- 将 KV Cache 按 Block 划分，以 Token 序列内容为 Key 存入缓存
-- 新请求到来时，用 input_ids 匹配最长公共前缀
-- 命中部分直接复制 KV Cache 到 GPU/NPU，模型只计算差异部分
-- 关键在于**内容寻址**：相同 Token 序列必然产生相同 Key，无需显式管理
+#### Q: 前缀全命中为何还要算 1 token？
+- 需要 logits 采样
+- num_computed_tokens 需 block 对齐，尾块可能整块重算
+- max_cache_hit_length = num_tokens - 1
 
-#### Q: MindIE 的滚动哈希和 vLLM 的 SHA-256 有什么区别？为什么这样设计？
-- MindIE：自定义 `hash_combine` 滚动哈希，64-bit，计算极快，但非加密安全
-  - 设计目的：支持链式嵌套（每 Block 的 hash 依赖前一 Block），保证顺序敏感
-  - 适合高频调用，且用作 KV Cache Key 无安全需求
-- vLLM：SHA-256 内容哈希，256-bit，加密安全但计算开销大
-  - 设计目的：通用性，直接使用 Python 标准库
-  - 实际部署中常因 hash 开销被用户关闭，vLLM 后续版本正在优化
+#### Q: block hash 怎么保证安全共享？
+- 链式 hash + extra_keys（LoRA/multimodal/cache_salt）隔离
+- ref_cnt 引用计数；不去重保证 block ID append-only 稳定
 
-#### Q: computed_block_lens 与 remote_computed_block_lens 的关系是什么？
-- `computed_block_lens`：本地 NPU 上已存在的 Block 数（Local Cache）
-- `remote_computed_block_lens`：全部命中 Block 数（Local + Remote）
-- 远程需传输的 Block 数 = `remote_computed_block_lens` - `computed_block_lens`
-- 这个设计区分了“无需传输”和“需 RDMA 传输”的缓存，减少不必要的网络开销
+#### Q: 有了 APC 还要跨实例亲和干什么？
+- APC 不解决 N 机 round-robin 稀释问题
+- 亲和优化命中概率与负载，不替代引擎内核
+- 跨实例 Conductor 聚全局 hash 视图，Motor 送回最长前缀机
 
-#### Q: 为什么 MindIE 使用 128 Token 的粗粒度 Block，而 vLLM 用 16 Token？
-- **MindIE 权衡**：128 Token 减少 hash 计算次数和管理开销，但前缀复用率降低
-  - 适合长 prompt 场景（few-shot MMLU），短前缀复用需求不高
-  - 分布式场景下，粗粒度也减少了 MemPool 查询频率
-- **vLLM 权衡**：16 Token 极大提高任意长度前缀的复用率，但 hash 计算和树操作开销更大
-  - 适合通用场景，长/短前缀都能受益
-  - 单机内存管理灵活，细粒度淘汰更精确
+#### Q: 假阳性亲和为何比 round-robin 更糟？
+- 假阳性：索引说 W 有前缀 S，引擎已 BlockRemoved
+- 会确定性把同前缀 burst 全灌到空壳机 → 满量重算 + 热点排队
+- RR 至少 1/N 摊开，还有偶然命中
 
-#### Q: MindIE 的 prefix cache 如何处理 SCP（序列并行）？
-- Token 按 round-robin 分配到各 SCP 维度，每 rank 只持有部分 Token 的 KV Cache
-- Hash Key 包含 scp_rank 和 scp_size：`"{hash}_{scp_rank}_{scp_size}_{model_name}"`，防止跨 rank 冲突
-- computed_blocks 为二维数组 `[batch_size, scp_size]`，每 rank 仅处理自己的维度
-- all-gather 后需重排 slots 顺序，且不同 rank 的 Block 数需 padding 对齐
+#### Q: vLLM 是 RadixTree 吗？
+- **否**。vLLM 是 hash map + 链式 block hash
+- RadixTree 是 SGLang 的实现
+
+#### Q: block_size 不一致会怎样？
+- 引擎与索引必须一致；不一致 → 精确亲和静默全 miss、退化为 LB
+- Motor/Conductor 常配 128，引擎常见 16
 
 ### 5.2 口述话术
-“Prefix Cache 是 LLM 推理的常见优化，本质是通过内容寻址的方式复用已计算的 KV Cache。举个例子，如果多个请求共享相同的 system prompt，这些请求就只有真正不同的 user query 部分需要计算。实现上，MindIE 用的是双层架构——C++ 做前缀匹配、Python 做 hash 生成和分布式存储读写，通过 Mooncake RDMA 实现跨机零拷贝共享，适合多机部署和 Ascend NPU 生态。vLLM 则是单机方案，用 RadixTree 和 SHA-256 hash 做灵活的前缀匹配，开箱即用，但分布式部署需要额外组件。两者各有取舍——MindIE 强在分布式场景的吞吐提升，vLLM 强在灵活性和易用性。”
+**60 秒电梯稿**：
+> vLLM 用 PagedAttention 把 KV 切成固定 block。Prefix Cache/APC 在满块上算链式 hash：`block_hash_i = H(parent_hash, tokens_in_block_i, extra_keys)`——同 hash 即同整段前缀路径。新请求从 B0 沿表查，遇 miss 必须停（因果）；命中则挂同一物理块、ref_cnt++，跳过对应 prefill。
+>
+> 驱逐走 LRU，但只有 `ref_cnt==0` 才可踢——公共前缀被多请求引用，比后缀更抗踢。全命中也至少留 1 token 算 logits。
+>
+> 两层正交：APC 只解决同实例复用；N 机乱打会稀释命中。跨实例靠 ZMQ 事件养 Conductor，Motor tokenize + `/query` 把请求送到「存货最长」的机——落点后仍靠引擎 APC 真跳过计算。ZMQ 是通知面，不搬 KV。
 
-
----
 ## 6. 延伸阅读
 ### 6.1 相关主题
-- **KV Cache 管理**：Prefix Cache 依赖基础 KV Cache Block 管理机制
-- **Mooncake 分布式传输**：MindIE 跨机缓存共享的核心依赖，RDMA/Ascend Direct 零拷贝技术
-- **Speculative Decoding**：MindIE C++ 前缀树 (`prefix_tree.h/cpp`) 用于预测解码，独立于 prefix cache，但技术上有协同优化空间
-- **SplitFuse**：MindIE 插件系统支持 prefix cache + splitfuse 组合使用
+- PagedAttention 与 Continuous Batching：KV Cache 物理块管理基础
+- ZMQ KV Events：引擎 BlockStored/Removed 事件 → 跨实例索引
+- 假命中与驱逐感知：假阳性 vs 假阴性、Motor vs 近似树对比
+- 打分函数与 Herding：负载门控、冷机 seed、利用率约束
 
 ### 6.2 源文件
+
 | 文件路径 | 标题 | 类型 |
-|---------|------|------|
-| wiki/repos/mindie-pyserver/prefix-cache.md | MindIE Prefix Cache 前缀缓存 | 核心文档 |
-| wiki/raw/articles/pyserver/prefix_cache_analysis.md | Prefix Cache 分析 | 分析报告 |
+|----------|------|------|
+| wiki/repos/mindie-pyserver/prefix-cache.md | MindIE Prefix Cache 前缀缓存 | 技术文档 |
+| wiki/raw/articles/pyserver/prefix_cache_analysis.md | Prefix Cache 分析 | 分析文档 |
+| interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md | PagedAttention + Prefix Caching | 面试专题 |
+| interview/kv knowledge/00-概念与分层模型.md | 概念与分层模型 | 知识库 |
+| interview/2026-07-15/27-引擎PrefixCache内核口述卡.md | 引擎 PrefixCache 内核口述卡 | 口述卡 |
+| interview/2026-07-15/12-假命中与驱逐感知口述卡.md | 假命中与驱逐感知口述卡 | 口述卡 |
+| interview/2026-07-15/25-ZMQ-KV-Events速答卡.md | ZMQ KV Events 速答卡 | 口述卡 |
