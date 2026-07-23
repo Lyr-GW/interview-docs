@@ -69,7 +69,7 @@ nav:
     - KV Cache 亲和调度: topics/kv-cache-affinity.md
     - 投机推理: topics/speculative-decoding.md
     - Flash Attention: topics/flash-attention.md
-    - 调度器: topics/scheduler.md
+    - 调度器与 Continuous Batching: topics/scheduler.md
     - Function Call 与结构化输出: topics/function-call-structured-output.md
     - Prefix Cache: topics/prefix-cache.md
     - HTTP 服务层: topics/http-server.md
@@ -77,7 +77,13 @@ nav:
     - DeepSeek 模型: topics/deepseek-models.md
     - 推理框架对比: topics/inference-frameworks.md
     - PyMotor 架构: topics/pymotor-architecture.md
-    - 量化与PD分离: topics/quantization-pd-separation.md
+    - 量化与 PD 分离: topics/quantization-pd-separation.md
+  - vLLM 专题（2026-07-22 新）:
+    - vLLM V1 调度器源码分析: topics/vllm-scheduler-analysis.md
+    - vLLM vs MindIE LLM 框架对比: topics/vllm-mindie-comparison.md
+  - 算子与硬件（新）:
+    - 推理算子与硬件总纲: topics/operator-hardware.md
+    - 算子 × 简历答辩总纲: topics/operator-resume-defense.md
   - 技术专题:
     - 性能分析与调优: topics/profiling.md
     - K8s 与基础设施: topics/k8s-infra.md

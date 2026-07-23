@@ -243,4 +243,6 @@ flowchart LR
 | interview/kv knowledge/08-选型与面试口述.md | 选型与面试口述 | 知识库 |
 | interview/kv knowledge/09-ZMQ-KV-Events详解.md | ZMQ KV Events 详解 | 知识库 |
 | interview/kv knowledge/12-KV池化完整综述.md | KV 池化完整综述 | 知识库 |
-| interview/interview-review/13-KV亲和性调度模拟面试对练实录.md | KV 亲和性调度模拟面试对练实录 | 面试实录 |
+|| interview/interview-review/13-KV亲和性调度模拟面试对练实录.md | KV 亲和性调度模拟面试对练实录 | 面试实录 |
+|| [2026-07-22/03-KV亲和调度低高并发时延与收益边界.md](../sources/2026-07-22/03-KV亲和调度低高并发时延与收益边界.md) | 低并发与高并发时延、收益及边界分析 | 源码分析 |
+|| [vllm-mindie-comparison.md](vllm-mindie-comparison.md) | vLLM vs MindIE LLM 框架调度抢占对比 | 框架对比 |

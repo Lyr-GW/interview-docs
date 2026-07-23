@@ -198,4 +198,6 @@ flowchart TB
 |----------|------|------|
 | wiki/repos/mindie-pyserver/scheduler.md | MindIE-LLM Scheduler 调度器 | 源码分析 |
 | wiki/raw/articles/pyserver/scheduler_deep_analysis.md | Scheduler 调度器 — 深度分析 | 对照分析 |
-| interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md | PagedAttention + Continuous Batching + Scheduler + Chunked Prefill | 面试笔记 |
+|| interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md | PagedAttention + Continuous Batching + Scheduler + Chunked Prefill | 面试笔记 |
+|| [vllm-scheduler-analysis.md](vllm-scheduler-analysis.md) | vLLM V1 调度器源码深入分析（2026-07-22 新专题） | 源码分析 |
+|| [vllm-mindie-comparison.md](vllm-mindie-comparison.md) | vLLM vs MindIE LLM 框架调度抢占对比 | 框架对比 |
