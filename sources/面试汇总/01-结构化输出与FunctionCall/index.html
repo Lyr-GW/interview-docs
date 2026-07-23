@@ -1,0 +1,3834 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/%E9%9D%A2%E8%AF%95%E6%B1%87%E6%80%BB/01-%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E4%B8%8EFunctionCall/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>结构化输出与 Function Call 汇总 - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#function-call" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              结构化输出与 Function Call 汇总
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#xgrammar-pda-bitmask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一、结构化输出原理（xgrammar / PDA / bitmask）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="一、结构化输出原理（xgrammar / PDA / bitmask）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 问题定义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-xgrammar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 xgrammar 处理链路
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 后端对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-mindie-vs-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 MindIE 整体设计 vs vLLM（代码级对比）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.4 MindIE 整体设计 vs vLLM（代码级对比）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.1 MindIE 全链路设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.2 vLLM 整体设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.3 细节对比表
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#144" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.4 一句话总结
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 副作用（必背六条）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fifo-100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        二、编译缓存（FIFO / 100 与自我迭代）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="二、编译缓存（FIFO / 100 与自我迭代）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 开销两段
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 缓存设计（代码真相——红线）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-benchmark" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 关键数值（经验量级，非本仓 benchmark）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tokenizer-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        三、tokenizer 同源与 tools 透传
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="三、tokenizer 同源与 tools 透传">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-model_path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 为何必须同源（红线：本地 model_path 同源加载，非运行时从引擎拉取）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-tools-fail-closed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 tools 透传 + fail-closed（必背三件套）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-vs-router" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 vs 字符级 router
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bitmask-npu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        四、bitmask NPU 路径诚实边界
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="四、bitmask NPU 路径诚实边界">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-torch-npu-fused-kernel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 实现（红线：torch NPU 算子组合，非自研 fused kernel）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.1 实现（红线：torch NPU 算子组合，非自研 fused kernel）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#411" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1.1 先用一句人话理解它
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#412-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1.2 它如何从压缩通行表还原出每个 token 的结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#413-batch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1.3 为什么时序、尾部和 batch 对齐很重要
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#414-fused" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1.4 性能上为什么它不算 fused
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-npu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 相关算子知识：这条路径到底在 NPU 上消耗什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 相关算子知识：这条路径到底在 NPU 上消耗什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#421-vector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.1 它不是矩阵乘，而是一串 Vector / 搬运操作
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#422" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.2 每个算子的作用与潜在开销
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#423-128k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.3 用 128K 词表建立内存直觉
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 性能优化空间：从低风险到深度融合
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.3 性能优化空间：从低风险到深度融合">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#431-p0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.1 P0：先定位瓶颈，避免优化错层
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#432-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.2 P1：框架层低风险优化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#433-p2-fused-bitmask-apply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.3 P2：实现 fused bitmask apply
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#434-p3-sampler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.4 P3：进一步融合进 sampler，潜在收益更高
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#435-p4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.5 P4：按合法集合稀疏度选择路径（研究方向）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#436" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.6 推荐实施顺序与验收
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-bitmask-apply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 超大词表会不会把 bitmask apply 变成瓶颈
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.4 超大词表会不会把 bitmask apply 变成瓶颈">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#441" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.1 先给结论
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#442-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.2 MindIE 当前实现的放大点（逐代码核实）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#443-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.3 vLLM 是否做了融合算子：是，但要看清融合边界
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.4.3 vLLM 是否做了融合算子：是，但要看清融合边界">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#4431" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.3.1 它具体融合了哪些算子
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4432-block_size8192" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.3.2 BLOCK_SIZE=8192 到底表示什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4433-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.3.3 为什么它比 MindIE 当前组合路径省访存
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4434-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.3.4 vLLM 还做了哪些“非算子融合”优化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4435-legacy-runner-fused-apply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.3.5 legacy runner 也有 fused apply，但数据路径没那么紧凑
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4436" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.3.6 哪些步骤还没融合
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4437-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.3.7 与 MindIE 的最终对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#444-fused" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.4 为什么 fused 后通常仍不是第一瓶颈
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#445-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.5 MindIE 优化优先级（按收益/风险排序）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#446" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4.6 如何验证是否真的成了瓶颈
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-call-egd4-casehard-cut-offparser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        五、Function Call 全链路（E/G/D、4-Case、Hard Cut-off、约束⊥parser）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="五、Function Call 全链路（E/G/D、4-Case、Hard Cut-off、约束⊥parser）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-tool-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 概念关系：Tool Call 是结构化输出的特化子集
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-encode-generate-decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Encode / Generate / Decode（白板）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-4-case" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 4-Case 流式状态机（必背）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-hard-cut-offdsml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Hard Cut-off（DSML 专有）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-vs-parser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 约束 vs parser：正交（必背）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-tool_choice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 tool_choice 映射约束
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57-structural-tag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.7 Structural Tag——约束与解析的统一收敛点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#58" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.8 失败模式对照
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#59" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.9 交叉工程细节
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mtp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        六、MTP × 结构化互斥
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="六、MTP × 结构化互斥">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 入口硬互斥（红线：禁止「可以一起开 / 已打通」）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-vs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 产品理由 vs 工程理由
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 对标 vLLM 缺什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 上场话术
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        七、快问快答（合并去重）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        八、第三层追问弹药
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="function-call">结构化输出与 Function Call 汇总<a class="headerlink" href="#function-call" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>面试用内容型知识汇总：把结构化输出（xgrammar 约束解码）与 Function Call 讲成一条链路的两端。
+每节结构：原理 → 代码锚点 → 口述 → 快问快答 → 第三层追问。所有数字区分「代码事实 / 机制 / 经验量级（非本仓实测）」。</p>
+</blockquote>
+<hr />
+<h2 id="xgrammar-pda-bitmask">一、结构化输出原理（xgrammar / PDA / bitmask）<a class="headerlink" href="#xgrammar-pda-bitmask" title="Permanent link">&para;</a></h2>
+<h3 id="11">1.1 问题定义<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<p>结构化输出（structured output / guided decoding）：让 LLM 的输出**保证**符合形式规范——JSON Schema、正则、EBNF 语法、工具调用格式。仅靠 prompt 无法保证 100% 合法；约束解码在**采样阶段**硬性屏蔽非法 token——每步解码前算出「当前语法状态下合法的 token 集合」，把非法 token 的 logit 置 −inf。</p>
+<p>核心价值：把「模型大概率输出合法 JSON」升级为「模型必然输出合法 JSON」——这是任何要机器消费模型输出的下游系统（Agent、数据抽取、API 编排）的刚需。</p>
+<p>核心难点是**词表与语法的错位**：语法定义在字符/字节层，模型输出的是 token（一个 token 可能横跨多个语法单元，如 <code>{"na</code> 同时消费了 <code>{</code>、<code>"</code>、<code>na</code>）。引擎必须对 12.8 万词表的每个 token 判断「从当前语法状态出发，接受它后是否仍合法」——每步全词表检查，朴素实现开销巨大。</p>
+<p>支持的约束类型（不止 tool call）：</p>
+<table>
+<thead>
+<tr>
+<th>约束类型</th>
+<th>典型入参</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JSON Schema</td>
+<td><code>response_format</code> / <code>guided_json</code></td>
+<td>数据抽取、API 固定结构</td>
+</tr>
+<tr>
+<td>正则 regex</td>
+<td><code>guided_regex</code></td>
+<td>电话、日期、枚举短格式</td>
+</tr>
+<tr>
+<td>EBNF 语法</td>
+<td><code>guided_grammar</code></td>
+<td>领域 DSL、SQL 子集</td>
+</tr>
+<tr>
+<td>工具调用</td>
+<td><code>structural_tag</code> / tools</td>
+<td>Function Call（结构化输出的特化子集）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-xgrammar">1.2 xgrammar 处理链路<a class="headerlink" href="#12-xgrammar" title="Permanent link">&para;</a></h3>
+<p>xgrammar（CMU Catalyst / MLC，MLSys 2025）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>JSON Schema ──转换──&gt; EBNF 上下文无关文法（CFG）
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    ──编译──&gt; 字节级下推自动机（byte-level PDA）
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ──预计算──&gt; adaptive token mask cache（自适应 token 掩码缓存）
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>运行时：PDA 栈状态 → token bitmask → apply 到 logits → 采样
+</code></pre></div>
+<p><strong>为什么是 PDA 而不是 FSM</strong>：JSON 是递归结构（对象套对象、数组套数组），嵌套深度无界，正则/有限状态机表达不了，需要带栈的下推自动机。简历/仓内写「FSM」不严谨——<strong>说 PDA 更准确</strong>（简单正则约束才可退化为 FSM）。这是红线之一。</p>
+<p><strong>核心优化一：token 二分类 + 掩码预计算（xgrammar 的灵魂）</strong></p>
+<ul>
+<li><strong>context-independent token（&gt;99%）</strong>：仅凭 PDA 当前位置（栈顶节点）即可判合法，与栈深层内容无关 → <strong>编译期预计算</strong>，以栈顶节点为 key 存入 adaptive token mask cache；</li>
+<li><strong>context-dependent token（&lt;1%）</strong>：需检查整个栈 → 运行时用**持久化执行栈**（支持快速分支/回滚）现场检查。</li>
+</ul>
+<p>运行时每步 = 查缓存拿 99% token 掩码 + 现场检查 1%，mask 生成从「全词表模拟」降到微秒级。</p>
+<p><strong>核心优化二：存储与系统协同</strong></p>
+<ul>
+<li>掩码缓存按内容自适应选存储格式（合法集小存白名单 / 非法集小存黑名单 / 否则存 bitmask），控内存；PDA 做编译器式优化（内联、等价状态合并）；</li>
+<li><strong>与 GPU 计算 overlap</strong>：mask 生成在 CPU，与 GPU 前向并行；bitmask 以 int32 压缩位图传 GPU，用 kernel 一次 <code>logits.masked_fill_(-inf)</code>。</li>
+</ul>
+<h3 id="13">1.3 后端对比<a class="headerlink" href="#13" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>后端</th>
+<th>核心技术</th>
+<th>表达能力</th>
+<th>每步开销</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>xgrammar</strong></td>
+<td>字节级 PDA + 预计算 mask cache</td>
+<td>完整 CFG（JSON Schema/EBNF/regex）</td>
+<td>微秒级（99% 预计算）</td>
+<td>vLLM/SGLang/TRT-LLM 主流默认；C++ 内核可移植</td>
+</tr>
+<tr>
+<td><strong>Outlines</strong></td>
+<td>正则→FSM，token 级转移表</td>
+<td>正则/JSON Schema（递归受限，需展开近似）</td>
+<td>查表 O(1)，但编译可能很慢（复杂 schema 分钟级痛点，core 已 Rust 重写）</td>
+<td>学术起源（arXiv:2307.09702）</td>
+</tr>
+<tr>
+<td><strong>Guidance / llguidance</strong></td>
+<td>Earley 解析 + token 前缀树，lazy</td>
+<td>CFG，表达最灵活</td>
+<td>每步动态解析（llguidance Rust ~50μs）</td>
+<td>模板编程式约束；vLLM 的 <code>guidance</code> 后端</td>
+</tr>
+<tr>
+<td><strong>lm-format-enforcer</strong></td>
+<td>token 级前缀匹配</td>
+<td>JSON Schema/regex</td>
+<td>中等</td>
+<td>实现简单，性能一般</td>
+</tr>
+</tbody>
+</table>
+<p>一句话对比（可背）：<strong>Outlines 是「正则→FSM 查表」，快但表达受限、编译慢；Guidance/llguidance 是「运行时解析」，灵活但每步要算；xgrammar 走中间路线——PDA 支持完整 CFG，又把 99% 判定预计算掉，既通用又快。</strong></p>
+<p>vLLM 里 <code>backend="auto"</code> 的优先级（逐字对照代码，非推测）：<strong>xgrammar &gt; guidance &gt; outlines</strong>——先试 xgrammar；失败且（Mistral 非 tekken 分词器 / 命中 guidance 也不支持的 JSON 特性）则降级 outlines；否则降级 guidance。<code>lm-format-enforcer</code> 不参与 auto，必须显式指定。</p>
+<h3 id="14-mindie-vs-vllm">1.4 MindIE 整体设计 vs vLLM（代码级对比）<a class="headerlink" href="#14-mindie-vs-vllm" title="Permanent link">&para;</a></h3>
+<h4 id="141-mindie">1.4.1 MindIE 全链路设计<a class="headerlink" href="#141-mindie" title="Permanent link">&para;</a></h4>
+<p>MindIE 的结构化输出可以按「请求解析 → 编译缓存 → 请求态 matcher → step 级 bitmask → logits handler → 状态推进」六步讲：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>OpenAI response_format
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  → StructuredOutputRequest.from_response_format()
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  → StructuredOutputManager.prepare / build grammar
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>       查 SHA-256(schema) 编译缓存
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>       miss: xgr.GrammarCompiler.compile_json_schema()
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  → 每请求创建 XgrammarGrammar(CompiledGrammar → GrammarMatcher)
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  → decode step 前 fill_next_token_bitmask([B, ceil(V/32)])
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  → GuidedDecodingLogitsHandler.apply_token_bitmask_inplace()
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>  → sampler 采 token
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>  → accept_token() 推进 GrammarMatcher 状态
+</code></pre></div>
+<p>四个核心文件的职责边界：</p>
+<table>
+<thead>
+<tr>
+<th>MindIE 文件 / 符号</th>
+<th>设计职责</th>
+<th>代码事实 / 面试口径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mindie_llm/text_generator/plugins/structured_output/structured_output_manager.py</code> · <code>StructuredOutputManager</code></td>
+<td>总控层：延迟导入 xgrammar、构造 tokenizer info / grammar backend、维护编译缓存、为 batch 生成 bitmask</td>
+<td><code>_DEFAULT_GRAMMAR_CACHE_SIZE=100</code>；缓存 key 是规范化 schema 的 SHA-256；超限 <code>next(iter(...))</code> 删最早插入项，命中不调序 → <strong>FIFO/100，不是 LRU/128</strong></td>
+</tr>
+<tr>
+<td>同文件 · <code>GuidedDecodingBackendType</code></td>
+<td>后端枚举 / 扩展点</td>
+<td>现行落地后端是 <strong>xgrammar</strong>；guidance 更准确说是接口预留，不要说「线上多后端都打通」</td>
+</tr>
+<tr>
+<td><code>structured_output_grammar.py</code> · <code>XgrammarGrammar</code></td>
+<td>请求态 grammar：封装 <code>xgr.GrammarMatcher</code>，负责 <code>fill_next_token_bitmask</code>、<code>accept_token</code>、终止检测、tried token 游标</td>
+<td>编译产物 <code>CompiledGrammar</code> 可共享；<code>GrammarMatcher</code> 必须每请求独立，因为 PDA/栈状态随 token 序列演进</td>
+</tr>
+<tr>
+<td><code>structured_output_bitmask.py</code> · <code>apply_token_bitmask_inplace(_npu)</code></td>
+<td>设备侧 logits 屏蔽：把 int32 压缩位图应用到 logits</td>
+<td>NPU 路径是 <code>repeat_interleave</code> + 位移取 bit + <code>masked_fill_(-inf)</code> 的 torch/torch_npu 组合，<strong>不是自研 Ascend C fused kernel</strong></td>
+</tr>
+<tr>
+<td><code>samplers/logits_handlers/pta_handlers.py</code> · <code>GuidedDecodingLogitsHandler</code></td>
+<td>采样器接入点：在 selector / softmax / argmax 之前把非法 token logit 置 <code>-inf</code></td>
+<td><code>@register_class("guided_decoding")</code> 说明这是 logits handler 链上的一个插件，不改变模型 forward 本身</td>
+</tr>
+<tr>
+<td><code>plugins/plugin_manager.py</code></td>
+<td>生命周期与异步路径挂载</td>
+<td>异步调度下 mask 生成和 <code>accept_token</code> 必须放在同一顺序契约里；错位会导致「旧状态 mask 合法、新状态 accept 拒绝」</td>
+</tr>
+</tbody>
+</table>
+<p>这套设计的核心取舍：<strong>MindIE 迁移 vLLM 的 xgrammar 思路，但落在 MindIE 插件 / sampler handler 体系里</strong>。编译和状态管理在 Python 插件层；NPU 侧优先用现有 torch_npu 算子组合保证正确性和可移植，后续再考虑融合 kernel。</p>
+<h4 id="142-vllm">1.4.2 vLLM 整体设计<a class="headerlink" href="#142-vllm" title="Permanent link">&para;</a></h4>
+<p>vLLM V1 的结构化输出按 EngineCore / Scheduler / Worker 分层：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>API 层
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  response_format / guided_json / guided_regex / guided_grammar / structural_tag
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  → SamplingParams.structured_outputs
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  → _validate_structured_outputs() 决定 backend
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>EngineCore 进程（CPU）
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  → StructuredOutputManager.grammar_init(request)
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>       ThreadPoolExecutor 异步编译
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>       request.structured_output_request.grammar = Future / Grammar
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>  → Scheduler.get_grammar_bitmask()
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>       CPU 侧 fill_bitmask，生成 GrammarOutput(np.ndarray[int32])
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>  → accept_tokens / rollback 推进请求态 grammar
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>Worker 进程（GPU）
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>  → 接收 GrammarOutput
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>  → pin_memory + non_blocking H2D
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>  → Triton 或 xgrammar fused kernel apply 到 logits
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>  → sampler
+</code></pre></div>
+<p>代码锚点：</p>
+<table>
+<thead>
+<tr>
+<th>vLLM 文件 / 符号</th>
+<th>设计职责</th>
+<th>关键点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vllm/v1/structured_output/__init__.py</code> · <code>StructuredOutputManager</code></td>
+<td>EngineCore 进程单例，统一管理 backend、异步编译、bitmask 填充</td>
+<td>编译提交到 <code>ThreadPoolExecutor</code>；<code>Future.result(timeout=0.0001)</code> 非阻塞轮询；没编完的请求留在 WAITING，不进 batch</td>
+</tr>
+<tr>
+<td><code>backend_types.py</code> · <code>StructuredOutputBackend</code> / <code>StructuredOutputGrammar</code></td>
+<td>engine 级 backend 与 request 级 grammar 两层抽象</td>
+<td>backend 负责 compile / allocate bitmask；grammar 负责 <code>accept_tokens</code>、<code>validate_tokens</code>、<code>rollback</code>、<code>fill_bitmask</code></td>
+</tr>
+<tr>
+<td><code>backend_xgrammar.py</code></td>
+<td>xgrammar 后端</td>
+<td><code>xgr.GrammarCompiler(cache_enabled=True, cache_limit_bytes=...)</code>；缓存按字节上限，默认由 <code>VLLM_XGRAMMAR_CACHE_MB=512</code> 控制</td>
+</tr>
+<tr>
+<td><code>sampling_params.py::_validate_structured_outputs</code></td>
+<td><code>backend="auto"</code> 选择逻辑</td>
+<td>优先级是 <strong>xgrammar &gt; guidance &gt; outlines</strong>；<code>lm-format-enforcer</code> 不参与 auto，需显式指定</td>
+</tr>
+<tr>
+<td><code>vllm/v1/core/sched/scheduler.py::get_grammar_bitmask()</code></td>
+<td>CPU / scheduler 侧生成 mask</td>
+<td>紧跟 <code>execute_model(non_block=True)</code> 后执行，CPU mask 生成与 GPU forward overlap</td>
+</tr>
+<tr>
+<td><code>vllm/v1/worker/gpu/structured_outputs.py</code> / <code>structured_output/utils.py</code></td>
+<td>GPU 侧 apply</td>
+<td>新路径用 vLLM Triton kernel；旧路径可用 <code>xgr.apply_token_bitmask_inplace</code>；共同点是 pin memory + <code>non_blocking=True</code> 异步搬运</td>
+</tr>
+<tr>
+<td><code>vllm/v1/structured_output/request.py</code> / grammar <code>rollback</code></td>
+<td>投机解码支持</td>
+<td>为 <code>(1+k)</code> 个位置生成多行 mask；沿 draft 试探 <code>accept</code>，填完立刻 <code>rollback</code>，verify 后按真实采纳 token 正式 <code>accept</code></td>
+</tr>
+</tbody>
+</table>
+<p>vLLM 的核心设计是把 grammar 状态放在 <strong>EngineCore/Scheduler 进程</strong>，worker 只拿 bitmask 快照 apply。这样避免跨进程同步 PDA 栈状态；worker 无状态，调度侧对 request 生命周期、投机接受/拒绝、reasoning 边界有完整视角。</p>
+<h4 id="143">1.4.3 细节对比表<a class="headerlink" href="#143" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>MindIE 现行设计</th>
+<th>vLLM V1 设计</th>
+<th>结论 / 面试说法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>架构落点</td>
+<td><code>plugins/structured_output/</code> + sampler <code>GuidedDecodingLogitsHandler</code></td>
+<td><code>vllm/v1/structured_output/</code> + EngineCore/Scheduler/Worker 分层</td>
+<td>MindIE 是插件式迁移；vLLM 是 V1 engine 原生能力</td>
+</tr>
+<tr>
+<td>请求入口</td>
+<td>OpenAI 兼容 <code>response_format</code> 解析成结构化请求</td>
+<td><code>SamplingParams.structured_outputs</code> 覆盖 JSON/regex/grammar/structural_tag</td>
+<td>MindIE 主链更聚焦 <code>response_format</code> / JSON Schema；vLLM 入口更统一</td>
+</tr>
+<tr>
+<td>后端选择</td>
+<td>实际落地 <strong>xgrammar</strong>；guidance 属扩展预留</td>
+<td>多后端抽象完整；auto: xgrammar → guidance → outlines</td>
+<td>别把 MindIE 说成线上多后端；vLLM 才是完整多后端矩阵</td>
+</tr>
+<tr>
+<td>编译调度</td>
+<td>Manager 内同步/插件流程编译，靠本地缓存降低重复 schema 成本</td>
+<td><code>ThreadPoolExecutor</code> 异步编译；Future 未完成则请求不进 batch</td>
+<td>vLLM 把「编译未完成」显式纳入调度状态；MindIE 更偏特性插件内消化</td>
+</tr>
+<tr>
+<td>编译缓存</td>
+<td>Python 层 <code>dict</code>：SHA-256(schema) → <code>CompiledGrammar</code>；默认 100 条 FIFO</td>
+<td>下沉给 <code>xgr.GrammarCompiler(cache_enabled=True)</code>；按字节上限（默认 512MB）</td>
+<td>MindIE 简单可控但按条数不感知产物大小；vLLM 按字节更稳</td>
+</tr>
+<tr>
+<td>请求态状态</td>
+<td>每请求 <code>XgrammarGrammar</code> / <code>GrammarMatcher</code> 独立推进</td>
+<td>每请求 <code>StructuredOutputGrammar</code> 挂在 <code>Request.structured_output_request.grammar</code></td>
+<td>两者一致：编译产物可共享，运行态 matcher 不能共享</td>
+</tr>
+<tr>
+<td>bitmask 生成位置</td>
+<td>插件 / forward 时序内生成 <code>[B, ceil(V/32)]</code> 单位置 mask</td>
+<td>Scheduler CPU 侧生成 <code>GrammarOutput</code>，worker 只 apply</td>
+<td>vLLM 进程边界更清晰；MindIE 重点是和异步插件时序对齐</td>
+</tr>
+<tr>
+<td>apply 实现</td>
+<td>NPU 走 torch_npu 组合：展开 bit → <code>masked_fill_(-inf)</code></td>
+<td>Triton kernel 或 xgrammar fused apply；H2D pin + non-blocking</td>
+<td>MindIE 不吹 fused kernel；可优化方向是 fused sampler / fused apply</td>
+</tr>
+<tr>
+<td>异步 / overlap</td>
+<td>异步路径要把 mask 生成与 accept 放进 forward 线程顺序契约，避免旧状态 mask</td>
+<td><code>execute_model(non_block=True)</code> 后 CPU 算 mask，与 GPU forward overlap</td>
+<td>两者都想 overlap；vLLM 是架构天然并发，MindIE 更强调修正插件时序</td>
+</tr>
+<tr>
+<td>投机解码</td>
+<td>入口与 <code>response_format</code> <strong>硬互斥</strong>；单位置 bitmask，MTP 插件不挂 grammar</td>
+<td>支持多位置 bitmask + <code>rollback</code> + verify 后正式 <code>accept</code></td>
+<td>MindIE 当前不能同开 MTP×SO；对标 vLLM 缺 <code>(1+k)</code> mask 和 rollback 挂载</td>
+</tr>
+<tr>
+<td>Reasoning / thinking</td>
+<td>SO 与 Tool/Reasoning 未统一成 structural tag；Function Call 多走事后 parser</td>
+<td>reasoning 未结束默认不 fill bitmask、不 advance grammar；可配置 <code>enable_in_reasoning</code></td>
+<td>vLLM 对 thinking 边界更系统；MindIE 讲清楚「约束与 parser 正交」</td>
+</tr>
+<tr>
+<td>Tool Call 收敛</td>
+<td>Tool Call 路径 A：<code>ToolCallsProcessor</code> 事后解析；SO 路径 B：全程约束，二者分轨</td>
+<td><code>structural_tag</code> 是一等 grammar，模型族协议注册到 <code>structural_tag_registry</code></td>
+<td>如果重做 MindIE，优先补 structural tag，把 auto tool call 的 arguments 纳入硬约束</td>
+</tr>
+<tr>
+<td>失败处理</td>
+<td>parser 侧强调 fail-soft；SO 侧依赖 schema 校验和 matcher 拒绝</td>
+<td>API 层先校验；engine 内编译异常仍有 TODO；正则编译有超时保护</td>
+<td>不要虚构完美兜底；可主动说 vLLM metrics / 失败处理也有可补点</td>
+</tr>
+<tr>
+<td>可观测性</td>
+<td>以日志、UT、路径锚点为主；缓存命中率/编译耗时 metrics 可补</td>
+<td>当前代码未见结构化输出专属 Prometheus metrics，主要靠日志/异常</td>
+<td>两边都可补「编译耗时、缓存命中率、bitmask耗时」指标</td>
+</tr>
+</tbody>
+</table>
+<h4 id="144">1.4.4 一句话总结<a class="headerlink" href="#144" title="Permanent link">&para;</a></h4>
+<p><strong>MindIE 方案</strong>：以 xgrammar 为唯一落地主后端，打通 <code>response_format → GrammarCompiler → GrammarMatcher → bitmask → NPU logits handler → accept_token</code>，工程贡献在约束链路、缓存、NPU apply 接入和异步步进正确性；缓存是 <strong>SHA-256 + FIFO/100</strong>，bitmask 是 <strong>torch_npu 组合</strong>。</p>
+<p><strong>vLLM 方案</strong>：把结构化输出做成 EngineCore 原生能力，后端抽象、多后端 fallback、异步编译、scheduler 侧 bitmask、worker 无状态 apply、投机 rollback、reasoning 跳过约束都更系统；代价是架构复杂度更高，但边界更清楚。</p>
+<h3 id="15">1.5 副作用（必背六条）<a class="headerlink" href="#15" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>TTFT 增加</strong>：首次编译 schema 的 CPU 耗时（百毫秒级）计入首 token；缓解 = 编译缓存 + 异步编译。</li>
+<li><strong>每步解码开销</strong>：mask 生成 + bitmask apply；慢后端可显著抬 TPOT，xgrammar 用预计算 + overlap 压到接近零。</li>
+<li><strong>输出质量风险</strong>：约束是贪心的——高概率 token 被 mask 掉时模型被迫走低概率路径，可能「合法但语义差」（被 schema 逼着提前闭括号）；缓解 = schema 放宽 / few-shot 让模型本来就想输出合法格式。</li>
+<li><strong>调度复杂度</strong>：约束状态是请求级、随 <code>accept_token</code> 演进的状态机，与投机解码（多位置 mask + rollback）、异步调度（mask 与异步输出时序）组合时正确性成本高。</li>
+<li><strong>batch 内干扰</strong>：同 batch 有约束请求时 mask 生成在关键路径，慢 schema 拖累整个 step（故未编完的挡在 batch 外）。</li>
+<li><strong>内存</strong>：mask cache（12.8 万词表 × 每 PDA 节点）与编译产物占内存，需容量控制。</li>
+</ol>
+<hr />
+<h2 id="fifo-100">二、编译缓存（FIFO / 100 与自我迭代）<a class="headerlink" href="#fifo-100" title="Permanent link">&para;</a></h2>
+<h3 id="21">2.1 开销两段<a class="headerlink" href="#21" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>编译期（per-schema）</strong>：Schema→EBNF→PDA→mask cache 预计算，跑 CPU，简单 schema <strong>约 5–15ms</strong>、复杂 schema <strong>约 100–200ms</strong>（候选人实测量级，与 xgrammar 论文一致），<strong>直接加在 TTFT 上</strong>。</li>
+<li><strong>运行期（per-token）</strong>：查掩码缓存 + 检查少量 context-dependent token + apply bitmask，xgrammar 下通常 <strong>&lt;1% 每步开销</strong>，且可与 GPU overlap。</li>
+</ol>
+<h3 id="22">2.2 缓存设计（代码真相——红线）<a class="headerlink" href="#22" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>上场倒背</strong>：<code>structured_output_manager.py</code> 中 <code>_DEFAULT_GRAMMAR_CACHE_SIZE = 100</code>（L95）；超限时 <code>next(iter(self._grammar_cache))</code> 删最早插入项，<strong>命中不 move-to-end</strong>（L1054–1057）→ 实际是 <strong>SHA-256 + 默认 100 条 + FIFO</strong>。<strong>禁止说 LRU / 128。</strong></p>
+</blockquote>
+<ul>
+<li><strong>MindIE（现行）</strong>：对规范化 schema 串做 <strong>SHA-256</strong> 为 key，内存缓存 <code>CompiledGrammar</code>；默认容量 <strong>100</strong>（<code>grammar_cache_size</code> 可配）；淘汰 <strong>FIFO</strong>（普通 <code>dict</code> 插入序，命中不调序）。相同 schema 二次请求零编译。业务侧 schema 集合通常稳定、近「全热」，FIFO 与 LRU 收益差小，故选实现最简方案。</li>
+<li><strong>vLLM</strong>：缓存下沉给 <code>xgr.GrammarCompiler(cache_enabled=True, cache_limit_bytes=...)</code>，以**字节数上限**（默认 512MB，<code>VLLM_XGRAMMAR_CACHE_MB</code>）而非条数控制内存——按条数隐患是单条产物大小方差大，按字节更稳。vLLM 侧没有独立请求级去重表，去重下沉给 xgrammar 编译器缓存。</li>
+<li><strong>自我迭代点（可主动说）</strong>：条数 + 字节双门限更稳；多实例场景缓存是 per-instance 的，<strong>schema 亲和路由</strong>（同 schema 请求进同实例）可提高命中率——与 KV 亲和调度是**同构问题**。</li>
+</ul>
+<h3 id="23-benchmark">2.3 关键数值（经验量级，非本仓 benchmark）<a class="headerlink" href="#23-benchmark" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>数值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>编译 – 简单 schema（≤5 字段无嵌套）</td>
+<td>约 5–15ms</td>
+<td>加在 TTFT</td>
+</tr>
+<tr>
+<td>编译 – 复杂 schema（深嵌套 + 多 union）</td>
+<td>约 100–200ms</td>
+<td>加在 TTFT</td>
+</tr>
+<tr>
+<td>mask 生成 – 缓存命中（&gt;99% token）</td>
+<td>约 10–30μs/步</td>
+<td>查栈顶节点缓存</td>
+</tr>
+<tr>
+<td>mask 生成 – 现场检查（&lt;1% token）</td>
+<td>约 50–150μs/步</td>
+<td>遍历持久化栈，贵 3–5 倍</td>
+</tr>
+<tr>
+<td>单步加权 mask 生成</td>
+<td>约 20–80μs/步</td>
+<td>overlap 后基本不占关键路径</td>
+</tr>
+<tr>
+<td>bitmask apply</td>
+<td>约 10–50μs（vLLM Triton 靠下限；NPU 组合略宽）</td>
+<td>element-wise，随 batch 近线性</td>
+</tr>
+<tr>
+<td>TPOT 增量占比</td>
+<td>约 &lt;1%~3%</td>
+<td>典型 &lt;1%，淹没在前向方差里</td>
+</tr>
+<tr>
+<td>TTFT 增量 – 缓存命中</td>
+<td>约 +0.1–0.5ms</td>
+<td>仅 SHA-256 + dict 查 + 建 matcher</td>
+</tr>
+<tr>
+<td>编译缓存命中率</td>
+<td>约 85%–95%（tool-calling 场景，100 条足够）</td>
+<td>长尾自定义 schema 可掉到 20% 以下</td>
+</tr>
+<tr>
+<td>单请求 bitmask 内存</td>
+<td>12.8 万 ÷ 32 ≈ 4000 int32 ≈ 15.6KB</td>
+<td>精确计算</td>
+</tr>
+<tr>
+<td>预分配 buffer（batch=64）</td>
+<td>≈ 1MB</td>
+<td>按 batch 预分配</td>
+</tr>
+</tbody>
+</table>
+<p>诚实口径（10s）：「这些是 xgrammar 论文（arXiv:2411.15100）+ vLLM/SGLang 公开 benchmark 量级 + 我们缓存配置反推的估计，不是严格复现基准；我没把客户 raw profiler 曲线写进简历。」</p>
+<hr />
+<h2 id="tokenizer-tools">三、tokenizer 同源与 tools 透传<a class="headerlink" href="#tokenizer-tools" title="Permanent link">&para;</a></h2>
+<h3 id="31-model_path">3.1 为何必须同源（红线：本地 model_path 同源加载，非运行时从引擎拉取）<a class="headerlink" href="#31-model_path" title="Permanent link">&para;</a></h3>
+<p>KV 亲和的命中长度，必须和引擎真正 prefill 的 token 序列对齐。Motor 在 Coordinator 用 <code>TokenizerManager</code>：HuggingFace <code>AutoTokenizer</code> 加载与下层引擎**同一份** <code>prefill_kv_event_config.model_path</code>，对 chat 走 <code>apply_chat_template(..., tools=..., add_generation_prompt=True, tokenize=True)</code>——产出与 vLLM/SGLang 进引擎的序列**逐字节一致**，Conductor 的 <code>longest_matched</code> 才有意义。</p>
+<p>白板三步：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Client (messages + tools)
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  → Coordinator TokenizerManager（同源 model_path）
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>       apply_chat_template(+tools) → token_ids
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  → Conductor /query（block 哈希同构）→ longest_matched
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  → 亲和打分 / 负载记账（复用同一份 token_ids）
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  → Prefill 引擎（必须吃「同一条」语义序列）
+</code></pre></div>
+<p>开场金句：「调度看的 token ≠ 引擎吃的 token → 亲和全是噪声。」</p>
+<h3 id="32-tools-fail-closed">3.2 tools 透传 + fail-closed（必背三件套）<a class="headerlink" href="#32-tools-fail-closed" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>正确做法</th>
+<th>翻车后果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>tools 透传</strong></td>
+<td><code>apply_chat_template(..., tools=tools)</code></td>
+<td>漏传 → 序列分叉 → <strong>命中虚高</strong> → 假亲和</td>
+</tr>
+<tr>
+<td><strong>chat template</strong></td>
+<td>与引擎默认/<code>--chat-template</code> 部署对齐</td>
+<td>模板漂移 → 亲和全 0 或乱命中</td>
+</tr>
+<tr>
+<td><strong>fail-closed</strong></td>
+<td>主路径 + tools-aware fallback 都失败 → <code>[]</code> → LoadBalance</td>
+<td>fail-open 半对序列 = <strong>确定性误导</strong> Conductor</td>
+</tr>
+</tbody>
+</table>
+<p>漏传 tools 是**修过的真实 bug**（docstring 写明 silently drop 是 bug）。token_ids 一次 tokenize 至少复用三处：查 Conductor 前缀 / <code>isl</code> 打分 / demand 负载记账。</p>
+<p>口述骨架：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>能完整同源 encode  → 用 token 级亲和
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>不能（tools/模板挂）→ 空序列，退 LoadBalance
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>绝不               → 「少传 tools 也凑合查一下」
+</code></pre></div>
+<h3 id="33-vs-router">3.3 vs 字符级 router<a class="headerlink" href="#33-vs-router" title="Permanent link">&para;</a></h3>
+<p>一句（倒背）：「字符级本地树省 tokenize、猜缓存；我们同源 tokenize + 查真索引——贵在毫秒 CPU，换的是 tools 场景与 block 边界对齐。」</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>字符级 router（SGLang cache_aware 等）</th>
+<th>Motor TokenizerManager</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>匹配</td>
+<td><code>DashMap&lt;char,…&gt;</code> 字符前缀</td>
+<td>token / block 哈希同构</td>
+</tr>
+<tr>
+<td>tools/模板</td>
+<td>易错位</td>
+<td>必须透传，否则分叉</td>
+</tr>
+<tr>
+<td>驱逐</td>
+<td>本地树常无真实 Removed</td>
+<td>Conductor 订 kv-events</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>零 tokenize</td>
+<td>毫秒级（4K 量级常说 ~数 ms，经验非本仓曲线）</td>
+</tr>
+</tbody>
+</table>
+<p>业界收敛：vLLM Render / llm-d Precise 把「引擎同源 render」产品化；Motor 是进程内同源加载，哲学相同、实现更早更窄（文本 Chat 主路径）。</p>
+<hr />
+<h2 id="bitmask-npu">四、bitmask NPU 路径诚实边界<a class="headerlink" href="#bitmask-npu" title="Permanent link">&para;</a></h2>
+<h3 id="41-torch-npu-fused-kernel">4.1 实现（红线：torch NPU 算子组合，非自研 fused kernel）<a class="headerlink" href="#41-torch-npu-fused-kernel" title="Permanent link">&para;</a></h3>
+<p>采样前：xgrammar <code>fill_next_token_bitmask</code> 产出 <strong>int32 压缩位图</strong> <code>[batch, ceil(vocab/32)]</code> → <code>GuidedDecodingLogitsHandler</code> → <code>apply_token_bitmask_inplace_npu</code>：<code>repeat_interleave</code> 按 bit 展开 → <code>masked_fill_(-inf)</code> 屏蔽非法 logits。这是 <strong>PyTorch / torch_npu 算子组合</strong>，**不是**自研 Ascend C kernel，也不是直接调 xgrammar 官方 CUDA apply。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>fill_next_token_bitmask (CPU / xgrammar)
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  → int32 bitmask [B, ceil(V/32)]
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  → GuidedDecodingLogitsHandler
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>  → apply_token_bitmask_inplace_npu(logits, bitmask, vocab_size)
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>       repeat_interleave(bitmask, 32)
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>       (mask &gt;&gt; bit) &amp; 1
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>       masked_fill_(bit==0, -inf)
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>       超出 coverage 的 vocab 尾部也置 -inf
+</code></pre></div>
+<p>代码锚点：<code>structured_output_bitmask.py</code>（<code>apply_token_bitmask_inplace_npu</code> ~L46–63；入口包装 <code>apply_token_bitmask_inplace</code> numpy→device 再调 NPU 版）；<code>pta_handlers.py</code> 的 <code>GuidedDecodingLogitsHandler</code>；UT <code>test_structured_output_bitmask.py</code>。<strong>自研 fused kernel = 无</strong>（负证据）。</p>
+<h4 id="411">4.1.1 先用一句人话理解它<a class="headerlink" href="#411" title="Permanent link">&para;</a></h4>
+<p>模型在采样前会给词表中的每个候选 token 一个分数，整行分数叫 <code>logits</code>。<code>apply_token_bitmask_inplace</code> 做的事很简单：<strong>把 grammar 不允许生成的 token 分数改成 <code>-inf</code>，后续采样自然不会选到它。</strong></p>
+<p>可以把它理解成两张表：</p>
+<table>
+<thead>
+<tr>
+<th>表</th>
+<th>含义</th>
+<th>谁产生 / 使用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>logits [B, V]</code></td>
+<td>模型给每个候选 token 的分数表；<code>B</code> 是当前 batch 的请求数，<code>V</code> 是词表大小</td>
+<td>模型 LM Head 产生；采样器使用</td>
+</tr>
+<tr>
+<td><code>bitmask [B, ceil(V/32)]</code></td>
+<td>grammar 给出的“通行表”：每个 token 只有允许或禁止两种状态</td>
+<td>xgrammar 产生；本函数读取</td>
+</tr>
+</tbody>
+</table>
+<p><code>bitmask</code> 之所以不是 <code>[B, V]</code>，是为了节省传输和内存：32 个允许/禁止状态被压进一个 <code>int32</code>。例如 <code>0b0101</code> 的低四位表示：第 0、2 个 token 可以通过，第 1、3 个不可以通过。</p>
+<h4 id="412-token">4.1.2 它如何从压缩通行表还原出每个 token 的结果<a class="headerlink" href="#412-token" title="Permanent link">&para;</a></h4>
+<p>对 token 编号 <code>t</code>，代码需要先找到它属于哪个 <code>int32</code>，再读出其中对应的一位：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>word = t // 32     # 第几个压缩整数
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>bit  = t % 32      # 这个整数里的第几位
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>该位为 1 → 合法，保留原 logit
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>该位为 0 → 非法，把 logit 改为 -inf
+</code></pre></div>
+<p>实际 NPU 路径的含义可概括为下面四步：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>1. repeat_interleave(bitmask, 32)
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>   把每个“管 32 个 token”的压缩整数复制 32 份。
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>2. (word &gt;&gt; bit_offset) &amp; 1
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>   对第 0 到第 31 个副本，依次读出对应的那一位，得到每个 token 的允许/禁止结果。
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>3. masked_fill_(not_allowed, -inf)
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>   对禁止位置原地写入 -inf；合法位置保持模型原来的分数。
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>4. 防御性处理 coverage 不足的词表尾部
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>   正常 Manager 用 ceil(V/32) 分配，位图会覆盖到 V 之后的 padding bit；若外部传入的
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>   bitmask 仍短于 logits，剩余 token 按 fail-closed 原则置为 -inf。
+</code></pre></div>
+<p>等价伪代码如下。它是帮助理解的数据流，不要求和源码变量名逐字一致：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">apply_token_bitmask_inplace_npu</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">packed_mask</span><span class="p">,</span> <span class="n">vocab_siz</span><span class="err">，</span><span class="n">e</span><span class="p">):</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="c1"># 每个 int32 管 32 个 token；先把每个 int32 复制成 32 个位置。</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">repeated_words</span> <span class="o">=</span> <span class="n">packed_mask</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="c1"># 依次读取每个 int32 的第 0 到第 31 位，得到“这个 token 是否允许”。</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">word_count</span> <span class="o">=</span> <span class="n">packed_mask</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">bit_offsets</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>        <span class="mi">32</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">word_count</span><span class="p">)</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>    <span class="n">allowed</span> <span class="o">=</span> <span class="p">((</span><span class="n">repeated_words</span> <span class="o">&gt;&gt;</span> <span class="n">bit_offsets</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>    <span class="c1"># 不允许的 token 永远不能被采样器选到。</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>    <span class="n">covered_vocab</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">allowed</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>    <span class="n">logits</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="n">covered_vocab</span><span class="p">]</span><span class="o">.</span><span class="n">masked_fill_</span><span class="p">(</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>        <span class="o">~</span><span class="n">allowed</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="n">covered_vocab</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>    <span class="p">)</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>    <span class="n">logits</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">covered_vocab</span><span class="p">:</span><span class="n">vocab_size</span><span class="p">]</span><span class="o">.</span><span class="n">fill_</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">))</span>
+</code></pre></div>
+<p>入口 <code>apply_token_bitmask_inplace</code> 负责将 CPU / numpy 侧的位图准备到目标设备，再分发到 NPU 实现；<code>apply_token_bitmask_inplace_npu</code> 则专注上述“读通行表、改分数表”的步骤。函数是 <strong>inplace</strong>：直接修改传入的 logits，不额外返回一张新的分数表。</p>
+<h4 id="413-batch">4.1.3 为什么时序、尾部和 batch 对齐很重要<a class="headerlink" href="#413-batch" title="Permanent link">&para;</a></h4>
+<p>正确顺序是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>当前 grammar 状态
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  → 生成“下一个 token”的通行表
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>  → 根据通行表屏蔽 logits
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>  → temperature / top-k / top-p / sample 选 token
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>  → 用选中的 token 推进 grammar 状态
+</code></pre></div>
+<ul>
+<li>必须先屏蔽、再采样。采样之后再屏蔽，非法 token 已经选出来了；先做 top-k/top-p 再屏蔽，也可能把候选集合清空。</li>
+<li><code>repeat_interleave</code> 只是把压缩整数复制开，仍要经过右移和 <code>&amp; 1</code> 才能读到每个 token 的允许状态。</li>
+<li>正常 Manager 用 <code>(V+31)//32</code> 分配，足以覆盖完整词表；尾部 <code>fill_(-inf)</code> 是防御 undersized bitmask 的兜底。若 <code>V</code> 不是 32 的倍数，apply 时还应把 bool mask 切到 <code>effective_len</code>，避免 padding bit 与 logits 维度不一致。</li>
+<li>batch 的第 <code>b</code> 行 mask 必须对应第 <code>b</code> 行 logits。异步路径若拿了上一步的通行表，代码本身的位运算再正确也没用，后续 <code>accept_token</code> 仍会报 token rejected；这是请求状态推进错位，不是算子计算错误。</li>
+</ul>
+<h4 id="414-fused">4.1.4 性能上为什么它不算 fused<a class="headerlink" href="#414-fused" title="Permanent link">&para;</a></h4>
+<p>这条路径的优点是直观：先压缩传输，到了 NPU 上用现成 PyTorch / torch_npu 算子展开并屏蔽 logits，容易验证正确性，也容易跨设备适配。</p>
+<p>代价是 <code>repeat_interleave</code> 会把紧凑的 <code>[B, ceil(V/32)]</code> 通行表展开到接近 <code>[B, V]</code>，中间还要做位移、比较和填充。也就是说，它会多读写几次接近整个词表宽度的数据。<code>masked_fill_</code> 是原地修改 logits，但整条链路依然由多个框架算子组成；是否有局部优化由运行时决定，<strong>不能称为自研 fused kernel</strong>。</p>
+<p>vLLM 的 Triton 或 <code>xgr.apply_token_bitmask_inplace</code> 会把“定位 bit、判断是否合法、写 <code>-inf</code>”合进一个设备 kernel：不需要显式构造接近 vocab 宽度的中间通行表，通常能减少中间内存访问和启动开销。MindIE 后续可以评估融合 apply 或直接融合进采样器，但是否值得做必须以 profiler 结果为准。</p>
+<h3 id="42-npu">4.2 相关算子知识：这条路径到底在 NPU 上消耗什么<a class="headerlink" href="#42-npu" title="Permanent link">&para;</a></h3>
+<h4 id="421-vector">4.2.1 它不是矩阵乘，而是一串 Vector / 搬运操作<a class="headerlink" href="#421-vector" title="Permanent link">&para;</a></h4>
+<p>NPU 上可以先粗略区分两类计算：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>擅长什么</th>
+<th>本路径是否使用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cube / Matrix 单元</td>
+<td>MatMul、Linear、Attention 中的大块矩阵乘，计算量大</td>
+<td>基本不使用</td>
+</tr>
+<tr>
+<td>Vector 单元与内存搬运</td>
+<td>位移、按位与、比较、条件写入等逐元素操作</td>
+<td><strong>主要使用</strong></td>
+</tr>
+</tbody>
+</table>
+<p><code>apply_token_bitmask_inplace</code> 对每个 token 只做几次很轻的整数运算，但需要处理接近整个词表的数据。因此它通常不是“算力不够”，而是更接近**访存受限**：时间主要花在张量分配、数据搬运、读写显存和多个算子启动上。</p>
+<p>这也是算子分析里常说的“计算强度低”：每读取或写入几个字节，只做一两次位运算，没有足够多的计算把内存访问成本摊薄。</p>
+<h4 id="422">4.2.2 每个算子的作用与潜在开销<a class="headerlink" href="#422" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>算子 / 操作</th>
+<th>输入 → 输出</th>
+<th>本质</th>
+<th>主要成本与风险</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU→NPU copy</td>
+<td><code>[B, ceil(V/32)] int32</code> → 设备位图</td>
+<td>搬运压缩后的通行表</td>
+<td>数据量不大，但同步拷贝会卡住流水线；适合异步拷贝并与 forward 重叠</td>
+</tr>
+<tr>
+<td><code>repeat_interleave(32)</code></td>
+<td><code>[B, ceil(V/32)]</code> → <code>[B, 32×ceil(V/32)]</code></td>
+<td>把每个压缩 word 复制 32 次</td>
+<td>输出扩大约 32 倍，需要分配并写入大中间张量，通常是当前组合路径最显眼的一步</td>
+</tr>
+<tr>
+<td><code>arange + repeat</code></td>
+<td><code>[0..31]</code> → <code>[V]</code> 附近</td>
+<td>构造每个 token 对应的 bit 编号</td>
+<td>内容每步都一样；若每步重建，会产生不必要的分配和启动开销</td>
+</tr>
+<tr>
+<td>右移 <code>&gt;&gt;</code></td>
+<td><code>[B, V]</code> → <code>[B, V]</code></td>
+<td>把目标 bit 移到最低位</td>
+<td>整数 Vector 操作本身很轻，主要成本仍是读写整张中间张量</td>
+</tr>
+<tr>
+<td>按位与 <code>&amp; 1</code> / 比较 <code>== 0</code></td>
+<td><code>int32 [B, V]</code> → <code>bool [B, V]</code></td>
+<td><code>&amp; 1</code> 仍产生 int32 的 0/1，随后比较得到非法 token 的 bool mask</td>
+<td>会再物化一张 bool mask；要注意避免 <code>int32</code> 被隐式提升到 <code>int64</code></td>
+</tr>
+<tr>
+<td><code>masked_fill_(-inf)</code></td>
+<td>logits + bool mask → logits</td>
+<td>非法位置写 <code>-inf</code></td>
+<td>原地操作省掉一份新 logits，但仍需读取 mask，并访问接近整行 logits</td>
+</tr>
+<tr>
+<td>tail <code>fill_(-inf)</code></td>
+<td>词表尾部 slice</td>
+<td>屏蔽没有 bit 的 token</td>
+<td>数据量很小，核心价值是正确性，不是性能</td>
+</tr>
+</tbody>
+</table>
+<p>这里的 <code>inplace</code> 只表示“不新建一份 logits”，<strong>不代表整条路径没有临时张量</strong>。<code>repeated_words</code> 和 <code>allowed</code> 仍可能占用显存并造成额外内存流量。</p>
+<h4 id="423-128k">4.2.3 用 128K 词表建立内存直觉<a class="headerlink" href="#423-128k" title="Permanent link">&para;</a></h4>
+<p>以 <code>V=128000</code> 为例，下面只按张量语义估算大小，<strong>不是 profiler 实测流量</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>数据</th>
+<th style="text-align: right;">单请求 <code>B=1</code></th>
+<th style="text-align: right;"><code>B=64</code></th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>压缩 bitmask，int32</td>
+<td style="text-align: right;">约 15.6KB</td>
+<td style="text-align: right;">约 1.0MB</td>
+<td>CPU→NPU 真正需要传输的数据</td>
+</tr>
+<tr>
+<td><code>mask_expanded</code>，int32</td>
+<td style="text-align: right;">约 500KB</td>
+<td style="text-align: right;">约 31.3MB</td>
+<td><code>repeat_interleave</code> 的显式输出</td>
+</tr>
+<tr>
+<td>右移表达式临时结果，int32</td>
+<td style="text-align: right;">约 500KB</td>
+<td style="text-align: right;">约 31.3MB</td>
+<td>eager 语义下 <code>mask_expanded &gt;&gt; bit_indices</code> 可能产生</td>
+</tr>
+<tr>
+<td><code>bit_masks</code>，int32</td>
+<td style="text-align: right;">约 500KB</td>
+<td style="text-align: right;">约 31.3MB</td>
+<td><code>&amp; 1</code> 后仍是 int32，不是 bool</td>
+</tr>
+<tr>
+<td><code>bit_masks == 0</code>，bool</td>
+<td style="text-align: right;">约 125KB</td>
+<td style="text-align: right;">约 7.8MB</td>
+<td>供 <code>masked_fill_</code> 使用的条件 mask</td>
+</tr>
+<tr>
+<td><code>bit_indices</code>，int32</td>
+<td style="text-align: right;">约 500KB</td>
+<td style="text-align: right;">约 500KB</td>
+<td>只沿 vocab 维，每次调用重建，不随 B 放大</td>
+</tr>
+<tr>
+<td>logits，FP16/BF16</td>
+<td style="text-align: right;">约 250KB</td>
+<td style="text-align: right;">约 15.6MB</td>
+<td>模型本来就会产生的数据</td>
+</tr>
+</tbody>
+</table>
+<p>也就是说，<code>B=64</code> 时几个 <code>[B,V]</code> 级 int32 中间结果可带来**数十 MB 乃至百 MB 量级的分配/读写/step**，还不含 logits 本身。它们不一定同时达到峰值，后端也可能做内存复用或局部融合，所以这不是实测显存峰值；但足以说明优化重点应是**避免物化 <code>[B,V]</code> 级中间张量**，而不是纠结一次右移用了几个周期。</p>
+<h3 id="43">4.3 性能优化空间：从低风险到深度融合<a class="headerlink" href="#43" title="Permanent link">&para;</a></h3>
+<h4 id="431-p0">4.3.1 P0：先定位瓶颈，避免优化错层<a class="headerlink" href="#431-p0" title="Permanent link">&para;</a></h4>
+<p>先把一个 decode step 拆开测量：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>T_structured
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  = T_mask_generate_cpu
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>  + T_cpu_to_npu
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>  + T_apply_on_npu
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>  + T_sync_or_wait
+</code></pre></div>
+<p>至少要回答四个问题：</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>要看的证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>慢在 CPU 生成 mask 还是 NPU apply？</td>
+<td>Host 时间线与 device 时间线分段计时</td>
+</tr>
+<tr>
+<td>NPU apply 中哪个算子最重？</td>
+<td><code>repeat_interleave</code>、位运算、<code>masked_fill_</code> 的算子耗时与内存时间线</td>
+</tr>
+<tr>
+<td>是否存在隐式同步？</td>
+<td>H2D 前后、stream wait、numpy→tensor 转换处是否出现 host 阻塞</td>
+</tr>
+<tr>
+<td>优化后是否改善端到端？</td>
+<td>除 microbenchmark 外，还看 TPOT P50/P99、吞吐和 structured / non-structured 混合 batch</td>
+</tr>
+</tbody>
+</table>
+<p>建议覆盖 <code>B={1,8,32,64}</code>、<code>V={32K,128K}</code>、FP16/BF16，以及不同合法 token 密度。小 batch 更容易受算子启动开销影响，大 batch 更容易暴露内存带宽和临时张量问题。</p>
+<h4 id="432-p1">4.3.2 P1：框架层低风险优化<a class="headerlink" href="#432-p1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>优化</th>
+<th>做法</th>
+<th>预期收益</th>
+<th>注意点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>预计算 <code>bit_offsets</code></td>
+<td>按 <code>device + mask_width</code> 缓存 <code>[0..31]</code> 重复序列，不在每个 decode step 重建</td>
+<td>减少 <code>arange/repeat</code> 分配与启动</td>
+<td>显式使用 <code>int32</code>，避免与 bitmask 运算时提升到 <code>int64</code></td>
+</tr>
+<tr>
+<td>复用 buffer</td>
+<td>为 packed mask、展开结果或 bool mask 预分配工作区</td>
+<td>减少动态显存分配和 shape 抖动</td>
+<td>需要按最大 batch 管理有效区域，避免旧数据污染</td>
+</tr>
+<tr>
+<td>跳过无约束行</td>
+<td>batch 中没有 structured request 时整个 handler 直接返回；已终止 / 全合法行按元数据跳过</td>
+<td>避免无意义的全词表扫描</td>
+<td>行级 gather/scatter 也有成本，适合设请求数阈值</td>
+</tr>
+<tr>
+<td>压缩位图异步 H2D</td>
+<td>使用可异步传输的 Host buffer、独立 copy stream，并在真正 apply 前同步</td>
+<td>将约 16KB/请求的拷贝隐藏在 NPU forward 后面</td>
+<td>必须保证 mask 与当前 step / batch slot 对齐</td>
+</tr>
+<tr>
+<td>静态 shape / 图复用</td>
+<td>对常用 batch 桶预分配固定形状，尝试将纯 apply 段纳入 aclgraph</td>
+<td>降低 Host 下发和 kernel launch 开销</td>
+<td>mask 内容可动态，但 shape、地址和控制流要满足图约束；需实测是否值得</td>
+</tr>
+</tbody>
+</table>
+<p>低风险优化里最值得先核实的是两项：<strong><code>bit_offsets</code> 是否每步重建</strong>、<strong>H2D 是否引入同步</strong>。它们改动较小，也不会改变 grammar 或采样语义。</p>
+<h4 id="433-p2-fused-bitmask-apply">4.3.3 P2：实现 fused bitmask apply<a class="headerlink" href="#433-p2-fused-bitmask-apply" title="Permanent link">&para;</a></h4>
+<p>专用 kernel 不需要先把 bitmask 展开。可以让每个并行任务直接处理一个 token：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>对每个 batch 行 b、token t 并行执行：
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>  word    = bitmask[b, t &gt;&gt; 5]       # t // 32
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>  allowed = (word &gt;&gt; (t &amp; 31)) &amp; 1   # t % 32
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>  if allowed == 0:
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>      logits[b, t] = -inf
+</code></pre></div>
+<p>这个 kernel 的直接收益：</p>
+<ul>
+<li>不再生成 <code>[B, V]</code> 的 <code>repeated_words</code>；</li>
+<li>不再生成 <code>[B, V]</code> 的 bool <code>allowed</code>；</li>
+<li>把多次框架算子启动收成一次；</li>
+<li>每个 packed word 可服务连续 32 个 logits，适合按词表维度连续切块，提高访存连续性。</li>
+</ul>
+<p>若用 Ascend C 实现，核心不是复杂数学，而是 tiling 和搬运：按 <code>batch × vocab tile</code> 分块，把 packed words 与对应 logits 搬入片上缓冲，完成取位和条件写回，再双缓冲流水。需要覆盖 FP16、BF16、FP32、非 32 对齐词表、混合约束行等边界。</p>
+<p>这一级最接近 vLLM Triton / xgrammar fused apply 的设计，通常是当前 MindIE 路径最直接的算子优化目标。</p>
+<h4 id="434-p3-sampler">4.3.4 P3：进一步融合进 sampler，潜在收益更高<a class="headerlink" href="#434-p3-sampler" title="Permanent link">&para;</a></h4>
+<p>单独 fused apply 仍然会先读写一次 logits，随后 sampler 为 top-k、top-p 或 argmax 再读一次。更进一步可以让 sampler 在读取每个 logit 时同步检查 bitmask：非法 token 在寄存器 / 片上计算中直接视为 <code>-inf</code>，不再真的写回 logits。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>当前：logits → mask kernel 读写一次 → sampler 再读一次
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>融合：sampler 读取 logits 时检查 bitmask → 直接参与 argmax/top-k/top-p
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>采样模式</th>
+<th>融合难度</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>greedy / argmax</td>
+<td>低</td>
+<td>比较最大值前把非法项视为 <code>-inf</code> 即可</td>
+</tr>
+<tr>
+<td>top-k</td>
+<td>中</td>
+<td>在分块 top-k / reduce 前加入 bit 判断</td>
+</tr>
+<tr>
+<td>top-p</td>
+<td>高</td>
+<td>还涉及 softmax、排序 / 累积概率与随机采样，验证面更大</td>
+</tr>
+</tbody>
+</table>
+<p>因此工程上可以先做 <strong>mask-aware argmax / top-k</strong>，再评估 top-p。融合 sampler 的理论收益高于单独 apply，因为它不仅消除中间 mask，还能消除一次 logits 写回和下一算子的重复读取。</p>
+<h4 id="435-p4">4.3.5 P4：按合法集合稀疏度选择路径（研究方向）<a class="headerlink" href="#435-p4" title="Permanent link">&para;</a></h4>
+<p>有些 grammar 状态只允许少量 token，例如固定字段名、枚举或 JSON 标点。如果合法 token 数 <code>K</code> 远小于词表 <code>V</code>，可以考虑让 xgrammar 额外提供合法 token id 列表，只 gather 这 <code>K</code> 个 logits 后采样，而不是扫描整个词表。</p>
+<p>但它不适合无条件启用：合法集合较大时，构建 id 列表和 gather 反而更慢。因此更合理的是自适应策略：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>K 很小       → whitelist ids + gather + 小集合采样
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>K 接近 V     → packed bitmask + fused 全词表扫描
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>中间区域     → 用 benchmark 得出的阈值选择
+</code></pre></div>
+<p>再激进一步是只计算合法词表列的 LM Head，但这会把动态 grammar 状态带进大矩阵乘、词表并行和权重布局，复杂度远高于 bitmask apply；除非 profiling 证明 LM Head 本身已是主要瓶颈且合法集合长期极稀疏，否则不建议作为第一优先级。</p>
+<h4 id="436">4.3.6 推荐实施顺序与验收<a class="headerlink" href="#436" title="Permanent link">&para;</a></h4>
+<p>推荐顺序：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>1. profiler 拆账 + 正确性基线
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>2. bit_offsets 缓存 / dtype 固定 / buffer 复用 / 异步 H2D
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>3. fused bitmask apply
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>4. mask-aware argmax / top-k sampler
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>5. 合法集合稀疏自适应；选择性 LM Head 仅作研究
+</code></pre></div>
+<p>正确性至少覆盖：全 0 / 全 1 mask、<code>bit=31</code> 的有符号 int32、<code>V % 32 != 0</code>、不同 logits dtype、mixed batch、batch 重排、异步多 step。性能验收不能只报 kernel μs，还要比较无约束基线与当前 / 优化后路径的 TPOT P50/P99、吞吐、显存峰值和 Host 空隙。</p>
+<p>收益边界要诚实：大模型 forward 很重时，bitmask apply 通常只是小头；小模型、低 batch、极低 TPOT 或大词表 / 大 batch 时，kernel launch 与中间内存流量才更容易显眼。在没有 A/B 和 profiler 前，不报确定百分比。</p>
+<p>收口金句（倒背）：「当前瓶颈更可能是展开位图带来的中间内存流量，不是位运算本身；先做低风险缓存与异步拷贝，再用 fused apply 消掉 <code>[B,V]</code> 中间态，最后才考虑融合 sampler。」</p>
+<p>正交提醒：apply 再快也救不了「过期 FSM 填的 mask」——那是**步进契约**（线程/游标/顺序）问题；本节只谈 apply 实现与性能。</p>
+<h3 id="44-bitmask-apply">4.4 超大词表会不会把 bitmask apply 变成瓶颈<a class="headerlink" href="#44-bitmask-apply" title="Permanent link">&para;</a></h3>
+<h4 id="441">4.4.1 先给结论<a class="headerlink" href="#441" title="Permanent link">&para;</a></h4>
+<p><strong>会随词表线性变慢，但不应只看 <code>V</code>，而要看 <code>有效 mask 行数 × V</code> 和实现常数。</strong></p>
+<ul>
+<li>对 128K 词表、较小 batch、较重模型，apply 通常仍是 decode 尾段的小头，LM Head、Attention/FFN 或 top-p 更可能占主导。</li>
+<li>当 <code>V</code> 到 256K/1M、batch 较大、模型本身很快，或结构化请求只占 mixed batch 少数时，MindIE 当前组合路径更容易显眼。</li>
+<li>vLLM fused apply 也仍是 <code>O(S×V)</code>，不是“词表再大也零开销”；只是 <code>S</code> 只统计需要约束的 logits 行，且不把压缩位图物化成全词表宽的全局中间张量，常数明显更小。</li>
+</ul>
+<p>这里记：<code>B</code> = 当前采样 batch 行数；<code>S</code> = 真正需要结构化约束的行数；投机解码时 vLLM 的 <code>S</code> 还要乘每请求的 speculative / bonus 位置数。</p>
+<h4 id="442-mindie">4.4.2 MindIE 当前实现的放大点（逐代码核实）<a class="headerlink" href="#442-mindie" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>放大点</th>
+<th>代码事实</th>
+<th>超大词表影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bitmask 宽度</td>
+<td><code>StructuredOutputManager._init_bitmask_buffer()</code> 用 <code>(vocab_size + 31)//32</code>，默认预分配 64 行</td>
+<td>压缩 Host buffer 本身合理，大小约 <code>B×V/8</code> bytes</td>
+</tr>
+<tr>
+<td>mixed batch 不压缩行</td>
+<td><code>grammar_bitmask()</code> 只要发现任一 grammar，就返回完整 <code>[B, ceil(V/32)]</code>；无约束 / terminated 行填 <code>0xFFFFFFFF</code></td>
+<td>NPU apply 成本按 <code>B×V</code>，不是 <code>S×V</code>；<code>S≪B</code> 时浪费最明显</td>
+</tr>
+<tr>
+<td>每步 CPU copy</td>
+<td><code>grammar_bitmask()</code> 返回 <code>bitmask.copy()</code></td>
+<td>又做一次 <code>B×V/8</code> 的 Host 内存复制</td>
+</tr>
+<tr>
+<td>每步 H2D</td>
+<td><code>torch.from_numpy(...).to(logits.device)</code>，没有 resident device buffer / 显式 non-blocking copy</td>
+<td>每步重新构造设备 tensor；同步与分配成本可能进入关键路径</td>
+</tr>
+<tr>
+<td>每步构造 bit 索引</td>
+<td><code>torch.arange(32, int32).repeat(bitmask.shape[-1])</code></td>
+<td>生成约 <code>[V]</code> 的 <code>bit_indices</code>，内容固定却重复分配</td>
+</tr>
+<tr>
+<td>全量展开</td>
+<td><code>repeat_interleave</code> → 右移 → <code>&amp;1</code> → <code>==0</code> → <code>masked_fill_</code></td>
+<td>多个 <code>[B,V]</code> 级中间张量和 kernel launch，访存随 <code>B×V</code> 线性增长</td>
+</tr>
+</tbody>
+</table>
+<p>另外有一个正确性边界：Manager 正常分配的是 <code>ceil(V/32)</code>，当 <code>V%32!=0</code> 时 <code>bit_masks</code> 会比 logits 多出 padding 位；apply 应使用 <code>bit_masks[..., :effective_len] == 0</code>。当前代码直接传完整 <code>bit_masks == 0</code>，若部署词表 / logits 没有按 32 padding，需要单独补测和修正。</p>
+<h4 id="443-vllm">4.4.3 vLLM 是否做了融合算子：是，但要看清融合边界<a class="headerlink" href="#443-vllm" title="Permanent link">&para;</a></h4>
+<p>本地 vLLM（commit <code>8df14cfc</code>，2026-07-12）的 Model Runner V2（MRV2）中，<code>vllm/v1/worker/gpu/structured_outputs.py</code> 明确定义了一个 <code>@triton.jit</code> kernel：<code>_apply_grammar_bitmask_kernel</code>。它改编自 XGrammar 的 Triton bitmask kernel。</p>
+<p>**结论是：vLLM 已经把“读取 packed bitmask → 解开 bit → 判断 token 是否非法 → 向非法 logit 写 <code>-inf</code>”融合到一个 GPU kernel 里。**但它没有把 grammar 位图生成、H2D 搬运或 sampler 一起融合进这个 kernel。</p>
+<h5 id="4431">4.4.3.1 它具体融合了哪些算子<a class="headerlink" href="#4431" title="Permanent link">&para;</a></h5>
+<p>MindIE 当前用框架组合算子表达这段逻辑：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>repeat_interleave(bitmask, 32)
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>  → arange(32).repeat(...)
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>  → right_shift
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>  → bitwise_and(&amp; 1)
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>  → equal(0)
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>  → masked_fill_(-inf)
+</code></pre></div>
+<p>vLLM MRV2 则在一个 Triton kernel 中完成等价逻辑，核心代码可通俗化为：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># 二维 grid：第 0 维是 mask 行，第 1 维是词表 block</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">mask_row</span> <span class="o">=</span> <span class="n">program_id</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">vocab_block</span> <span class="o">=</span> <span class="n">program_id</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="c1"># 先找到该 mask 对应的 logits 行，支持 mixed batch / 投机位置</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="n">logits_row</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">logits_indices</span><span class="p">[</span><span class="n">mask_row</span><span class="p">])</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="c1"># 一次处理 8192 个 token，只需读 8192/32=256 个 int32 word</span>
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="n">packed</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">bitmask</span><span class="p">[</span><span class="n">mask_row</span><span class="p">,</span> <span class="n">word_offsets</span><span class="p">])</span>
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>
+<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="c1"># 这些中间值是 kernel 内部值，不显式写成全局 [S,V] tensor</span>
+<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="n">invalid</span> <span class="o">=</span> <span class="p">((</span><span class="n">packed</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">bit_id</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>
+<a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="c1"># 不读取旧 logit，只对非法 token 做条件写</span>
+<a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="n">store</span><span class="p">(</span><span class="n">logits</span><span class="p">[</span><span class="n">logits_row</span><span class="p">,</span> <span class="n">token_offsets</span><span class="p">],</span> <span class="o">-</span><span class="n">inf</span><span class="p">,</span>
+<a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>      <span class="n">mask</span><span class="o">=</span><span class="n">invalid</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">token_offsets</span> <span class="o">&lt;</span> <span class="n">vocab_size</span><span class="p">))</span>
+</code></pre></div>
+<p>这里的“融合”不是简单把 Python 函数包在一起，而是 Triton 把整段表达编译为一个 GPU kernel：</p>
+<ul>
+<li>只有一次 kernel launch，不再为 repeat、shift、and、compare、fill 分别启动 kernel。</li>
+<li>解出的 8192 个判断值是 kernel 内部中间值；源码不会为它们分配一张全局显存中的 <code>[S,V]</code> bool/int32 mask。实际映射到寄存器还是局部存储由 Triton/编译器决定，高寄存器压力时仍可能发生 spill，但这不等于框架显式物化整张中间 tensor。</li>
+<li>kernel 直接执行带 predicate 的 <code>tl.store</code>，只把非法 token 的 logit 覆盖为 <code>-inf</code>，不需要先读出旧 logit 再做 select。</li>
+</ul>
+<h5 id="4432-block_size8192">4.4.3.2 <code>BLOCK_SIZE=8192</code> 到底表示什么<a class="headerlink" href="#4432-block_size8192" title="Permanent link">&para;</a></h5>
+<p>kernel grid 的形状是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>grid = (S, ceil(V / 8192))
+</code></pre></div>
+<p>每个 Triton program 负责“一个 mask 行的一段 8192-token 词表”。因为一个 <code>int32</code> 管 32 个 token，所以一个 program 仅需加载：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>8192 / 32 = 256 个 int32 = 1024 bytes packed bitmask
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">词表 V</th>
+<th style="text-align: right;">每个 mask 行的 Triton program 数</th>
+<th style="text-align: right;">每行 packed bitmask 读取量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">32K</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4KB</td>
+</tr>
+<tr>
+<td style="text-align: right;">128K</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">16KB</td>
+</tr>
+<tr>
+<td style="text-align: right;">256K</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">32KB</td>
+</tr>
+<tr>
+<td style="text-align: right;">1,048,576</td>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">128KB</td>
+</tr>
+</tbody>
+</table>
+<p>注意：128K 词表的 16 个 program 属于**同一次 Triton kernel launch 的 grid**，并不是 16 次 Python/算子调用。GPU 可以并行调度不同 mask 行和不同 vocab block。</p>
+<h5 id="4433-mindie">4.4.3.3 为什么它比 MindIE 当前组合路径省访存<a class="headerlink" href="#4433-mindie" title="Permanent link">&para;</a></h5>
+<p>以 <code>V=128K</code>、单个 mask 行为例：</p>
+<table>
+<thead>
+<tr>
+<th>数据</th>
+<th style="text-align: right;">MindIE 当前路径</th>
+<th style="text-align: right;">vLLM Triton 路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>packed bitmask</td>
+<td style="text-align: right;">16KB</td>
+<td style="text-align: right;">16KB</td>
+</tr>
+<tr>
+<td>全局 <code>mask_expanded</code> int32</td>
+<td style="text-align: right;">512KB</td>
+<td style="text-align: right;">无</td>
+</tr>
+<tr>
+<td>全局 shift / <code>&amp;1</code> int32 中间量</td>
+<td style="text-align: right;">每张约 512KB</td>
+<td style="text-align: right;">无显式全局张量</td>
+</tr>
+<tr>
+<td>全局 bool mask</td>
+<td style="text-align: right;">约 128KB</td>
+<td style="text-align: right;">无显式全局张量</td>
+</tr>
+<tr>
+<td>logits 访问</td>
+<td style="text-align: right;"><code>masked_fill_</code> 读 mask 并修改 logits</td>
+<td style="text-align: right;">不读旧 logit，只向 invalid 位置写 <code>-inf</code></td>
+</tr>
+</tbody>
+</table>
+<p>如果 logits 是 FP16/BF16，128K 个 token 的整行是 256KB。设非法 token 占比为 <code>q</code>，vLLM kernel 的主要显存流量可粗略看成：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>每行约 16KB bitmask 读 + q × 256KB logits 写
+</code></pre></div>
+<p>结构化语法往往会屏蔽大部分 token，所以 <code>q</code> 可能接近 1；即便如此，vLLM 也主要只付出一次 logits 写入。MindIE 还需要为数张 512KB 的中间张量执行额外读写，所以融合 kernel 的收益主要来自**减少全局显存往返**，而不是“位运算算得更快”。</p>
+<p>上述是根据 eager 算子语义的数据量估算，不是实测峰值；框架编译和内存复用可能改变 MindIE 的实际临时存储，最终仍需要 profiler 验证。</p>
+<h5 id="4434-vllm">4.4.3.4 vLLM 还做了哪些“非算子融合”优化<a class="headerlink" href="#4434-vllm" title="Permanent link">&para;</a></h5>
+<p>MRV2 的效率不只来自 Triton kernel，还来自数据编排和流水线：</p>
+<ol>
+<li><strong>compact mask rows</strong>：scheduler 只为结构化请求生成 <code>S</code> 行 bitmask，不为 mixed batch 中的无约束请求制造 full-mask 行。</li>
+<li><strong><code>logits_indices</code> 间接定位</strong>：kernel 先读映射，再修改对应 logits 行；这同时支持 mixed batch 和投机解码的多个 logits 位置。</li>
+<li><strong>预分配 device buffer</strong>：<code>grammar_bitmask</code> 和 <code>logits_indices</code> 在 worker 初始化时按 <code>max_num_logits</code> 分配，每步只复用 slice，不重新申请 GPU 存储。</li>
+<li><strong>pinned memory + non-blocking copy</strong>：<code>async_copy_to_gpu()</code> 将 Host tensor pin 住，再 <code>copy_(..., non_blocking=True)</code> 到预分配 buffer。</li>
+<li><strong>独立 copy stream</strong>：bitmask 和 index 复制放在 <code>copy_stream</code>，主 stream 只在 kernel launch 前 <code>wait_stream</code>；反向 wait 保证 buffer 在 kernel 用完前不被下一步覆盖。这能把一部分 H2D 与 CPU mapping 构造重叠，但 apply kernel 本身仍必须等待 bitmask 到达。</li>
+</ol>
+<p>这些优化不叫“融合算子”，但会减少每 step 分配、同步和无效行扫描，对端到端 TPOT 同样重要。</p>
+<h5 id="4435-legacy-runner-fused-apply">4.4.3.5 legacy runner 也有 fused apply，但数据路径没那么紧凑<a class="headerlink" href="#4435-legacy-runner-fused-apply" title="Permanent link">&para;</a></h5>
+<p>vLLM 当前同时保留了两条路径，具体使用哪条受 <code>VLLM_USE_V2_MODEL_RUNNER</code>、模型架构、Triton 可用性和功能兼容性影响：</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>bitmask apply</th>
+<th>Host / H2D 特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MRV2 <code>worker/gpu/structured_outputs.py</code></td>
+<td>vLLM 自带的单 Triton kernel</td>
+<td>bitmask 本身是 compact <code>S</code> 行；预分配 GPU buffer + 独立 copy stream</td>
+</tr>
+<tr>
+<td>legacy <code>structured_output/utils.py</code></td>
+<td><code>xgr.apply_token_bitmask_inplace(..., indices=...)</code>；GPU <code>auto</code> 后端通常选 Triton</td>
+<td>先构造与 logits 行数对齐的 pinned Host bitmask；<code>indices</code> 让设备 kernel 只 apply 结构化行，但 Host 组装/H2D 没有 MRV2 紧凑</td>
+</tr>
+</tbody>
+</table>
+<p>XGrammar 官方 API 也明确支持 <code>indices</code> 以跳过 mixed batch 中的无约束行，GPU 上的默认 CUDA 实现为 Triton。因此“vLLM 有 fused apply”对两条 GPU 路径基本都成立；区别在于 MRV2 进一步优化了 bitmask 行数、buffer 复用和拷贝时序。</p>
+<p>参考：<a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/worker/gpu/structured_outputs.py">vLLM MRV2 Triton 源码</a>；<a href="https://xgrammar.mlc.ai/docs/api/python/bitmask_ops.html">XGrammar bitmask API</a>。</p>
+<h5 id="4436">4.4.3.6 哪些步骤还没融合<a class="headerlink" href="#4436" title="Permanent link">&para;</a></h5>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>CPU grammar matcher 生成 packed bitmask     未融合，与 GPU kernel 分开
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>Host → Device bitmask / indices copy          未融合，但做了异步化
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>Triton apply bitmask → logits                 已融合为一个 kernel
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>sampler(logits, input_batch)                      未与 apply kernel 融合
+</code></pre></div>
+<p>从 <code>worker/gpu/model_runner.py</code> 的调用顺序也可以看到：先 <code>apply_grammar_bitmask(logits, ...)</code>，再 <code>sampler(logits, input_batch)</code>。因此当前仍然是 apply 写一遍 logits，sampler 再读一遍 logits；还有继续融合到 argmax/top-k/top-p 的理论空间。</p>
+<p>另外，vLLM kernel 仍然需要检查每个受约束 logits 行的整个词表，复杂度是 <code>O(S×V)</code>。词表从 128K 增到 256K 时，每行 program 数从 16 增到 32；融合降低的是 kernel launch 和中间访存常数，没有改变随 <code>V</code> 线性增长的本质。</p>
+<h5 id="4437-mindie">4.4.3.7 与 MindIE 的最终对比<a class="headerlink" href="#4437-mindie" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>MindIE 当前 NPU 路径</th>
+<th>vLLM MRV2 GPU 路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>apply 实现</td>
+<td>多个 torch/torch_npu 组合算子</td>
+<td>单个手写 Triton kernel</td>
+</tr>
+<tr>
+<td>融合范围</td>
+<td>未显式融合；是否局部融合取决于框架编译</td>
+<td>unpack + bit test + conditional <code>-inf</code> store</td>
+</tr>
+<tr>
+<td>kernel launch</td>
+<td>repeat / index / shift / and / compare / fill 等多步</td>
+<td>apply 主体一次 launch</td>
+</tr>
+<tr>
+<td>全局中间张量</td>
+<td>多个 <code>[B,V]</code></td>
+<td>不显式物化 <code>[S,V]</code> mask</td>
+</tr>
+<tr>
+<td>mask 行数</td>
+<td>mixed batch 通常是 <code>B</code></td>
+<td>compact 的 <code>S</code> + <code>logits_indices</code></td>
+</tr>
+<tr>
+<td>H2D / buffer</td>
+<td>每步 numpy→tensor→device</td>
+<td>预分配 device buffer + pinned async copy + copy stream</td>
+</tr>
+<tr>
+<td>logits 写入</td>
+<td><code>masked_fill_</code> 处理整张条件 mask</td>
+<td>只对 invalid token 执行 predicated store</td>
+</tr>
+<tr>
+<td>与 sampler 融合</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>复杂度</td>
+<td>约 <code>O(B×V)</code>，常数较大</td>
+<td>约 <code>O(S×V)</code>，常数较小</td>
+</tr>
+</tbody>
+</table>
+<p>面试中可以这样收口：「<strong>vLLM 做了 apply 级别的 Triton 融合，把 bitmask 解包、判断和写 <code>-inf</code> 放进一个 kernel，避免全局 <code>[S,V]</code> 中间 mask；再用 compact rows 和异步 buffer 降低 mixed-batch 与 H2D 开销。但它还没与 sampler 融合，复杂度仍是 <code>O(SV)</code>。</strong>」</p>
+<h4 id="444-fused">4.4.4 为什么 fused 后通常仍不是第一瓶颈<a class="headerlink" href="#444-fused" title="Permanent link">&para;</a></h4>
+<p>同一 decode step 里，至少还有两段也随词表增长：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>LM Head: hidden [B,H] × vocab weight [H,V]  → 计算/读取规模约 O(B×H×V)
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>Sampler: softmax / top-k / top-p            → 至少 O(B×V)
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>Bitmask apply                               → O(mask_rows×V)
+</code></pre></div>
+<p>LM Head 每个 vocab 元素要参与长度为 <code>H</code> 的点积，而 fused bitmask 对每个 vocab 元素只做取 bit 和条件写入，所以在大模型中 LM Head 通常重得多。但下列条件会让 bitmask 占比上升：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>原因</th>
+<th>MindIE 风险</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>小模型 / 强量化 / 极低 TPOT</td>
+<td>主模型 forward 变快，固定 launch 与尾段操作占比上升</td>
+<td>高</td>
+</tr>
+<tr>
+<td><code>V≥256K</code> 甚至 1M</td>
+<td>所有 <code>[B,V]</code> 中间张量线性扩大</td>
+<td>高</td>
+</tr>
+<tr>
+<td>大 batch</td>
+<td>NPU 展开和 <code>masked_fill_</code> 按 <code>B×V</code> 放大</td>
+<td>高</td>
+</tr>
+<tr>
+<td>mixed batch 且 <code>S≪B</code></td>
+<td>少数结构化请求触发整批 full-mask apply</td>
+<td>MindIE 特有放大；vLLM 新路径按 S 处理</td>
+</tr>
+<tr>
+<td>greedy / 小 top-k</td>
+<td>sampler 本身较轻，mask 尾段更显眼</td>
+<td>中高</td>
+</tr>
+<tr>
+<td>重模型、B 小、V≤128K</td>
+<td>forward 吞没 apply 开销</td>
+<td>通常低</td>
+</tr>
+</tbody>
+</table>
+<p>因此更准确的回答不是“128K 一定慢”或“bitmask 一定可以忽略”，而是：<strong>128K 单请求的 packed mask 只有约 16KB，不大；MindIE 的风险来自把它展开为多个约 500KB/行的中间张量，并在 mixed batch 中按整批放大。</strong></p>
+<h4 id="445-mindie">4.4.5 MindIE 优化优先级（按收益/风险排序）<a class="headerlink" href="#445-mindie" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>按结构化行压缩 bitmask</strong>：Manager 返回 <code>bitmask + logits_indices</code>，只为 active grammar 行填 mask；handler 只 apply 这些行，把复杂度从 <code>B×V</code> 降到 <code>S×V</code>。</li>
+<li><strong>复用并异步搬运压缩位图</strong>：预分配 pinned Host / NPU buffer，用独立 copy stream 和 non-blocking copy；消除每步 <code>.to(device)</code> 分配和不必要的 <code>bitmask.copy()</code>。</li>
+<li><strong>缓存静态 bit 索引</strong>：若暂时保留 torch 组合，至少按 device / mask width 缓存 <code>bit_indices</code>，并把 <code>masked_fill_</code> 外层冗余切片赋值改为真正原地操作。</li>
+<li><strong>实现 fused NPU apply</strong>：kernel 直接用 <code>t&gt;&gt;5</code> / <code>t&amp;31</code> 查 packed bit 并写 <code>-inf</code>，消掉所有 <code>[S,V]</code> 全局中间 mask。</li>
+<li><strong>融合 sampler</strong>：在 argmax/top-k 读取 logits 时检查 packed bit，避免 apply 写一遍、sampler 再读一遍。</li>
+</ol>
+<p>优先级 1 往往比直接写 Ascend C kernel 更重要：它先消除 mixed batch 中 <code>B×V</code> 对 <code>S×V</code> 的无效放大；否则即使单行 kernel 变快，仍然会扫描不需要约束的 logits 行。</p>
+<h4 id="446">4.4.6 如何验证是否真的成了瓶颈<a class="headerlink" href="#446" title="Permanent link">&para;</a></h4>
+<p>建议做三维 benchmark：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>Vocab V:       32K / 128K / 256K / 1M
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>Batch B:       1 / 8 / 32 / 64
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>Structured S:  1 / B/4 / B
+</code></pre></div>
+<p>每组比较：无结构化、当前 MindIE、compact rows、复用异步 buffer、fused apply。分段记录：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>CPU grammar fill
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>bitmask.copy + numpy→tensor
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>H2D / 同步等待
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>repeat_interleave / shift / and / masked_fill
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>sampler
+<a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>端到端 TPOT P50/P99 与吞吐
+</code></pre></div>
+<p>判断“已成瓶颈”至少看两条：结构化开启后的 <code>ΔTPOT</code> 是否稳定超过总 TPOT 的 5%，以及 profiler 中该链路是否进入 device / Host 耗时前列。5% 是工程排优阈值，不是框架保证；最终以目标模型、NPU 型号和业务 batch 分布为准。</p>
+<hr />
+<h2 id="function-call-egd4-casehard-cut-offparser">五、Function Call 全链路（E/G/D、4-Case、Hard Cut-off、约束⊥parser）<a class="headerlink" href="#function-call-egd4-casehard-cut-offparser" title="Permanent link">&para;</a></h2>
+<h3 id="51-tool-call">5.1 概念关系：Tool Call 是结构化输出的特化子集<a class="headerlink" href="#51-tool-call" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>        Structured Output（任意 JSON Schema，xgrammar 硬约束）
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>               │ 特化
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>               ▼
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>           Tool Call
+<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>          ┌────┴─────┐
+<a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>路径 A：事后解析          路径 B：约束生成
+<a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a>模型自由生成协议文本        grammar 约束采样过程
+<a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>regex/状态机 + JSON 补全   bitmask 屏蔽非法 token
+<a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>软保证（可能解析失败）      硬保证（输出必然合法）
+</code></pre></div>
+<p>MindIE 默认走**路径 A**（<code>ToolCallsProcessor</code> 事后解析），xgrammar 可选叠加约束 arguments。两路径架构独立：约束作用在**采样阶段**（限制 token 选择），解析器作用在**解码阶段**（协议文本 → OpenAI 格式）——即便开约束，解析器仍要跑。</p>
+<h3 id="52-encode-generate-decode">5.2 Encode / Generate / Decode（白板）<a class="headerlink" href="#52-encode-generate-decode" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>① Encode（请求）  tools → chat template 注入 → token 序列进引擎
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>② Generate（采样）自由协议文本 ± 可选约束（xgrammar / structural tag）
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>③ Decode（响应）  decode → ReasoningParser（剥 think）→ ToolCallsProcessor → tool_calls / content，finish_reason=tool_calls
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>做什么</th>
+<th>不做</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Encode</td>
+<td>协议可见性、tools 进模板</td>
+<td>不保证输出合法</td>
+</tr>
+<tr>
+<td>Generate</td>
+<td>吐原生协议（Qwen <code>&lt;tool_call&gt;</code>、DSML <code>&lt;invoke&gt;</code>…）；可选硬约束</td>
+<td>不负责 OpenAI 字段组装</td>
+</tr>
+<tr>
+<td>Decode</td>
+<td>协议→API；流式增量；finish_reason</td>
+<td>不替代采样约束</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-4-case">5.3 4-Case 流式状态机（必背）<a class="headerlink" href="#53-4-case" title="Permanent link">&para;</a></h3>
+<p>驱动量：<code>start_count</code> / <code>end_count</code>（special token ID，<strong>非 regex</strong>）。</p>
+<table>
+<thead>
+<tr>
+<th>Case</th>
+<th>条件</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>start==end，delta 无 end</td>
+<td>普通 <code>{content: delta}</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>start↑ 且 start&gt;end</td>
+<td>新 tool_call；<code>tool_id++</code>；吐 start 前 content</td>
+</tr>
+<tr>
+<td>3</td>
+<td>start 不变且 start&gt;end</td>
+<td>call 中：portion → JSON Completor</td>
+</tr>
+<tr>
+<td>4</td>
+<td>end↑ 回到 start==end</td>
+<td>发最终 arguments delta</td>
+</tr>
+</tbody>
+</table>
+<p>name 攒齐一次发，arguments 边生成边发。<strong>为何不用 regex</strong>：partial decode 可截在半标签/半 UTF-8，regex 误判；token 计数 O(1) 对齐生成粒度。</p>
+<p>JSON Completor（MindIE）：<code>Full</code>（name 未发 → 递归下降抽已完成 k/v）/ <code>BraceOnly</code>（name 已发 → 补 <code>}</code> 发 arguments delta）。vs vLLM：多走 <code>partial_json_parser</code> + 文本/对象 diff；Hermes 常是**字符串级** diff——勿笼统背「全是 dict diff」。</p>
+<h3 id="54-hard-cut-offdsml">5.4 Hard Cut-off（DSML 专有）<a class="headerlink" href="#54-hard-cut-offdsml" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>P1 Prefix 拦截   → 半个 start tag 不泄露到 content
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>P2 Hard Cut-off  → 见 &lt;/function_calls&gt; 后永久返回 {}
+<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>P3 Snapshot-Diff → XML→JSON 字符串 diff 算 arguments delta
+</code></pre></div>
+<ul>
+<li>目的：反**标签后幻觉**继续输出；语义：永久静默 ≠ 本步「等更多 token」的软 <code>{}</code>；边界：DSML 专有，别说成所有模型族默认。</li>
+<li>兜底哲学：五层软降级，<strong>绝不 500</strong>，最坏降级为普通 content；根治靠约束生成。</li>
+</ul>
+<h3 id="55-vs-parser">5.5 约束 vs parser：正交（必背）<a class="headerlink" href="#55-vs-parser" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>约束（采样阶段）  → 限制「下一个 token 合法」
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>parser（解码阶段）→ 抽 name/arguments、管流式 delta / index
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>问法</th>
+<th>答</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>开约束还要 parser？</td>
+<td><strong>要</strong>。合法 ≠ 已抽成 API 增量</td>
+</tr>
+<tr>
+<td>parser 能替代约束？</td>
+<td><strong>否</strong>。解析失败只能软降级，不能防生成非法</td>
+</tr>
+<tr>
+<td>auto 为何难全程约束？</td>
+<td>自由文本与 tool 混合；需 <strong>Structural Tag</strong> trigger 动态切入</td>
+</tr>
+<tr>
+<td>MindIE 现状</td>
+<td>路径 A 与 SO 分轨，<strong>无 structural tag</strong>；vLLM 已按模型注册收敛</td>
+</tr>
+</tbody>
+</table>
+<h3 id="56-tool_choice">5.6 tool_choice 映射约束<a class="headerlink" href="#56-tool_choice" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>tool_choice</th>
+<th>语义</th>
+<th>约束方案</th>
+<th>难度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>none</code></td>
+<td>禁止调用</td>
+<td>无需约束（或屏蔽 start token）</td>
+<td>易</td>
+</tr>
+<tr>
+<td>具名（forced）</td>
+<td>必须调指定函数</td>
+<td>该函数 parameters schema 全程约束（退化为普通 SO）</td>
+<td>易</td>
+</tr>
+<tr>
+<td><code>required</code></td>
+<td>必须调某工具</td>
+<td>各函数 schema 取 <strong>anyOf 并集</strong>，name 约束为函数名枚举</td>
+<td>中</td>
+</tr>
+<tr>
+<td><code>auto</code></td>
+<td>模型自决</td>
+<td>朴素 grammar 表达不了；需 <strong>Structural Tag</strong></td>
+<td>难</td>
+</tr>
+</tbody>
+</table>
+<h3 id="57-structural-tag">5.7 Structural Tag——约束与解析的统一收敛点<a class="headerlink" href="#57-structural-tag" title="Permanent link">&para;</a></h3>
+<p>xgrammar 的 Structural Tag：定义若干 <strong>trigger</strong>（如 <code>&lt;tool_call&gt;</code>），自由文本不受约束，一旦采样出 trigger 立即切入对应 tag 的 grammar（按函数 JSON Schema 约束到结束标签），结束后回到自由文本——<strong>一次前向里动态切换「无约束↔有约束」</strong>，完美表达 <code>auto</code> 且天然兼容 reasoning（<code>&lt;think&gt;</code> 块处于无约束段）。</p>
+<p>vLLM 已成体系：<code>backend_xgrammar.py</code> 的 <code>compile_structural_tag(tags, triggers)</code> 作为与 json/regex/EBNF 并列的第一等 grammar；<code>tool_parsers/structural_tag_registry.py</code> <strong>每个模型族注册自己的构造器</strong>，xgrammar 内置 llama/kimi/deepseek_r1/qwen_3 等 11 个模型协议模板，区分 auto/required/forced。趋势：tool call 协议知识从「分散在各家 parser 代码」收敛到「xgrammar 内置模板」，推理框架只做编排。</p>
+<p><strong>MindIE 差距（如果重做怎么改）</strong>：<code>structured_output/</code> 下无 structural tag，tool call 走纯路径 A、SO 走全程约束，两者未打通。改进 = 引入 structural tag：<code>auto</code> 下给 arguments 硬保证，name 枚举化**从机制杜绝幻觉工具名**；路径 A 五层兜底保留作 fail-soft。</p>
+<h3 id="58">5.8 失败模式对照<a class="headerlink" href="#58" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>失败模式</th>
+<th>路径 A（事后解析）</th>
+<th>路径 B（约束生成）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>arguments 非法 JSON</td>
+<td>JSON Completor 补括号 → regex 抢救 → 降级空 arguments</td>
+<td>机制上不会发生</td>
+</tr>
+<tr>
+<td>幻觉工具名</td>
+<td>校验 name ∈ tools，失败降级 content</td>
+<td>name 枚举，机制杜绝</td>
+</tr>
+<tr>
+<td>标签后幻觉续写</td>
+<td>DSML Hard Cut-off 永久静默</td>
+<td>回到自由文本（仍可能废话，需配 stop）</td>
+</tr>
+<tr>
+<td>参数类型错（"3" vs 3）</td>
+<td>Schema-aware type coercion</td>
+<td>schema type:integer 直接约束</td>
+</tr>
+<tr>
+<td>该调不调</td>
+<td>无法解决（提示词工程）</td>
+<td><code>required</code> 强制进入 tool call</td>
+</tr>
+</tbody>
+</table>
+<h3 id="59">5.9 交叉工程细节<a class="headerlink" href="#59" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>编译缓存复用</strong>：对规范化 tools 数组（排序 + 去空白）整体做 SHA-256 为 key；Agent 场景 tools 固定、跨请求高重复，命中率高；但 <code>required</code>/<code>auto</code> 编译的是多函数并集 grammar，任一函数增删改都改 key，长尾工具命中率下降。schema 亲和路由同时提升编译缓存与 KV prefix 命中率。</li>
+<li><strong>Reasoning + Tool Call + 约束三方</strong>：Qwen3 <code>enable_thinking=True</code> 输出 <code>&lt;think&gt;...&lt;/think&gt;&lt;tool_call&gt;{...}&lt;/tool_call&gt;</code>；解析侧 ReasoningParser 与 ToolCallsProcessor **串行**共享一次 decode；约束侧 think 块必须无约束（约束思维链严重损害推理），vLLM 里 <code>should_fill_bitmask</code>/<code>should_advance</code> 在 reasoning 未结束前跳过约束、不推进 grammar 状态。</li>
+<li><strong>Agent 循环 KV 复用分层</strong>：System+Tools 定义命中率极高（tools 注入在 chat template 层，字符层不可见，token 级匹配才命中）；tool result 每步全新（10–100 token，prefill 快）；thinking token 跨步近零复用（可主动 evict）。</li>
+</ul>
+<hr />
+<h2 id="mtp">六、MTP × 结构化互斥<a class="headerlink" href="#mtp" title="Permanent link">&para;</a></h2>
+<h3 id="61">6.1 入口硬互斥（红线：禁止「可以一起开 / 已打通」）<a class="headerlink" href="#61" title="Permanent link">&para;</a></h3>
+<p>Serving <strong>入口硬互斥</strong>：<code>InferParam::ValidateMtpConstraints</code>——mtp 开且请求带 <code>response_format</code>（结构化）直接报错，原文 <code>"structured output (response_format) cannot be used with mtp"</code>。</p>
+<p>代码锚点：<code>MindIE-LLM/src/server/endpoint/utils/infer_param.cpp</code> <code>ValidateMtpConstraints</code> ≈ L216–224；UT <code>test_infer_param.cpp</code> ≈ L678 EXPECT 该错误串（本地已核实）。</p>
+<h3 id="62-vs">6.2 产品理由 vs 工程理由<a class="headerlink" href="#62-vs" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>说什么</th>
+<th>别说什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>产品</strong></td>
+<td>契约清晰：同开禁止；fail-fast，避免「加速表象 + JSON 破防」</td>
+<td>「客户从不需要结构化+投机」</td>
+</tr>
+<tr>
+<td><strong>工程</strong></td>
+<td>缺 rollback / 单位置 mask / verify 挂载；同开会错位或静默 skip</td>
+<td>「Python 也没 raise 所以完全无互斥」</td>
+</tr>
+<tr>
+<td><strong>分层真相</strong></td>
+<td><strong>C++ InferParam 有硬拦</strong>；Python 插件零交集未联调</td>
+<td>只 grep 了 <code>mtp_plugin.py</code> 就下结论</td>
+</tr>
+</tbody>
+</table>
+<p>一句定调：互斥**首先是工程做不到安全同开**，产品才包装成明确错误——不是「业务不需要 JSON+MTP」。</p>
+<h3 id="63-vllm">6.3 对标 vLLM 缺什么<a class="headerlink" href="#63-vllm" title="Permanent link">&para;</a></h3>
+<p>投机一步 = draft <strong>k</strong> 个位置 + 可选 bonus → logits 行数 ≈ <code>batch×(1+k)</code>。约束必须**逐位置**合法，拒绝后 grammar 还要能**回退**。</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>能力</th>
+<th>vLLM 做法</th>
+<th>MindIE 现状</th>
+<th>缺了会怎样</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>多位置 bitmask</td>
+<td>buffer 行数 <code>batch×(1+k)</code>，沿 draft 窗填</td>
+<td><code>_init_bitmask_buffer</code> → <code>[batch, ceil(V/32)]</code> 单位置</td>
+<td>第 2…k 位无 mask，草稿/验证不受约束</td>
+</tr>
+<tr>
+<td>2</td>
+<td>rollback / 试探</td>
+<td><code>max_rollback_tokens=k</code>；试探后**立刻** <code>rollback(n)</code>；<code>validate_tokens</code></td>
+<td>grammar 只 accept 前进；matcher 未传 rollback 窗</td>
+<td>reject/分歧后 FSM 回不到接受点再走真实路径</td>
+</tr>
+<tr>
+<td>3</td>
+<td>propose/verify 挂载</td>
+<td>①试探填 mask → ②立刻 rollback → ③verify 后正式 accept</td>
+<td>MTP 路径不碰 grammar/bitmask</td>
+<td>约束与投机状态机零交集</td>
+</tr>
+<tr>
+<td>4</td>
+<td>行数对齐</td>
+<td>mask 行与 logits 行同扩</td>
+<td>mask 仍 batch 行 vs logits <code>batch×(1+k)</code></td>
+<td>「开了结构化却没挡住」，静默失效</td>
+</tr>
+<tr>
+<td>5</td>
+<td>异步叠加</td>
+<td>仍须步进契约</td>
+<td>async 下推进时机本就不齐</td>
+<td>错位风险平方级</td>
+</tr>
+</tbody>
+</table>
+<p>15s 版：「要对齐 vLLM，核心不是再训一个 MTP 头，而是 <strong><code>(1+k)</code> 多位置 mask + matcher 可 rollback + 三段式挂载</strong>；我们入口互斥，正是因为这三块还没落地。」</p>
+<blockquote>
+<p><strong>vLLM 三段式（代码核实）</strong>：① 沿 draft <strong>临时</strong> <code>accept</code> 推进 grammar，边推进边填每个 speculative 位的 mask——此时假设 draft 全接受，<strong>非正式提交</strong>；② 循环末立刻 <code>grammar.rollback(state_advancements)</code>——<strong>在目标模型 verify 之前</strong>；③ verify 后真实路径可能与 draft 分歧，再按真实采纳序列**正式 accept**。回滚能力下沉给 xgrammar matcher（创建时 <code>max_rollback_tokens</code> 按投机长度声明），vLLM 不自己维护 checkpoint 栈。</p>
+<p><strong>为何先 rollback 再 verify</strong>（反例）：Draft=<code>A,B,C</code>，验证后=<code>A,X</code>（A 接受、B 拒绝、分歧改采 X，C 丢弃）。若不先 rollback，grammar 假停在 <code>A→B→C</code>，真实应是 <code>A→X</code>——从假状态无法靠「少回滚几步」到达。若把 rollback 放到 verify 后，整段 GPU 验证期间依赖 grammar 的逻辑都看见假状态 → 暴露窗口被拉长。接受长度决定的是正式 accept 几个，<strong>不是</strong> <code>rollback(k→m)</code>。深文：<code>interview-review/03</code> §3.5.5、<code>18</code> 附录 A、本夜 <code>23</code> §3.5。</p>
+</blockquote>
+<h3 id="64">6.4 上场话术<a class="headerlink" href="#64" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>标准答（20s）</strong>：「Serving 层 <code>ValidateMtpConstraints</code>：mtp 与 <code>response_format</code> 硬互斥，报错原文 <em>structured output cannot be used with mtp</em>。工程上插件未联调；产品上 fail-fast。禁说『可以一起开 / 已打通』。」</li>
+<li><strong>对方说「Python 没 raise」</strong>：「对，插件层确实零交集、无联动 guard——那是能力缺口。**入口 C++ 已拦**请求级组合；只看 Python 会误判成『完全无互斥』。」</li>
+<li><strong>绕过 Serving 直打引擎插件</strong>：插件零挂载 → 约束可能静默失效或行数 skip；这正是入口必须硬拦的理由。<strong>契约在 InferParam，不在「信任调用方只开一个」</strong>。</li>
+</ul>
+<hr />
+<h2 id="_1">七、快问快答（合并去重）<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p><strong>结构化输出原理</strong></p>
+<ol>
+<li>解决什么问题？→ 把「prompt 大概率合法」升级为「采样阶段硬性保证合法」，非法 token logit 置 −inf。</li>
+<li>支持哪些约束类型？→ JSON Schema、正则、EBNF、工具调用；tool call 是特化子集。</li>
+<li>为什么用 PDA 不用 FSM？→ JSON 递归、嵌套无界，FSM 表达不了；需带栈下推自动机；简单正则可退化 FSM。</li>
+<li>xgrammar 为什么快？→ token 二分类：&gt;99% context-independent 编译期预计算进 mask cache，&lt;1% context-dependent 运行时持久化栈现场检查。</li>
+<li>副作用有哪些？→ TTFT 增加、每步 mask 开销、强约束伤质量、投机/异步组合正确性成本、batch 内干扰、内存。</li>
+<li>后端怎么选？→ auto 优先级 xgrammar &gt; guidance &gt; outlines；lm-format-enforcer 须显式指定。</li>
+</ol>
+<p><strong>编译缓存</strong></p>
+<ol>
+<li>编译缓存怎么做？→ SHA-256 规范化 schema 为 key + <strong>FIFO 默认 100</strong>，命中不调序。</li>
+<li>为什么不是 LRU？→ 业务 schema 近全热，FIFO≈LRU，实现最简；vLLM 下沉 xgrammar 按字节（512MB）控更稳。</li>
+<li>编译缓存和 KV 亲和什么关系？→ 同构；schema 亲和路由同时提升编译缓存与 KV prefix 命中率。</li>
+</ol>
+<p><strong>tokenizer / tools</strong></p>
+<ol>
+<li>tokenizer 从哪来？→ Coordinator 本地 <code>model_path</code> 同源加载，非运行时从引擎拉。</li>
+<li>为何不能只比字符串前缀？→ tools/chat template 改字节序列；字符对齐 ≠ block 哈希对齐。</li>
+<li>tools 漏传会怎样？→ token 分叉 → 命中虚高 → 假亲和（修过的真实 bug）。</li>
+<li>fail-closed 是什么？→ encode 失败返回 <code>[]</code>，回退 LoadBalance，不拿半对序列查 Conductor。</li>
+<li>与 SGLang router 差在哪？→ 他们字符级猜缓存；我们 token 级查真索引。</li>
+<li>和 vLLM Render 关系？→ 同哲学（调度看引擎真 token）；我们进程内同源加载，他们 OnlineRenderer/HTTP。</li>
+</ol>
+<p><strong>bitmask NPU</strong></p>
+<ol>
+<li>NPU bitmask 是自研 kernel 吗？→ 否；<code>repeat_interleave</code> + <code>masked_fill_</code>，torch_npu 组合。</li>
+<li>位图形状？→ int32 <code>[B, ceil(V/32)]</code>，再展开。</li>
+<li>vs vLLM？→ 他们常 fused apply（Triton/xgr）；我们框架组合，可优化点是融合。</li>
+<li>会拖垮 Decode 吗？→ element-wise 小头，正确性优先；无正式 A/B 不上精确 %。</li>
+<li>贡献在哪？→ Schema→matcher→异步时序正确性，不在再造 kernel。</li>
+</ol>
+<p><strong>Function Call</strong></p>
+<ol>
+<li>全链路三步？→ Encode 注入 → Generate 协议±约束 → Decode 解析 + finish_reason。</li>
+<li>流式为何不用 regex？→ 截断误判；token 计数 O(1) 对齐粒度。</li>
+<li>4-Case 各干什么？→ content / 新 call / 进行中补 JSON / 结束尾 delta。</li>
+<li>name vs arguments 发送？→ name 攒齐一次；arguments 增量。</li>
+<li>Hard Cut-off？→ 结束标签后永久空 delta，挡幻觉续写；DSML 专有，非全模型默认。</li>
+<li>JSON Completor 两种模式？→ Full（抽结构）/ BraceOnly（补尾）。</li>
+<li>约束⊥parser？→ 采样合法 vs 字段/流式抽取，都要跑。</li>
+<li>tool_choice=auto 难点？→ 动静混合输出；需 trigger 动态约束（Structural Tag）。</li>
+<li>tool_choice 四种映射？→ none 无约束；forced 单函数全程约束；required anyOf 并集 + name 枚举；auto 需 structural tag。</li>
+<li>Structural Tag 为何是收敛点？→ trigger 驱动动态切换（无约束↔有约束），表达 auto 且兼容 reasoning；xgrammar 内置模型协议模板，把 parser 知识上收。</li>
+<li>幻觉工具名怎么防？→ 路径 A 校验 name ∈ tools；路径 B name 枚举化机制杜绝。</li>
+<li>解析失败怎么办？→ 软降级/等下一步/<code>{}</code>；绝不 500；根治靠约束。</li>
+<li>MindIE 与 vLLM 差距？→ MindIE tool call 纯路径 A、SO 全程约束，两者未打通；vLLM 已按模型注册 structural tag 收敛。</li>
+</ol>
+<p><strong>MTP × 结构化</strong></p>
+<ol>
+<li>能不能 MTP+结构化同开？→ 不能；入口硬互斥，错误串固定。</li>
+<li>产品理由？→ fail-fast，避免「加速表象 + JSON 破防」。</li>
+<li>工程理由？→ 无 rollback、单位置 mask、MTP 不碰 grammar。</li>
+<li>对标 vLLM 最缺什么？→ <code>(1+k)</code> 多位置 bitmask + rollback + 三段式挂载（试探→立刻 rollback→正式 accept）。</li>
+<li>为何先 rollback 再 verify？→ 假状态别拖过 GPU 验证；分歧可能 <code>ABC→AX</code> 不只截断前缀。</li>
+<li>为何有人说「无互斥」？→ 只看 Python 插件；InferParam 已拦。</li>
+</ol>
+<hr />
+<h2 id="_2">八、第三层追问弹药<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p><strong>追问 1 · 「你们开了 xgrammar，还要写 ToolCallsProcessor？」</strong>
+约束只保证 token 落在 grammar；OpenAI 流式要 name 先整体、arguments 分段、<code>tool_calls[].index</code>——这是 Decode 职责。开约束可简化 Completor 兜底，<strong>不能删除 parser</strong>。合法 ≠ 抽成 API 增量。</p>
+<p><strong>追问 2 · 「Hard Cut-off 和 stop token / structural tag 结束有何不同？」</strong>
+Hard Cut-off 是 <strong>Decode 侧永久静默</strong>（DSML 反幻觉闸门）；stop/grammar 结束是 **采样侧**停生成或离开约束段。二者可叠加；别说「有 stop 就等于 Hard Cut-off」。</p>
+<p><strong>追问 3 · 「如果重做 Tool Call，你补什么？」</strong>
+引入 <strong>Structural Tag</strong>：<code>auto</code> 下 trigger 切入 arguments schema；name 枚举杜绝幻觉工具名；与 Reasoning 无约束段天然兼容。对齐 vLLM <code>structural_tag_registry</code> 收敛方向；路径 A 五层兜底保留作 fail-soft。</p>
+<p><strong>追问 4 · 「简历写 NPU 侧屏蔽，你写了算子吗？」</strong>
+算子层面有操作，但是**调用/组合**现有 torch_npu 能力，不是 AscendC 手写 bitmask。「别问我自研了哪个 NPU bitmask kernel——没有；贡献在约束链路与异步时序。」</p>
+<p><strong>追问 5 · 「为何不直接上 fused？开销到底多少 μs？」</strong>
+交付优先正确性与可移植；组合路径已靠近带宽墙，收益要 profiler 证明。μs 是经验量级区间，**不是**本机复现的精确点估计；要精确数字得专门做 A/B。</p>
+<p><strong>追问 6 · 「bitmask apply 和 async mask 错位是一回事吗？」</strong>
+不是。错位是**步进契约**（线程/游标/顺序）；apply 是**实现形态**。FSM 错了，fused 也只是更快地屏蔽错集合。</p>
+<p><strong>追问 7 · 「为什么一定要在 Coordinator tokenize？引擎里不也 tokenize 吗？」</strong>
+亲和决策发生在路由瞬间；若不在调度侧拿到与引擎同构的 ids，Conductor 查的是「另一套序列」的前缀。二次 tokenize 省不了「决策前必须一致」；长期可走 token-in（路由 render 一次、引擎直吃 ids），但一致性契约不变。</p>
+<p><strong>追问 8 · 「tools 透传修的是什么 bug？fail-open 行不行？」</strong>
+漏传 tools → chat template 少注入一段 → ids 变短/分叉 → <code>longest_matched</code> 虚高。fail-open 等于系统性制造假阳性亲和；fail-closed 牺牲命中率保正确性——与「假阳比 RR 更糟」同一逻辑。</p>
+<p><strong>追问 9 · 「字符级明明更便宜，凭什么说精度更值钱？」</strong>
+错一个 block = 成百上千 token 重算 + 可能灌热点；中心 <code>/query</code> 目标量级毫秒（超时上界 0.2s）。tools/多轮场景字符错位是常态，不是边角——所以付同源 tokenize + 查真索引。</p>
+<p><strong>追问 10 · 「MTP×结构化互斥是产品决策还是技术债？」</strong>
+根因是技术未打通；产品把危险组合收成显式错误。不是「业务不需要」，是「同开会错」。</p>
+<p><strong>追问 11 · 「具体要改哪几处才能 MTP+结构化同开？」</strong>
+① matcher <code>max_rollback_tokens=k</code> + <code>rollback</code> API；② bitmask 扩到 <code>batch×(1+k)</code> 并在 draft 窗试探填；③ <strong>试探完立刻 rollback</strong>，verify 后按真实路径正式 accept（勿做成 verify 后再 <code>rollback(k→m)</code>）；④ 处理 async 推进顺序。属设计路径，<strong>非现状</strong>。</p>
+<p><strong>追问 12 · 「vLLM 有没有针对结构化输出做专门监控指标？」</strong>
+当前版本代码里没看到专门 metrics 埋点，主要靠日志和请求失败异常信息兜底——这是可主动指出、我们做的话可补上的点（编译耗时、缓存命中率 metrics）。另有一个不错的细节：vLLM 对正则编译单独加了超时保护（<code>VLLM_REGEX_COMPILATION_TIMEOUT_S</code>）防 ReDoS。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

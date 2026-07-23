@@ -1,0 +1,3218 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/interview-review/20-%E5%BD%93%E5%89%8D%E7%AE%80%E5%8E%86%E8%A1%8C%E4%B8%BA%E9%9D%A2%E8%AF%95%E4%B8%8E%E4%B8%9A%E5%8A%A1%E9%A2%98%E5%87%86%E5%A4%87/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>当前简历行为面试与业务题准备 - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              当前简历行为面试与业务题准备
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一、先记住这条主线
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        二、“你现在做什么？”
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="二、“你现在做什么？”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#30" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30 秒版本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#90" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        90 秒版本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        面试官可能追问
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#motor-kv-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        三、主项目：Motor KV Cache 亲和性调度
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="三、主项目：Motor KV Cache 亲和性调度">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 两分钟完整回答
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 按问题拆开回答
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 按问题拆开回答">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：这个项目为什么有挑战？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：当时遇到的最大困难是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：为什么不用轮询、会话粘性或字符级前缀树？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-tokenize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：为什么要 tokenize 前置？会不会增加延迟？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：为什么需要两种调度模式？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q6：你在里面承担什么角色？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q7：团队怎么协同？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q8：最后结果怎么样？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q9：如果再做一次，你会改进什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 中心 Scheduler 为什么是“权威最终选择”
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3 中心 Scheduler 为什么是“权威最终选择”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#331" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3.1 “权威”不是一句口号
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#332" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3.2 快路径与慢路径
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#333-unified-prefill_cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3.3 unified 为什么要上报全量 prefill_cost
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#334" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3.4 负载从哪里来，又怎样释放
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#335-60" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3.5 60 秒口述版
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 团队协作与接口对齐清单
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 团队协作与接口对齐清单">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        负载均衡是怎样引入的
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#60" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        团队协作 60 秒口述版
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 深挖追问速答
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mindie-0-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        四、备选项目：MindIE 结构化输出从 0 到 1
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="四、备选项目：MindIE 结构化输出从 0 到 1">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-90" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 90 秒完整回答
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 高频追问
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-stale-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 异步 stale mask：完整问题定位流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.3 异步 stale mask：完整问题定位流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一步：把现象转成可验证的不变量
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第二步：建立同步路径基线
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第三步：用最小开关矩阵缩小范围
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第四步：按历史现场还原真实时序
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第四步：按历史现场还原真实时序">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-mask-preprocess" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 旧代码把 mask 固化在主线程 preprocess
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-postprocess_donewait" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 postprocess_done.wait() 为什么没有阻止错误
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-postprocess" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 旧 postprocess 提交得太晚
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 普通异步推理：一拍流水本来如何工作
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 完整错误流水线图（主线程与后台线程）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第五步：用 token 级最小例子证明
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第六步：明确排除项和相邻问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第七步：修复状态所有权，而不是只加锁
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第八步：验证修复与性能边界
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#90_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        90 秒定位复盘口述版
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        五、现场业务题：通用分析框架
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="五、现场业务题：通用分析框架">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        开场澄清问题模板
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ttft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        六、业务题示范：多实例大模型服务 TTFT 突然升高，怎么分析和落地？
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="六、业务题示范：多实例大模型服务 TTFT 突然升高，怎么分析和落地？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        题目
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 先澄清
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 拆解指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 建立假设并排序
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 比较候选方案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 设计方案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 分阶段落地
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 验收标准
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 风险和回退
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 三分钟收口答案
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        七、把技术回答提升为业务回答
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        八、口径一致性与风险提示
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="八、口径一致性与风险提示">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 结构化输出编译缓存
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-ttft-70-50" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. TTFT 70% 与端到端 50%
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-5000-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 5000+ 行与约 1 万行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 团队协作信息
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        九、上场前 10 分钟速记卡
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="九、上场前 10 分钟速记卡">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一句话身份
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个主项目
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个技术难题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个业务题框架
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        三句主动收口
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_23" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        禁止临场编造
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="_1">当前简历行为面试与业务题准备<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>基于 <code>cvs/林炜-v2.pdf</code> 整理。目标不是逐条复述简历，而是让回答形成一条清楚的主线：<strong>我解决了什么业务问题，为什么这样设计，我具体做了什么，怎样和团队协同，结果如何，以及如果重来会怎样改进。</strong></p>
+</blockquote>
+<h2 id="_2">一、先记住这条主线<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>面试中建议把经历分成“一主一备”：</p>
+<table>
+<thead>
+<tr>
+<th>定位</th>
+<th>项目</th>
+<th>最适合回答</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主项目</td>
+<td>Motor KV Cache 亲和性调度</td>
+<td>有挑战的项目、业务价值、方案选型、团队协作、量化结果、现场业务题</td>
+</tr>
+<tr>
+<td>备选项目</td>
+<td>MindIE 结构化输出</td>
+<td>从 0 到 1、个人主导、复杂技术问题、线上正确性、工程设计</td>
+</tr>
+</tbody>
+</table>
+<p>不要一上来把所有技术名词全部铺开。先讲业务问题和结果，面试官追问后再进入实现。</p>
+<p>推荐叙事顺序：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>场景和痛点 → 目标与约束 → 关键判断 → 我的职责 → 方案和难点 → 协作方式 → 验证结果 → 复盘
+</code></pre></div>
+<hr />
+<h2 id="_3">二、“你现在做什么？”<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="30">30 秒版本<a class="headerlink" href="#30" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>我目前在华为昇腾计算产品线做大模型推理服务开发，主要参与 MindIE 自研推理框架的特性设计和性能优化。我的工作集中在服务和调度层，包括结构化输出、KV Cache 亲和性调度、Tool Call、Reasoning 解析以及 Server 架构重构。最近投入最多的是两块：一块是从 0 到 1 交付结构化输出，解决模型输出必须严格符合 JSON Schema 的问题；另一块是多实例下的 KV Cache 亲和路由，通过复用已有前缀计算降低 TTFT。</p>
+</blockquote>
+<h3 id="90">90 秒版本<a class="headerlink" href="#90" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>我目前在华为昇腾计算产品线做大模型推理优化，主要面向 MindIE 推理服务。我的工作不是单纯做某一个算子，而是偏服务侧的完整交付：从需求分析、方案设计、接口抽象和核心编码，到联调、测试和性能验证。</p>
+<p>目前比较有代表性的工作有三类。第一是结构化输出，我从 JSON Schema 编译、逐 token 合法集合维护，一直打通到 NPU 侧 logits mask，并处理过约束解码和异步调度叠加后的状态错位问题。第二是多实例 KV Cache 亲和调度，我把 tokenize 前置到 Coordinator，通过全局 KV 索引做 token 级最长前缀匹配，再把前缀收益和实时负载共同纳入路由。第三是 Tool Call、Reasoning 解析以及 Server C++ 请求处理链路重构。</p>
+<p>这些工作让我比较熟悉大模型请求从协议接入、调度、Prefill/Decode、采样到流式返回的完整链路。我比较擅长把一个模糊的性能或正确性问题拆成可验证的工程方案，再推进到可交付状态。</p>
+</blockquote>
+<h3 id="_4">面试官可能追问<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p><strong>Q：你更偏算法、算子还是工程？</strong></p>
+<blockquote>
+<p>我目前最深入的是推理服务和调度工程，包括请求处理、异步执行、约束采样、KV Cache 管理和多实例路由。我理解 PagedAttention、FlashAttention、并行和通信的基本机制，但不会把自己包装成底层算子专家。我的优势是能把推理原理转化成服务侧可落地、可回退、可观测的方案。</p>
+</blockquote>
+<p><strong>Q：你最核心的竞争力是什么？</strong></p>
+<blockquote>
+<p>一是有从 0 到 1 交付复杂特性的经验；二是既关注正确性，也能从 TTFT、负载和缓存命中角度做系统性权衡；三是遇到跨线程、跨实例的问题时，我会先建立完整状态和数据流，而不是只修表面现象。</p>
+</blockquote>
+<hr />
+<h2 id="motor-kv-cache">三、主项目：Motor KV Cache 亲和性调度<a class="headerlink" href="#motor-kv-cache" title="Permanent link">&para;</a></h2>
+<h3 id="31">3.1 两分钟完整回答<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>我做过最有挑战、也最能体现业务分析能力的项目，是 Motor 的多实例 KV Cache 亲和性调度。</p>
+<p>背景是企业的大模型请求经常包含很长的 system prompt、tools schema 或多轮历史。在单实例里，Prefix Cache 可以复用这些前缀；但扩成多个实例后，如果仍然轮询或只看负载，同一个前缀很可能被打到没有缓存的实例，导致长 Prefill 重复计算，TTFT 明显上升。我们的目标是在不破坏负载均衡和服务可用性的前提下，让请求尽量落到真正持有对应 KV Cache 的实例。</p>
+<p>我在项目里主要负责方案设计和核心开发。第一个关键选择是匹配粒度。我没有使用字符级或仅依赖请求历史的近似方案，而是把 tokenize 前置到 Coordinator，确保 system prompt、tools 和 chat template 处理后得到的 token 与引擎一致，再通过 Mooncake Conductor 的全局 KV 索引做 token 级最长前缀匹配。这样避免了字符相同但 token 不一致，以及缓存已经驱逐但路由层仍误判的问题。</p>
+<p>第二个难点是亲和和负载并不总是一致。如果只选前缀最长的实例，同前缀突发流量会集中到一个节点，形成 herding。为此我设计了 unified 和 load_gated 两种模式：前者把剩余 Prefill 成本与实时负载做统一打分，后者先在最空闲的 Top-N 中筛选，再比较前缀命中。对于多 worker 负载视图滞后的问题，又把最终仲裁放到中心 Scheduler，用更新的权威负载进行重排。</p>
+<p>第三个难点是部署形态。方案不仅要支持普通多实例，还要兼容 PD 分离、PD 混部和 vLLM DP。因为不同 DP rank 有独立 KV Cache 池，所以注册、查询和 endpoint 选择都做到 <code>(instance, DP rank)</code> 粒度，而不是只到实例级。</p>
+<p>协作上，我负责调度方案和核心链路，需要和引擎侧确认 token、KV event 和 DP rank 的语义，和 Coordinator、Scheduler 相关开发对齐接口与负载账本，也需要和测试及部署侧共同覆盖多实例、PD 和异常回退场景。最终在简历所述的 8K 上下文、高前缀重复场景中，验证口径为 TTFT 约降低 70%、端到端时延约降低 50%，同时负载分布也得到改善。</p>
+<p>如果重新做一次，我会更早建立标准化 A/B 数据集和全链路指标面板，把缓存命中、路由决策、Conductor 延迟、队列时间、Prefill 时间和 fallback 原因统一串起来，这样参数调优和效果归因会更快。</p>
+</blockquote>
+<h3 id="32">3.2 按问题拆开回答<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
+<h4 id="q1">Q1：这个项目为什么有挑战？<a class="headerlink" href="#q1" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>它不是“做一个最长前缀匹配”这么简单，而是同时包含四类约束：匹配必须与引擎真实 token 和缓存状态一致；亲和不能制造负载热点；方案要跨多实例、PD 和 DP rank 工作；外部索引异常时不能影响主服务可用性。真正难的是正确性、性能、部署兼容和可用性必须同时成立。</p>
+</blockquote>
+<h4 id="q2">Q2：当时遇到的最大困难是什么？<a class="headerlink" href="#q2" title="Permanent link">&para;</a></h4>
+<p>推荐选择“亲和导致 herding”来讲，因为它能体现方案迭代，而不是只体现写代码。</p>
+<blockquote>
+<p>最大困难是：局部最优的亲和选择会导致全局负载恶化。多个 Coordinator worker 可能同时看到相似的旧负载，又查询到同一个前缀最优实例，于是突发请求会一起打过去。早期如果只在 worker 本地叠加 in-flight 负载，只能约束本进程，跨 worker 仍然无效。</p>
+<p>我的处理方式是把“亲和收益计算”和“资源最终仲裁”拆开。worker 负责计算各 endpoint 的 Prefill 成本或候选集，中心 Scheduler 使用更新的权威负载做最终选择。这样既保留缓存复用，又避免多个 worker 在旧视图下作出相同决定。验证时不只看平均 TTFT，还看 P99、各 endpoint 负载离散度、缓存命中、二次选择和 fallback 比例。</p>
+</blockquote>
+<h4 id="q3">Q3：为什么不用轮询、会话粘性或字符级前缀树？<a class="headerlink" href="#q3" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>轮询只解决分流，不感知缓存；会话粘性对固定 session 有效，但不适合共享 system prompt、tools schema 或跨会话公共前缀，也依赖历史状态；字符级本地树便宜，但 chat template 和 tools 注入后，字符和 token 边界不一定一致，而且它通常不知道引擎真实的存入和驱逐。我们的客户场景是长输入、高前缀复用，错失一个前缀可能意味着重复计算几千 token，所以我选择 token 级、事件驱动的真实索引，同时通过超时和回退控制外部依赖风险。</p>
+</blockquote>
+<h4 id="q4-tokenize">Q4：为什么要 tokenize 前置？会不会增加延迟？<a class="headerlink" href="#q4-tokenize" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>因为 KV Cache 的复用单位最终是 token/block。路由层若只看原始字符串，经过 chat template、system prompt 和 tools 注入后可能与引擎实际 token 序列不一致。前置 tokenize 确实增加了 CPU 开销，但它换来的是精确命中，而且 token 结果还可复用于长度校验、Conductor 查询和负载记账。若 tokenizer 异常或查询超时，方案会 fail closed，直接回退普通负载均衡，不让优化链路拖垮主链路。</p>
+</blockquote>
+<h4 id="q5">Q5：为什么需要两种调度模式？<a class="headerlink" href="#q5" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>因为不同业务对收益和风险的偏好不同。<code>unified</code> 是软权衡，前缀收益足够大时允许覆盖一定负载差，更适合高重复率、长 Prefill 场景；<code>load_gated</code> 是硬门控，先限定最空闲 Top-N，再从中选最长前缀，更适合对尾延迟和负载上界敏感的场景。硬门控不是简单调大一个权重就能完全等价，所以保留两种策略更清晰。</p>
+</blockquote>
+<h4 id="q6">Q6：你在里面承担什么角色？<a class="headerlink" href="#q6" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>我的角色不是只接一个小模块，而是负责把需求转成完整技术方案并推进核心落地。具体包括竞品和现状分析、token 级匹配方案、Conductor 查询链路、DP rank 粒度建模、双调度策略、配置化参数、异常回退，以及联调和验证。涉及引擎、Coordinator、Scheduler 或部署边界时，我负责把接口契约和失败语义明确下来，再和对应模块的同事共同完成联调。</p>
+</blockquote>
+<h4 id="q7">Q7：团队怎么协同？<a class="headerlink" href="#q7" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>这个项目横跨路由层、中心调度、推理引擎、KV 索引和部署系统。我会先把接口契约写清楚：请求由谁 tokenize、实例和 DP rank 怎样唯一标识、Conductor 返回什么、worker 提交哪些候选、Scheduler 如何原子选择并记账、请求结束后怎样释放负载、异常时回退到哪里。开发阶段先用 mock 的 KV 命中和负载数据验证策略，再接 Conductor、Scheduler 和真实引擎；联调时重点核对 token、endpoint、负载增减和最终路由四条链路。验证阶段再和测试、性能及部署同事覆盖多实例、PD 分离、PD 混部、DP、缓存驱逐、扩缩容和组件超时。</p>
+<p>负载均衡不是另外搭一套系统，而是沿用现有 <code>SchedulingFacade</code> 和 <code>scheduler_type</code> 扩展新的 <code>kv_cache_affinity</code> 策略：KV 亲和负责计算请求特有的 Prefill 成本，原有 LoadBalance 继续提供 endpoint 负载评分和 fallback；worker 只提出候选，中心 Scheduler 在同一个提交锁内完成最终选择和负载分配。这样新能力可以灰度开启，也可以在 Conductor 查询失败时退回原有负载均衡。</p>
+<p>注意：如果被追问团队人数、项目周期、你是否担任 owner，请只说真实信息。当前简历没有给出这些数字，不要临场编造。</p>
+</blockquote>
+<h4 id="q8">Q8：最后结果怎么样？<a class="headerlink" href="#q8" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>功能上，方案覆盖了多实例、PD 分离、PD 混部和 DP rank 粒度路由；性能上，在 8K 上下文、高前缀重复的代表性场景中，简历口径是 TTFT 约降低 70%、端到端时延约降低 50%；稳定性上，索引或 tokenize 异常时可以回退普通负载均衡，不影响基础推理服务。更重要的是，方案把缓存复用从单实例能力提升成了集群级调度能力。</p>
+</blockquote>
+<h4 id="q9">Q9：如果再做一次，你会改进什么？<a class="headerlink" href="#q9" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>第一，更早建设标准化流量回放和 A/B 基线；第二，把命中率、有效复用 token、路由开销、队列时间、Prefill 时间、负载离散度和 fallback 原因放到同一个可观测链路；第三，根据模型、输入输出长度和重复率做参数自动推荐，而不只依赖静态配置；第四，评估 tokenizer/render 服务独立扩缩容，避免高 QPS 下 CPU 预处理成为新瓶颈。</p>
+</blockquote>
+<h3 id="33-scheduler">3.3 中心 Scheduler 为什么是“权威最终选择”<a class="headerlink" href="#33-scheduler" title="Permanent link">&para;</a></h3>
+<h4 id="331">3.3.1 “权威”不是一句口号<a class="headerlink" href="#331" title="Permanent link">&para;</a></h4>
+<p>worker 在每次选择前会从共享内存读取较新的负载，但读取和提交之间仍然存在时间窗口：多个 worker 可能基于同一个快照同时作出相同选择。因此，worker 的结果只能叫**提案**，不能直接视为最终分配。</p>
+<p>中心 Scheduler 之所以是权威端，来自四个机制：</p>
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>具体含义</th>
+<th>解决的问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单一账本</td>
+<td>Scheduler 持有所有可用 <code>(instance, endpoint)</code> 的负载状态</td>
+<td>worker 之间不需要互相同步本地 in-flight 状态</td>
+</tr>
+<tr>
+<td>版本校验</td>
+<td>worker 随请求携带 <code>workload_sequence</code> 和 <code>instance_version</code></td>
+<td>判断 worker 的负载快照和实例集合是否仍与 Scheduler 一致</td>
+</tr>
+<tr>
+<td>原子提交</td>
+<td>在 <code>_workload_commit_lock</code> 内完成“重选 → ALLOCATION 记账 → SHM 增量发布”</td>
+<td>避免两个并发请求都在记账前看到同一个最低负载 endpoint</td>
+</tr>
+<tr>
+<td>最终结果回传</td>
+<td>Scheduler 返回实际提交的 instance、endpoint、score 和 fast-path 标记</td>
+<td>转发、释放负载和观测都以最终结果为准，而不是以 worker top-1 为准</td>
+</tr>
+</tbody>
+</table>
+<p>这里最重要的不变量是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>选择哪个 endpoint 与给该 endpoint 增加本次请求负载，必须在同一个串行提交域内完成。
+</code></pre></div>
+<p>如果先选择、稍后再异步记账，那么下一请求仍会看到旧负载，中心化也无法阻止 herding。</p>
+<h4 id="332">3.3.2 快路径与慢路径<a class="headerlink" href="#332" title="Permanent link">&para;</a></h4>
+<p>一次分配的实际过程是：</p>
+<ol>
+<li>worker 从 Scheduler 发布的共享内存读取 endpoint 负载，同时记住稳定的 <code>workload_sequence</code> 和 <code>instance_version</code>；</li>
+<li>worker tokenize、查 Conductor，并计算本请求在各 endpoint 的 <code>prefill_cost</code>；</li>
+<li>worker 通过 <code>ALLOCATE_ONLY</code> 上报候选、请求负载、快照序列和实例版本；</li>
+<li>Scheduler 进入提交锁：</li>
+<li>如果 sequence 和 version 完全一致，说明 worker 确实基于当前账本选择，可走快路径，只校验 top-1 是否仍可用；</li>
+<li>如果任一版本不一致，说明快照已过期，走慢路径，使用 Scheduler 当前负载重新选择；</li>
+<li>Scheduler 在锁内给最终 endpoint 增加本请求负载，并把最新条目写回共享内存；</li>
+<li>返回最终 endpoint，worker 按这个结果转发请求，并保存同一份 workload，供完成、失败或重试时精确释放。</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>@startuml
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>title Motor KV 亲和：Worker 提案与 Scheduler 权威提交
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>participant &quot;Coordinator Worker&quot; as Worker
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>participant &quot;Workload SHM&quot; as SHM
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>participant &quot;Mooncake Conductor&quot; as Conductor
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>participant &quot;中心 Scheduler&quot; as Scheduler
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>participant &quot;目标 Engine / DP rank&quot; as Engine
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>Worker -&gt; SHM: 读取负载快照\nsequence + instance_version
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>Worker -&gt; Worker: 同源 tokenize\n计算 input tokens
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>Worker -&gt; Conductor: query(token_ids)
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>Conductor --&gt; Worker: 各 endpoint matched_tokens
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>Worker -&gt; Worker: 计算各 endpoint prefill_cost\n形成提案
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>Worker -&gt; Scheduler: ALLOCATE_ONLY\n候选 + prefill_cost + workload\nsequence + instance_version
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>activate Scheduler
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>Scheduler -&gt; Scheduler: 获取 workload_commit_lock
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>alt 快照版本完全一致
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    Scheduler -&gt; Scheduler: 校验 worker top-1 仍可用\nfast path
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>else 快照已变化
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    Scheduler -&gt; Scheduler: 用当前权威负载重排\nslow path
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>end
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>Scheduler -&gt; Scheduler: 原子增加最终 endpoint 负载
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>Scheduler -&gt; SHM: 发布增量与新 sequence
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>Scheduler --&gt; Worker: 最终 instance + endpoint + score
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>deactivate Scheduler
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>Worker -&gt; Engine: 转发请求到最终 endpoint
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>Engine --&gt; Worker: 流式结果 / 完成
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>Worker -&gt; Scheduler: RELEASE 对应 workload
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>Scheduler -&gt; SHM: 更新释放后的负载
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>note over Worker,Scheduler
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>worker 负责理解请求和计算亲和；
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>Scheduler 负责依据全局事实选择并提交资源。
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>end note
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>@enduml
+</code></pre></div>
+<h4 id="333-unified-prefill_cost">3.3.3 unified 为什么要上报全量 <code>prefill_cost</code><a class="headerlink" href="#333-unified-prefill_cost" title="Permanent link">&para;</a></h4>
+<p><code>unified</code> 的分数可拆为一个请求静态项和一个快速变化项：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>prefill_cost(e) = max(0, input_tokens - overlap_credit × matched_tokens(e))
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>score(e) = prefill_load_scale × prefill_cost(e) + load_weight × fresh_load(e)
+</code></pre></div>
+<ul>
+<li><code>prefill_cost(e)</code> 取决于本次请求和 Conductor 查询结果，在一次分配过程中基本不变，适合由 worker 计算；</li>
+<li><code>fresh_load(e)</code> 会随着所有 worker 的并发提交快速变化，必须由 Scheduler 在提交时读取；</li>
+<li>因此 worker 不需要把 prompt 或 Conductor 查询搬到 Scheduler，只需上报所有 endpoint 的 <code>prefill_cost</code> 和两个权重；</li>
+<li>Scheduler 用当前负载扫描全量候选，选择最小 score；分数相同时优先更低的 <code>prefill_cost</code>，避免无意义地损失缓存命中。</li>
+</ul>
+<p>早期只上报亲和 top-k，虽然能缓解热点，但可能把新的全局最优截断在候选集外。unified 后来升级为全量重排，就是为了消除这个误差。</p>
+<p><code>load_gated</code> 不采用全量 unified 重排。它的语义是“先锁定最闲 Top-N，再在其中比较亲和”，这是一条硬负载边界；如果 Scheduler 对所有 endpoint 重新做软加权，亲和可能把请求拉出 Top-N，策略语义就被破坏。因此它保留受限候选集内的权威重选。</p>
+<h4 id="334">3.3.4 负载从哪里来，又怎样释放<a class="headerlink" href="#334" title="Permanent link">&para;</a></h4>
+<p>负载不是瞬时 QPS，而是 endpoint 当前承担的工作量。亲和路径已经获得真实 token IDs，因此 Prefill 请求优先按真实输入 token 数记账；负载对象区分 <code>active_tokens</code> 与 <code>active_kv_cache</code>，LoadBalance 再根据角色计算 endpoint score。</p>
+<p>请求分配成功后，Scheduler 立即增加 workload；请求完成、失败、取消或发生回滚时，Router/RequestManager 必须用分配时保存的同一 workload 做对应释放。这里需要与请求生命周期负责人对齐，否则只加不减会让节点永久“越来越忙”，重复释放则会把负载减成错误值。</p>
+<p>共享内存用于把 Scheduler 账本低成本广播给 worker：实例集合变化时发布全量快照并提升 <code>instance_version</code>，普通负载变化只更新单个 entry 并推进 <code>workload_sequence</code>。共享内存提高读性能，但不取代 Scheduler 的最终提交权。</p>
+<h4 id="335-60">3.3.5 60 秒口述版<a class="headerlink" href="#335-60" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>worker 本地看到的负载即使来自共享内存，也只是一个读快照；多个 worker 可以基于同一快照同时选中同一 endpoint，所以最终选择必须回到中心 Scheduler。worker 上报本请求在每个 endpoint 的静态 <code>prefill_cost</code>，同时携带自己读取的 workload sequence 和 instance version。Scheduler 在一个提交锁里检查版本：版本一致走 top-1 快路径；过期则用当前账本重排。unified 模式下按 <code>prefill_cost + fresh_load</code> 对全量 endpoint 重新取最小，然后在同一把锁内立刻增加该 endpoint 的 workload，再把增量写回共享内存。核心不是“中心节点再算一遍”，而是把最终选择和负载记账做成原子操作，这样下一请求才能看到刚才的分配，真正抑制跨 worker herding。</p>
+</blockquote>
+<h3 id="34">3.4 团队协作与接口对齐清单<a class="headerlink" href="#34" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>合作对象/模块</th>
+<th>必须对齐的接口或语义</th>
+<th>最容易出问题的地方</th>
+<th>联调/验收证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>业务/性能负责人</td>
+<td>典型 ISL/OSL、前缀重复率、主指标是 TTFT 还是成本、可接受的 fallback</td>
+<td>把高复用场景收益泛化到所有流量</td>
+<td>固定流量回放、A/B 基线、P50/P95/P99</td>
+</tr>
+<tr>
+<td>Coordinator/Router 开发</td>
+<td><code>RequestInfo</code>、tools 透传、token_ids 复用、<code>SchedulingFacade.select_and_allocate</code>、最终 endpoint 转发</td>
+<td>仍按 worker top-1 转发，忽略 Scheduler repick</td>
+<td>request_id 串起提案与最终 endpoint</td>
+</tr>
+<tr>
+<td>Scheduler/负载均衡开发</td>
+<td><code>Workload</code> 定义、endpoint score、<code>ALLOCATE_ONLY</code>、sequence/version、原子分配与 RELEASE</td>
+<td>选择和记账分离；角色或量纲不一致</td>
+<td>分配前后 workload、fast_path、selected_score</td>
+</tr>
+<tr>
+<td>vLLM/推理引擎开发</td>
+<td>tokenizer/chat template 同源、Prefix Cache 开关、block size、KV event 格式、DP rank 到 endpoint 的映射</td>
+<td>tools 导致 token 分叉；实例命中但 rank miss</td>
+<td>route token hash、cached tokens、KV event 日志</td>
+</tr>
+<tr>
+<td>Mooncake Conductor/索引开发</td>
+<td><code>/query(token_ids)</code> 返回结构、tenant/instance 命名、BlockStored/Removed、replay、超时和空结果</td>
+<td>命名映射错误、事件延迟、驱逐后假命中</td>
+<td>matched_tokens、事件序列、查询延迟、fallback reason</td>
+</tr>
+<tr>
+<td>PD/部署/K8s 开发</td>
+<td>P/U 注册，D 不作为 Prefill KV 命中目标；服务端口、ZMQ endpoint、replay endpoint、扩缩容生命周期</td>
+<td>PD 角色配错、端口冲突、扩缩容后旧 endpoint 残留</td>
+<td>普通多实例、PD 分离、混部、扩缩容矩阵</td>
+</tr>
+<tr>
+<td>测试/性能/SRE</td>
+<td>故障注入、压测流量、指标和灰度回退</td>
+<td>只看平均 TTFT，不看 P99、负载和 fallback</td>
+<td>TTFT/Prefill/cached tokens/负载离散度/超时率</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_5">负载均衡是怎样引入的<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
+<p>可以按下面四层向面试官解释：</p>
+<ol>
+<li><strong>接入层不改主路由协议</strong>：继续通过 <code>SchedulingFacade.select_and_allocate</code> 获取最终资源，KV 亲和是一个新的 scheduler policy，而不是 Router 里散落的特殊分支；</li>
+<li><strong>配置层可切换</strong>：<code>scheduler_type=kv_cache_affinity</code> 才启用；默认或异常场景仍可走 <code>load_balance</code>，便于灰度和回滚；</li>
+<li><strong>评分层复用原负载模型</strong>：亲和只新增 <code>prefill_cost</code>，endpoint 的 <code>fresh_load</code> 仍由原 LoadBalance 评分逻辑给出，避免出现两套负载定义；</li>
+<li><strong>提交层统一</strong>：无论普通 LoadBalance 还是 KV 亲和，最终都由 Scheduler 在 <code>ALLOCATE_ONLY</code> 内选择并记账，请求结束后走同一 workload release 生命周期。</li>
+</ol>
+<h4 id="60">团队协作 60 秒口述版<a class="headerlink" href="#60" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>这个模块要同时和五条线协作。第一是 Router/Coordinator，确定 request、tools 和 token_ids 怎样传，以及必须以 Scheduler 返回的最终 endpoint 转发；第二是 Scheduler 和负载均衡，统一 Workload 量纲、sequence/version、原子 allocate 和 release；第三是引擎侧，确认 chat template、Prefix Cache、KV event、block size 和 DP rank 映射；第四是 Conductor 与部署侧，对齐 query、实例命名、事件/replay、服务发现和 PD 角色；第五是测试与性能侧，建立多实例、PD、DP、驱逐、扩缩容和超时矩阵。我的做法是先定契约和失败语义，再按 request_id 把 token、matched、worker proposal、Scheduler final endpoint、cached tokens 和 workload 增减串成一条证据链。</p>
+</blockquote>
+<h3 id="35">3.5 深挖追问速答<a class="headerlink" href="#35" title="Permanent link">&para;</a></h3>
+<p><strong>Q：为什么粒度必须到 DP rank？</strong></p>
+<blockquote>
+<p>因为每个 DP rank 的 KV Cache 池独立。如果只知道某个实例有缓存，但请求最终进入该实例内另一个 rank，命中仍会丢失。实例级命中在 DP 场景下可能被稀释到约 <code>1 / DP</code>，所以注册、查询和选 endpoint 必须保持同一粒度。</p>
+</blockquote>
+<p><strong>Q：Conductor 挂了怎么办？</strong></p>
+<blockquote>
+<p>亲和是优化链路，不是正确性依赖。查询设置超时，失败后回退 LoadBalance；同时记录 fallback 类型并监控超时率，避免静默退化。</p>
+</blockquote>
+<p><strong>Q：真实索引也可能不准吗？</strong></p>
+<blockquote>
+<p>会。KV event 有传播时延，路由决定后也存在新请求尚未写入索引的窗口，所以它不是强一致事务系统。工程上要接受短暂假阴性或假阳性，通过事件更新、超时、最终引擎校验和普通 Prefix Cache 机制兜底。目标是显著提高命中概率，而不是承诺每次路由都百分之百命中。</p>
+</blockquote>
+<p><strong>Q：如何证明收益来自 KV 亲和，而不是负载变化？</strong></p>
+<blockquote>
+<p>做相同请求集、相同实例数和并发下的 A/B，对照普通负载均衡与亲和路由；固定模型、输入输出长度、前缀重复率和缓存预热方式；同时观测 effective cached tokens、queue time、prefill time、TTFT、TPOT 和 endpoint 负载。亲和主要应该降低 Prefill 和 TTFT，TPOT 不应出现同量级变化。如果只有总时延，没有这些中间指标，归因是不充分的。</p>
+</blockquote>
+<hr />
+<h2 id="mindie-0-1">四、备选项目：MindIE 结构化输出从 0 到 1<a class="headerlink" href="#mindie-0-1" title="Permanent link">&para;</a></h2>
+<h3 id="41-90">4.1 90 秒完整回答<a class="headerlink" href="#41-90" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>另一个有挑战的项目是 MindIE 结构化输出，我负责从 0 到 1 打通完整链路。业务需求是让模型输出严格符合 JSON Schema，而不是生成后再用正则或重试修补。这对 Agent、API 参数生成和自动化流程很重要，因为格式错误会直接导致下游调用失败。</p>
+<p>我把问题拆成四层：<strong>接口层接收和校验 Schema；编译层把 Schema 转成 xgrammar 可执行的自动机；解码时由 GrammarMatcher 随 token 推进状态并生成合法 token 集合；最后在 NPU 侧用 bitmask 屏蔽非法 logits。</strong> 为了**降低复杂 Schema 重复编译带来的 TTFT**，我又增加了按 Schema 内容哈希的容量受控编译缓存，并为后续多后端预留抽象。</p>
+<p>项目中最难的问题发生在约束解码与异步调度叠加时。约束解码要求每一步严格遵循“根据当前状态生成 mask、采样、接受 token、推进状态”，但初版把同步路径的钩子原样放进异步流水：主线程先为当前 batch 生成 mask，之后才拿上一 batch 的 token 推进 grammar，导致当前采样稳定使用上上步状态生成的 stale mask。我先以同步路径建立正确时序，再对照历史提交和异步调用顺序，把问题定位到跨线程的状态所有权；修复时把异步的 mask 生成、采样和 <code>accept_token</code> 都收口到 <code>forward_loop</code>，让单一后台线程按 batch 出队顺序提交状态。</p>
+<p>我的角色是该特性的主要设计和交付者，简历记录贡献代码 5000+ 行。结果是打通了 Schema 到 NPU 采样约束的完整能力，并解决异步高并发下的正确性问题。这个项目让我最深的体会是：复杂特性的难点往往不是单点算法，而是算法状态机和已有异步架构之间的契约。</p>
+</blockquote>
+<h3 id="42">4.2 高频追问<a class="headerlink" href="#42" title="Permanent link">&para;</a></h3>
+<p><strong>Q：为什么不能生成完再校验或重试？</strong></p>
+<blockquote>
+<p>事后校验只能发现错误，不能保证一次成功；重试会增加延迟和成本，复杂嵌套 JSON 还可能多次失败。约束解码是在每一步直接排除非法 token，从生成过程上保证输出落在 Schema 语言内，更适合有严格协议要求的生产服务。</p>
+</blockquote>
+<p><strong>Q：为什么使用 xgrammar？</strong></p>
+<blockquote>
+<p>它能把 JSON Schema、grammar 等约束编译为可在逐 token 解码中执行的状态机，并高效生成合法 token mask。选型时重点看正确性、词表适配、编译和运行开销、社区成熟度以及与现有采样链路的集成成本，而不只是 API 是否简单。</p>
+</blockquote>
+<p><strong>Q：缓存解决了什么问题？</strong></p>
+<blockquote>
+<p>Schema 编译主要影响首 token 前的时间。Agent 或固定 API 经常重复使用同一个 Schema，因此用内容哈希作为 key 缓存编译结果，可以把重复请求的编译开销从主路径移除。缓存必须容量受控，并处理并发、对象生命周期和淘汰问题。</p>
+</blockquote>
+<p><strong>Q：异步错位是怎么定位的？</strong></p>
+<blockquote>
+<p>我先把同步路径写成 <code>fill mask → forward/sample → accept token</code> 的正确基线，再只打开异步复现，避免一开始把 PD、并发和 xgrammar 混在一起。接着对照修复前后的历史提交，按 batch 和 step 记录 mask 使用的 grammar 状态、采样 token、accept 时机和执行线程，发现异步真实顺序是“先 preprocess 当前拍，再 postprocess 上一拍”，因此当前 mask 稳定落后一拍。最后用首 token <code>{</code> 的最小例子验证：第二步仍使用初始态 mask，所以可能再次放行 <code>{</code>。PD/replay 的 <code>num_tried_tokens</code> 是相邻的游标问题，但不是这个主 bug 的根因。</p>
+</blockquote>
+<p><strong>Q：结果如何衡量？</strong></p>
+<blockquote>
+<p>第一是正确性：覆盖嵌套对象、数组、枚举、必填字段、转义字符和并发场景，非法输出应归零；第二是性能：分别测冷编译对 TTFT 的影响、缓存命中后的 TTFT、逐 token mask 对 TPOT 的增量；第三是稳定性：缓存并发、异常 Schema、取消请求和异步调度下不能出现状态串扰。</p>
+</blockquote>
+<h3 id="43-stale-mask">4.3 异步 stale mask：完整问题定位流程<a class="headerlink" href="#43-stale-mask" title="Permanent link">&para;</a></h3>
+<p>这部分面试不要只讲“发现错位然后改到后台线程”，而要体现自己如何从复杂系统中排除错误方向、建立证据并验证根因。</p>
+<h4 id="_6">第一步：把现象转成可验证的不变量<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h4>
+<p>设接受第 <code>t-1</code> 个 token 后的 grammar 状态为 <code>S_(t-1)</code>，第 <code>t</code> 步使用的 mask 为 <code>M_t</code>，正确关系必须是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>M_t = mask(S_(t-1))
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>mask(S_(t-1)) → sample y_t → accept_token(y_t) → S_t
+</code></pre></div>
+<p>需要同时对齐三件事：请求/cache_id、grammar 状态和采样步号。只要 mask 来自旧状态，即使它被正确 apply 到本步 logits，结果仍然错误。</p>
+<h4 id="_7">第二步：建立同步路径基线<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h4>
+<p>同步链路在一个调用栈内完成：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>preprocess: fill M_t from S_(t-1)
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>→ forward / apply mask / sample y_t
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>→ postprocess: accept y_t and advance to S_t
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>→ 下一轮 preprocess
+</code></pre></div>
+<p>因为 <code>postprocess(t-1)</code> 返回后才会进入 <code>preprocess(t)</code>，同步模式天然满足状态提交顺序。同步正常也说明 Schema 编译、xgrammar 状态转移、bitmask 位序和 NPU mask apply 并非首要嫌疑。</p>
+<h4 id="_8">第三步：用最小开关矩阵缩小范围<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h4>
+<p>建议这样描述当时的排查思路：</p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>基线</th>
+<th>逐步打开</th>
+<th>判断目的</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>结构化输出</td>
+<td>关闭</td>
+<td>开启</td>
+<td>确认与 grammar/mask 相关</td>
+</tr>
+<tr>
+<td>调度模式</td>
+<td>同步</td>
+<td>异步</td>
+<td>锁定路径分叉</td>
+</tr>
+<tr>
+<td>并发</td>
+<td>单请求</td>
+<td>高并发/动态 batch</td>
+<td>判断并发是根因还是放大器</td>
+</tr>
+<tr>
+<td>部署</td>
+<td>单实例</td>
+<td>PD/recompute</td>
+<td>把主 bug 与 replay/迁移问题分开</td>
+</tr>
+</tbody>
+</table>
+<p>关键结论是：<strong>高并发是放大器，不是主因</strong>。异步流水一旦进入稳态，单请求也具备 stale mask 条件；动态 batch 只让现象更容易暴露。</p>
+<h4 id="_9">第四步：按历史现场还原真实时序<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h4>
+<p>不要只看修复后的现状代码。对比初版提交 <code>278c79b</code> 与修复提交 <code>737fa89</code>，可以明确看到：<strong>问题不是两个线程同时修改了同一块 mask，也不是 NPU 读取 mask 太早，而是初版把“生成下一步 mask”和“提交上一步 token”分别放在了异步流水的错误阶段。</strong></p>
+<p>异步模式之所以会触发、同步模式不会，是因为 <code>generate_token_async()</code> 使用 <code>input_queue/output_queue</code> 做一拍流水：主线程提前准备当前批次 <code>B_t</code>，后台线程执行已入队批次，主线程同时回收上一批次 <code>B_(t-1)</code> 的结果。普通采样参数可以提前准备，但结构化 mask 存在跨步数据依赖：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>生成 M_t 必须依赖刚采样出的 y_(t-1)
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>y_(t-1) 又必须先 accept 到 GrammarMatcher，才能得到 S_(t-1)
+</code></pre></div>
+<p>也就是说，<code>guided_bitmask</code> 看起来是 <code>sampling_metadata</code> 的一个字段，语义上却不是静态元数据，而是**依赖上一拍输出的状态快照**。初版把它和普通 metadata 一起提前到主线程 preprocess，正好跨过了这条不能被流水化的依赖边。</p>
+<h5 id="41-mask-preprocess">4.1 旧代码把 mask 固化在主线程 <code>preprocess</code><a class="headerlink" href="#41-mask-preprocess" title="Permanent link">&para;</a></h5>
+<p>初版 <code>PluginManager.preprocess()</code> 无论同步还是异步都会执行结构化输出逻辑：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># 278c79b: plugin_manager.py，旧 preprocess 核心逻辑</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">bitmask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_structured_output_manager</span><span class="o">.</span><span class="n">process_batch_for_generation</span><span class="p">(</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="n">sequence_ids</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">all_sequence_ids</span><span class="p">),</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">response_format_array</span><span class="o">=</span><span class="n">response_format_array</span><span class="p">,</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="p">)</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">sampling_metadata</span><span class="o">.</span><span class="n">guided_bitmask</span> <span class="o">=</span> <span class="n">bitmask</span>
+</code></pre></div>
+<p><code>process_batch_for_generation()</code> 会读取此时 GrammarMatcher 的当前状态并生成 mask，然后把结果存进本批次的 <code>sampling_metadata</code>。这一步完成后，即使 grammar 随后推进，<code>B_t</code> 携带的 <code>guided_bitmask</code> 也不会自动刷新。</p>
+<p>在同步模式中这没有问题，因为调用顺序是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>postprocess(B_(t-1))：accept y_(t-1)，得到 S_(t-1)
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>→ 下一轮 preprocess(B_t)：从 S_(t-1) 生成 M_t
+</code></pre></div>
+<p>但 <code>generate_token_async()</code> 是一拍流水。旧代码的实际顺序是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># 278c79b: generate_token_async()，按真实代码顺序精简</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">cache_ids</span><span class="p">,</span> <span class="n">model_input</span><span class="p">,</span> <span class="n">sampling_metadata</span><span class="p">,</span> <span class="n">trace_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">B_t</span><span class="p">)</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1"># ↑ 此处已经生成并固化 B_t.guided_bitmask</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">model_output_wrapper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="c1"># ↑ 现在才取到后台完成的 B_(t-1)</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="bp">self</span><span class="o">.</span><span class="n">input_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">model_input_wrapper</span><span class="p">)</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="c1"># ↑ B_t 入队，后台可以开始 forward/sample</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="n">generation_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">postprocess</span><span class="p">(</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>    <span class="n">model_output_wrapper</span><span class="o">.</span><span class="n">cache_ids</span><span class="p">,</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>    <span class="n">model_output_wrapper</span><span class="o">.</span><span class="n">input_metadata</span><span class="p">,</span>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>    <span class="o">...</span><span class="p">,</span>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>    <span class="n">model_output_wrapper</span><span class="o">.</span><span class="n">sampling_output</span><span class="p">,</span>
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="p">)</span>
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="c1"># ↑ 直到这里才提交 y_(t-1)，推进 grammar</span>
+<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>
+<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="n">postprocess_done</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+</code></pre></div>
+<p>因此执行 <code>preprocess(B_t)</code> 时，<code>y_(t-1)</code> 还躺在 <code>output_queue</code> 中，没有经过 <code>postprocess()</code>。GrammarMatcher 只提交到了 <code>S_(t-2)</code>，所以代码实际生成的是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>旧代码：M_t = mask(S_(t-2))
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>正确值：M_t = mask(S_(t-1))
+</code></pre></div>
+<p>这就是“错一拍”的直接原因。</p>
+<h5 id="42-postprocess_donewait">4.2 <code>postprocess_done.wait()</code> 为什么没有阻止错误<a class="headerlink" href="#42-postprocess_donewait" title="Permanent link">&para;</a></h5>
+<p>初版后台线程的关键顺序是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># 278c79b: forward_loop()，按真实代码顺序精简</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">model_input_wrapper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">model_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator_backend</span><span class="o">.</span><span class="n">forward_from_model_inputs</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">sampling_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator_backend</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="n">draft_filtered_logits</span><span class="p">,</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="n">model_input_wrapper</span><span class="o">.</span><span class="n">sampling_metadata</span><span class="p">,</span>  <span class="c1"># 内含旧 guided_bitmask</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="p">)</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="n">model_input_wrapper</span><span class="o">.</span><span class="n">postprocess_done</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</code></pre></div>
+<p>这里虽然有 <code>postprocess_done.wait()</code>，但它位于 <code>forward + sample</code> <strong>之后</strong>。它只能保证后台线程在进入后续 verify/下一轮处理前等主线程完成 postprocess，无法挽救本轮采样，因为：</p>
+<ol>
+<li><code>M_t</code> 已经在更早的主线程 <code>preprocess(B_t)</code> 中按 <code>S_(t-2)</code> 生成；</li>
+<li><code>sample(B_t)</code> 已经消费了这个旧 mask；</li>
+<li>等待发生时，错误 token 已经采样完成。</li>
+</ol>
+<p>即使某次线程调度恰好让主线程先完成 <code>postprocess(B_(t-1))</code>、后台稍后才执行 <code>sample(B_t)</code>，问题仍然存在：<code>B_t.sampling_metadata.guided_bitmask</code> 在 preprocess 时已经物化为旧值，不会随着 grammar 变成 <code>S_(t-1)</code> 而自动重算。</p>
+<p>所以这不是一个“偶尔谁先抢到 CPU”的普通竞态，而是**流水阶段设计导致的确定性 stale snapshot**。异步稳态下，只要同一请求连续解码，就具备稳定落后一拍的条件；高并发和动态 batch 只是让非法输出更容易被观察到。</p>
+<h5 id="43-postprocess">4.3 旧 <code>postprocess</code> 提交得太晚<a class="headerlink" href="#43-postprocess" title="Permanent link">&para;</a></h5>
+<p>初版真正推进 GrammarMatcher 的代码在 <code>postprocess()</code>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># 278c79b: plugin_manager.py，旧 postprocess 核心逻辑</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">_structured_output_manager</span><span class="o">.</span><span class="n">update_states_after_sampling</span><span class="p">(</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="n">sequence_ids</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">all_sequence_ids</span><span class="p">),</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="n">token_ids</span><span class="o">=</span><span class="n">token_ids</span><span class="p">,</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="p">)</span>
+</code></pre></div>
+<p>对 <code>B_(t-1)</code> 来说，这段代码本应先于 <code>B_t</code> 的 mask 生成；异步路径却把它放到了 <code>B_t.preprocess()</code> 和 <code>B_t</code> 入队之后。根因可以准确概括为：</p>
+<blockquote>
+<p><strong>状态提交 <code>accept(y_(t-1))</code> 仍属于上一拍主线程 postprocess，而状态读取 <code>fill_mask(B_t)</code> 已提前发生在当前拍主线程 preprocess；异步流水把“先提交、后读取”的状态机契约反转成了“先读取旧状态、后提交新状态”。</strong></p>
+</blockquote>
+<h5 id="44">4.4 普通异步推理：一拍流水本来如何工作<a class="headerlink" href="#44" title="Permanent link">&para;</a></h5>
+<p>没有结构化输出时，<code>preprocess</code> 准备的主要是模型输入、position ids、采样参数等**不依赖上一 token 内容**的对象，因此可以提前处理。主线程不等待当前 <code>B_t</code> 的 NPU 计算结束，而是在本轮处理上一拍 <code>B_(t-1)</code> 的输出；<code>B_t</code> 的输出会在下一轮调用中从 <code>output_queue</code> 取回。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>@startuml
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>title 普通异步推理：主线程准备/后处理与后台 NPU 计算重叠
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>participant &quot;主线程\n generate_token_async()&quot; as Main
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>queue &quot;input_queue&quot; as IQ
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>participant &quot;后台线程\n forward_loop()&quot; as Forward
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>participant &quot;NPU / Sampler&quot; as NPU
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>queue &quot;output_queue&quot; as OQ
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>== 当前调用：主线程处理 B_t，同时回收 B_(t-1) ==
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>Main -&gt; Main: preprocess(B_t)\n构造 model inputs / 静态 sampling metadata
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>Main -&gt; OQ: get()
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>OQ --&gt; Main: output(B_(t-1))
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>Main -&gt; IQ: put(B_t)
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>Main -&gt; Main: postprocess(B_(t-1))\n更新请求状态、组装流式响应
+<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>
+<a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>== 与此同时，后台线程计算 B_t ==
+<a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>
+<a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a>IQ --&gt; Forward: dequeue(B_t)
+<a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a>Forward -&gt; NPU: forward(B_t)
+<a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a>NPU --&gt; Forward: logits_t
+<a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a>Forward -&gt; NPU: sample(logits_t)
+<a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a>NPU --&gt; Forward: y_t
+<a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a>Forward -&gt; OQ: put(output(B_t))
+<a id="__codelineno-13-26" name="__codelineno-13-26" href="#__codelineno-13-26"></a>
+<a id="__codelineno-13-27" name="__codelineno-13-27" href="#__codelineno-13-27"></a>note over Main,NPU #DDFFDD
+<a id="__codelineno-13-28" name="__codelineno-13-28" href="#__codelineno-13-28"></a>主线程的 B_t 准备与后台的 B_t 计算可以流水重叠；
+<a id="__codelineno-13-29" name="__codelineno-13-29" href="#__codelineno-13-29"></a>B_t 的结果在下一轮主线程调用中再被 postprocess。
+<a id="__codelineno-13-30" name="__codelineno-13-30" href="#__codelineno-13-30"></a>普通输入准备不依赖 y_(t-1)，所以这种提前处理是安全的。
+<a id="__codelineno-13-31" name="__codelineno-13-31" href="#__codelineno-13-31"></a>end note
+<a id="__codelineno-13-32" name="__codelineno-13-32" href="#__codelineno-13-32"></a>@enduml
+</code></pre></div>
+<p>这条流水的收益是把 CPU 侧的输入构造、结果处理与 NPU 的 forward/sample 重叠。问题只在于结构化输出的 <code>guided_bitmask</code> 并非静态 metadata：它依赖 <code>y_(t-1)</code> 已经推进的 grammar 状态，因此不能像普通 model inputs 一样在 <code>B_t</code> 的主线程 preprocess 中提前固化。</p>
+<h5 id="45">4.5 完整错误流水线图（主线程与后台线程）<a class="headerlink" href="#45" title="Permanent link">&para;</a></h5>
+<p>下图按真实队列顺序画出一拍流水：主线程提前准备 <code>B_t</code>，后台线程执行 <code>B_t</code>，而主线程随后才提交 <code>B_(t-1)</code> 的 token。红色注释标出 stale mask 被生成和被消费的两个位置。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>@startuml
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>title 修复前：异步流水为何稳定使用 stale mask
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>participant &quot;generate_token_async\n主线程&quot; as Main
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>queue &quot;input_queue&quot; as IQ
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>participant &quot;forward_loop\n后台线程&quot; as Forward
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>queue &quot;output_queue&quot; as OQ
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>participant &quot;GrammarMatcher&quot; as Grammar
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>participant &quot;Model / Sampler&quot; as Compute
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>note over Grammar
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>进入本轮时只提交到 S_(t-2)；
+<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>y_(t-1) 已采样，但仍在 output_queue，
+<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>尚未经过主线程 postprocess。
+<a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>end note
+<a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>
+<a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>Main -&gt; Grammar: preprocess(B_t)\nprocess_batch_for_generation()
+<a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>Grammar --&gt; Main: M_t = mask(S_(t-2))
+<a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>note right of Main #FFDDDD
+<a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>错误点 1：
+<a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a>M_t 在这里已物化并写入
+<a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a>sampling_metadata.guided_bitmask。
+<a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>正确值应基于 S_(t-1)。
+<a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>end note
+<a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a>
+<a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a>Main -&gt; OQ: get()
+<a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a>OQ --&gt; Main: output(B_(t-1)), y_(t-1)
+<a id="__codelineno-14-28" name="__codelineno-14-28" href="#__codelineno-14-28"></a>Main -&gt; IQ: put(B_t, stale M_t)
+<a id="__codelineno-14-29" name="__codelineno-14-29" href="#__codelineno-14-29"></a>IQ --&gt; Forward: dequeue B_t
+<a id="__codelineno-14-30" name="__codelineno-14-30" href="#__codelineno-14-30"></a>
+<a id="__codelineno-14-31" name="__codelineno-14-31" href="#__codelineno-14-31"></a>par 后台处理当前拍 B_t
+<a id="__codelineno-14-32" name="__codelineno-14-32" href="#__codelineno-14-32"></a>    Forward -&gt; Compute: forward(B_t)
+<a id="__codelineno-14-33" name="__codelineno-14-33" href="#__codelineno-14-33"></a>    Forward -&gt; Compute: sample(..., guided_bitmask=M_t)
+<a id="__codelineno-14-34" name="__codelineno-14-34" href="#__codelineno-14-34"></a>    Compute --&gt; Forward: y_t
+<a id="__codelineno-14-35" name="__codelineno-14-35" href="#__codelineno-14-35"></a>    note right of Forward #FFDDDD
+<a id="__codelineno-14-36" name="__codelineno-14-36" href="#__codelineno-14-36"></a>    错误点 2：
+<a id="__codelineno-14-37" name="__codelineno-14-37" href="#__codelineno-14-37"></a>    sample 已消费 mask(S_(t-2))。
+<a id="__codelineno-14-38" name="__codelineno-14-38" href="#__codelineno-14-38"></a>    end note
+<a id="__codelineno-14-39" name="__codelineno-14-39" href="#__codelineno-14-39"></a>    Forward -&gt; Forward: postprocess_done.wait()
+<a id="__codelineno-14-40" name="__codelineno-14-40" href="#__codelineno-14-40"></a>else 主线程提交上一拍 B_(t-1)
+<a id="__codelineno-14-41" name="__codelineno-14-41" href="#__codelineno-14-41"></a>    Main -&gt; Grammar: postprocess(B_(t-1))\nupdate_states_after_sampling(y_(t-1))
+<a id="__codelineno-14-42" name="__codelineno-14-42" href="#__codelineno-14-42"></a>    Grammar --&gt; Main: 推进为 S_(t-1)
+<a id="__codelineno-14-43" name="__codelineno-14-43" href="#__codelineno-14-43"></a>    Main -&gt; Forward: postprocess_done.set()
+<a id="__codelineno-14-44" name="__codelineno-14-44" href="#__codelineno-14-44"></a>end
+<a id="__codelineno-14-45" name="__codelineno-14-45" href="#__codelineno-14-45"></a>
+<a id="__codelineno-14-46" name="__codelineno-14-46" href="#__codelineno-14-46"></a>note over Main,Compute #FFDDDD
+<a id="__codelineno-14-47" name="__codelineno-14-47" href="#__codelineno-14-47"></a>等待发生在 sample 之后，已经太晚；
+<a id="__codelineno-14-48" name="__codelineno-14-48" href="#__codelineno-14-48"></a>而且 M_t 是 preprocess 时生成的快照，
+<a id="__codelineno-14-49" name="__codelineno-14-49" href="#__codelineno-14-49"></a>grammar 后续推进不会让它自动更新。
+<a id="__codelineno-14-50" name="__codelineno-14-50" href="#__codelineno-14-50"></a>end note
+<a id="__codelineno-14-51" name="__codelineno-14-51" href="#__codelineno-14-51"></a>@enduml
+</code></pre></div>
+<p>可以用一句话收口：</p>
+<blockquote>
+<p><strong>旧异步路径在 <code>preprocess(B_t)</code> 读取了尚未提交 <code>y_(t-1)</code> 的 GrammarMatcher，生成并冻结 <code>mask(S_(t-2))</code>；<code>postprocess_done</code> 又放在采样之后才等待，所以 <code>B_t</code> 会使用落后一拍状态的合法集合采样，并可能放行当前状态下的非法 token。</strong></p>
+</blockquote>
+<h4 id="token">第五步：用 token 级最小例子证明<a class="headerlink" href="#token" title="Permanent link">&para;</a></h4>
+<p>JSON 对象的首步通常允许 <code>{</code>：</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>正确状态</th>
+<th>正确 mask</th>
+<th>旧异步 mask</th>
+<th>可见现象</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第一步</td>
+<td>初始态</td>
+<td>允许 <code>{</code></td>
+<td>初始态</td>
+<td>正常采到 <code>{</code></td>
+</tr>
+<tr>
+<td>第二步</td>
+<td>已接受 <code>{</code></td>
+<td>应允许对象内部的 <code>"</code>、空白或 <code>}</code></td>
+<td>仍是初始态</td>
+<td>可能再次放行 <code>{</code>，得到 <code>{{</code></td>
+</tr>
+</tbody>
+</table>
+<p>并非每次都会立刻出错，因为相邻状态的合法 token 集合可能重叠。只有当采到“旧状态允许、当前状态不允许”的 token 时才显性失败，这解释了它为何看似偶发。</p>
+<h4 id="_10">第六步：明确排除项和相邻问题<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>是否为主 bug</th>
+<th>区分依据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>xgrammar 自动机计算错误</td>
+<td>否</td>
+<td>同步路径使用同一 matcher 正常</td>
+</tr>
+<tr>
+<td>NPU bitmask apply 错误</td>
+<td>否</td>
+<td>问题在 mask 生成时已使用错误状态</td>
+</tr>
+<tr>
+<td>高并发内存随机破坏</td>
+<td>否</td>
+<td>单请求异步稳态也满足一拍落后</td>
+</tr>
+<tr>
+<td><code>cache_id</code> 身份隔离</td>
+<td>相邻防线</td>
+<td>解决重计算/迁移时 matcher 绑定谁</td>
+</tr>
+<tr>
+<td><code>num_tried_tokens</code> replay 游标</td>
+<td>相邻问题</td>
+<td>解决 PD/replay 中 rejected token 也占 buffer 的游标对齐</td>
+</tr>
+<tr>
+<td>decode 先 sync/replay 再填 mask</td>
+<td>相邻问题</td>
+<td>解决跨阶段状态恢复顺序，不是旧异步主线程时序根因</td>
+</tr>
+</tbody>
+</table>
+<p>这一层区分很重要：可以最后总结它们都属于“grammar 状态与真实输出游标一致性”，但不能把三个不同 bug 混成一个故事。</p>
+<h4 id="_11">第七步：修复状态所有权，而不是只加锁<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h4>
+<p>修复后的职责是：</p>
+<ol>
+<li>同步路径维持原来的 preprocess 生成 mask、postprocess accept；</li>
+<li>异步路径不再由主线程提前生成 mask；</li>
+<li><code>forward_loop</code> 出队后，根据最新 <code>S_(t-1)</code> 生成 <code>M_t</code>；</li>
+<li>同一后台线程完成 forward、mask apply、sample，并立即 <code>accept_token(y_t)</code>；</li>
+<li><code>is_structured_accepted</code> 随 <code>SamplingOutput</code> 返回主线程，主线程只消费结果，不重复推进。</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>@startuml
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>title 修复后：forward_loop 内形成单线程状态闭环
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>participant &quot;主线程&quot; as Main
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>participant &quot;forward_loop&quot; as Forward
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>participant &quot;GrammarMatcher&quot; as Grammar
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>participant &quot;NPU / Sampler&quot; as Compute
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>Main -&gt; Forward: enqueue(B_t)
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>Forward -&gt; Grammar: fill M_t from S_(t-1)
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>Grammar --&gt; Forward: M_t
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>Forward -&gt; Compute: forward + apply M_t + sample
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>Compute --&gt; Forward: y_t
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>Forward -&gt; Grammar: accept_token(y_t)
+<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>Grammar --&gt; Forward: S_t
+<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>Forward --&gt; Main: SamplingOutput\n含 is_structured_accepted
+<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>
+<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>note over Forward,Grammar #DDFFDD
+<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>fill mask、sample、accept 在同一所有权域内按出队顺序提交；
+<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>处理下一拍前，grammar 必须已经推进。
+<a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>end note
+<a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>@enduml
+</code></pre></div>
+<p>不选择“主线程加锁等待上一拍完成”，是因为那会显式阻塞流水，而且状态所有权仍横跨两个线程，继续存在重复推进和漏推进风险。把闭环放到唯一消费者线程，契约更简单。</p>
+<h4 id="_12">第八步：验证修复与性能边界<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h4>
+<p>正确性验证至少覆盖：</p>
+<ul>
+<li>单请求同步/异步结果一致；</li>
+<li>高并发、动态 batch 换入换出；</li>
+<li>多个不同 Schema/cache_id 不串状态；</li>
+<li>对象、数组、嵌套、枚举和转义等状态边界；</li>
+<li>非法 token 不再放行，matcher reject 和非法 JSON 归零；</li>
+<li>PD/recompute 另做 replay 和游标专项测试。</li>
+</ul>
+<p>性能上，修复把 <code>fill_bitmask + accept_token</code> 的 host 状态开销放回后台 forward 关键路径，失去一小段原本错误的跨拍 overlap；但主线程准备下一批与后台 NPU forward 的主流水仍然保留。仓库没有可引用的修复前后 TPOT/吞吐 A/B，因此面试只能说明机制影响和测试方法，不能宣称具体百分比。</p>
+<h4 id="90_1">90 秒定位复盘口述版<a class="headerlink" href="#90_1" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>我先没有从 xgrammar 内部猜，而是建立约束解码的不变量：第 t 步 mask 必须由接受第 t-1 个 token 后的状态生成。同步路径是 preprocess 填 mask、采样、postprocess accept，再进入下一轮，所以是正确基线。随后只打开异步并对照初版和修复提交，发现异步主线程的真实顺序是先 preprocess 当前 batch，再 postprocess 上一 batch，因此当前 mask 在上一 token 尚未 accept 时就生成了，稳定使用上上步状态。用 JSON 起始 token 做最小证明：第一步生成 <code>{</code> 后，第二步仍使用初始态 mask，可能再放行 <code>{</code>。修复没有简单加锁，而是把异步的 fill mask、sample、accept 全部放进 <code>forward_loop</code>，由同一后台线程按出队顺序提交；接受结果随 SamplingOutput 返回主线程。<code>cache_id</code>、PD replay 和 <code>num_tried_tokens</code> 是相邻一致性问题，我会和这个主 bug 分开讲。性能上损失一小段错误 overlap，但保留主异步流水；没有正式 A/B 数字，所以只承诺正确性结果。</p>
+</blockquote>
+<hr />
+<h2 id="_13">五、现场业务题：通用分析框架<a class="headerlink" href="#_13" title="Permanent link">&para;</a></h2>
+<p>现场拿到业务题时，不要立即报技术方案。先用下面七步，把“题目”变成“可验收的项目”。</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>要回答的问题</th>
+<th>推荐表达</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. 澄清目标</td>
+<td>到底优化收入、体验、成本还是稳定性？</td>
+<td>“我先确认主指标和不能牺牲的约束。”</td>
+</tr>
+<tr>
+<td>2. 量化现状</td>
+<td>流量、用户、峰值、分位数、基线是多少？</td>
+<td>“没有基线就无法判断方案收益。”</td>
+</tr>
+<tr>
+<td>3. 拆指标</td>
+<td>总指标由哪些阶段构成？</td>
+<td>“我先把端到端时延拆到可归因的阶段。”</td>
+</tr>
+<tr>
+<td>4. 找主因</td>
+<td>数据、代码、容量、依赖还是流程？</td>
+<td>“先用数据排优先级，不预设一定是某个组件。”</td>
+</tr>
+<tr>
+<td>5. 比方案</td>
+<td>收益、成本、风险、时间、可逆性如何？</td>
+<td>“我会给短期止血、中期优化和长期演进三档方案。”</td>
+</tr>
+<tr>
+<td>6. 设计落地</td>
+<td>MVP、灰度、监控、回退、负责人和依赖是什么？</td>
+<td>“先小流量验证关键假设，再扩大范围。”</td>
+</tr>
+<tr>
+<td>7. 验收复盘</td>
+<td>看什么指标，多久观察，失败如何收敛？</td>
+<td>“结果必须能回到最初的业务目标。”</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_14">开场澄清问题模板<a class="headerlink" href="#_14" title="Permanent link">&para;</a></h3>
+<p>面对任何业务题，可以先问 5 个问题：</p>
+<ol>
+<li>目标用户和核心场景是什么？</li>
+<li>当前最痛的是哪个指标，平均值还是 P99？</li>
+<li>流量规模、峰谷、输入输出分布和资源约束是什么？</li>
+<li>哪些条件不能改变，例如协议兼容、正确性、预算或上线时间？</li>
+<li>成功标准是什么，是否有对照组和历史基线？</li>
+</ol>
+<p>如果面试官不提供数据，可以主动建立假设，但要明确说：“下面我先基于这些假设分析，数据变化时方案也会调整。”</p>
+<hr />
+<h2 id="ttft">六、业务题示范：多实例大模型服务 TTFT 突然升高，怎么分析和落地？<a class="headerlink" href="#ttft" title="Permanent link">&para;</a></h2>
+<h3 id="_15">题目<a class="headerlink" href="#_15" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>某企业 Agent 服务上线后，用户反馈首字延迟高。请求平均 8K 上下文，包含大量相同 system prompt 和 tools，多实例部署。请你提出解决方案。</p>
+</blockquote>
+<h3 id="1">1. 先澄清<a class="headerlink" href="#1" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>我会先确认：TTFT 是平均值变差还是 P95/P99 变差；问题是一直存在还是扩容后出现；并发、实例数、模型和硬件是否变化；8K 中公共前缀占比和重复率是多少；输出长度如何；当前是否启用单实例 Prefix Cache；路由策略是轮询、最少连接还是会话粘性；最后确认目标，比如在不增加硬件的情况下把 P95 TTFT 降低 30%，且不能恶化错误率和负载长尾。</p>
+</blockquote>
+<h3 id="2">2. 拆解指标<a class="headerlink" href="#2" title="Permanent link">&para;</a></h3>
+<p>把 TTFT 拆成：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>TTFT = 接入/排队 + 模板与 tokenize + 路由查询 + Prefill + 首 token 采样与返回
+</code></pre></div>
+<p>重点采集：</p>
+<ul>
+<li>各阶段 P50/P95/P99；</li>
+<li>输入 token 数、输出 token 数、公共前缀长度；</li>
+<li>单实例 cached tokens 与集群有效命中率；</li>
+<li>每个实例的 active requests、active tokens、KV 占用；</li>
+<li>请求前缀与最终 endpoint 的关系；</li>
+<li>扩容前后命中率和 TTFT 的变化。</li>
+</ul>
+<h3 id="3">3. 建立假设并排序<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>结合“8K、公共 system prompt/tools、多实例”这几个条件，我会把“扩容后相同前缀被随机打散，单实例 Prefix Cache 命中被稀释”列为优先假设，但不会直接认定。先验证 cached tokens 是否随实例数增加而下降，以及 Prefill 是否占 TTFT 主体。如果 Queue time 才是主因，则优先处理容量和负载；如果 tokenize 占比很高，则需要独立扩展 render/tokenizer；只有确认 Prefill 重算是主因，才进入 KV 亲和方案。</p>
+</blockquote>
+<h3 id="4">4. 比较候选方案<a class="headerlink" href="#4" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>优点</th>
+<th>局限</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>扩容</td>
+<td>简单直接</td>
+<td>成本高，随机路由还会继续稀释缓存</td>
+<td>已确认容量不足</td>
+</tr>
+<tr>
+<td>会话粘性</td>
+<td>实现较轻</td>
+<td>依赖 session；无法复用跨用户公共前缀；可能造热点</td>
+<td>强会话业务</td>
+</tr>
+<tr>
+<td>路由层字符前缀树</td>
+<td>无外部查询，开销低</td>
+<td>token 不精确、无真实驱逐感知</td>
+<td>可接受近似命中</td>
+</tr>
+<tr>
+<td>token 级真实 KV 索引</td>
+<td>精确、可感知存入和驱逐</td>
+<td>增加 tokenize 与索引依赖</td>
+<td>长前缀、高复用、Prefill 主导</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>在题设下，我会选择 token 级真实 KV 索引，但前提是用超时和回退保证它只是优化链路。</p>
+</blockquote>
+<h3 id="5">5. 设计方案<a class="headerlink" href="#5" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>请求
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>  → 同源 render/tokenize，得到真实 token IDs
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>  → 查询全局 KV 索引，得到各 endpoint 的最长匹配长度
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>  → 结合剩余 Prefill 成本和实时负载打分
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>  → 中心调度做最终仲裁
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>  → 路由到具体实例或 DP rank
+</code></pre></div>
+<p>打分可先采用简单、可解释的形式：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>remaining_prefill = max(0, input_tokens - matched_tokens)
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>score = a × remaining_prefill + b × current_load
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>选择 score 最小的 endpoint
+</code></pre></div>
+<p>这里 <code>a</code> 和 <code>b</code> 不是拍脑袋常数，要通过回放压测按 TTFT、P99 和负载离散度调优。如果业务对热点极敏感，可改成“先选最空闲 Top-N，再比较前缀”的硬门控策略。</p>
+<h3 id="6">6. 分阶段落地<a class="headerlink" href="#6" title="Permanent link">&para;</a></h3>
+<p><strong>阶段一：验证假设</strong></p>
+<ul>
+<li>离线回放一批真实脱敏请求；</li>
+<li>对比轮询、会话粘性、近似前缀和精确亲和；</li>
+<li>确认收益主要来自 cached tokens 增加和 Prefill 降低。</li>
+</ul>
+<p><strong>阶段二：MVP</strong></p>
+<ul>
+<li>先支持单一模型、普通多实例；</li>
+<li>上线查询超时、LoadBalance 回退和关键日志；</li>
+<li>1% 流量灰度，观察错误率与尾延迟。</li>
+</ul>
+<p><strong>阶段三：扩展</strong></p>
+<ul>
+<li>支持 PD 分离、混部和 DP rank；</li>
+<li>增加中心仲裁，解决多 worker herding；</li>
+<li>做参数配置化和按场景推荐。</li>
+</ul>
+<h3 id="7">7. 验收标准<a class="headerlink" href="#7" title="Permanent link">&para;</a></h3>
+<p>业务指标：P50/P95/P99 TTFT、端到端时延、超时率和单位请求成本。</p>
+<p>系统指标：有效 cached tokens、Prefill time、queue time、各 endpoint 负载离散度、索引查询延迟、fallback 率和错误率。</p>
+<p>判断逻辑：</p>
+<ul>
+<li>cached tokens 上升、Prefill 和 TTFT 同步下降：假设成立；</li>
+<li>TTFT 下降但 P99 或负载离散度恶化：亲和过强，需要提高负载权重或使用硬门控；</li>
+<li>命中提升但 TTFT 不降：检查路由/tokenize 开销、KV 传输或 Prefill 并非瓶颈；</li>
+<li>索引异常时基础服务无明显退化：回退机制有效。</li>
+</ul>
+<h3 id="8">8. 风险和回退<a class="headerlink" href="#8" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>主要风险有 tokenizer 与引擎不一致、KV event 延迟造成假命中、索引服务超时、热点集中和 DP rank 映射错误。对应措施是同源 render/tokenize、事件和版本监控、短超时回退、中心负载仲裁、灰度开关以及按请求记录完整路由证据。上线初期保留一键切回原负载均衡策略。</p>
+</blockquote>
+<h3 id="9">9. 三分钟收口答案<a class="headerlink" href="#9" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>我不会一开始就认定要做 KV 亲和，而是先把 TTFT 拆成排队、预处理、路由、Prefill 和首 token 返回，确认多实例扩容后缓存命中下降、Prefill 重算是主因。方案上比较扩容、会话粘性、近似前缀树和真实 KV 索引；在长输入、高公共前缀的场景下，选择同源 tokenize 加真实 KV 索引，再用剩余 Prefill 成本和实时负载共同决策。落地先做单模型 MVP 和离线回放，再小流量灰度，最后扩到 PD 和 DP rank。验收不仅看平均 TTFT，还看 P99、cached tokens、Prefill、负载离散度和 fallback。索引链路异常时立即回退普通负载均衡，确保优化能力不成为可用性依赖。</p>
+</blockquote>
+<hr />
+<h2 id="_16">七、把技术回答提升为业务回答<a class="headerlink" href="#_16" title="Permanent link">&para;</a></h2>
+<p>下面几组改写，面试时优先使用右侧表达。</p>
+<table>
+<thead>
+<tr>
+<th>只讲技术</th>
+<th>更好的业务表达</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>“我做了最长前缀匹配。”</td>
+<td>“我减少了多实例下长前缀的重复 Prefill，核心目标是降低用户首字等待。”</td>
+</tr>
+<tr>
+<td>“我接了 Conductor。”</td>
+<td>“我选择真实 KV 索引来提高命中可信度，同时用超时回退隔离依赖风险。”</td>
+</tr>
+<tr>
+<td>“我设计了两个算法。”</td>
+<td>“我把高复用收益和尾延迟风险做成两种可配置策略，适配不同客户流量。”</td>
+</tr>
+<tr>
+<td>“我修了一个并发 bug。”</td>
+<td>“我恢复了异步架构下状态机每步推进的正确性契约，并补齐高并发验证。”</td>
+</tr>
+<tr>
+<td>“代码 5000 多行。”</td>
+<td>“我负责从接口、编译、运行时到测试的完整交付；代码量只是范围证明，不是价值本身。”</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_17">八、口径一致性与风险提示<a class="headerlink" href="#_17" title="Permanent link">&para;</a></h2>
+<p>以下内容在正式面试前必须确认，避免简历和实际实现冲突。</p>
+<h3 id="1_1">1. 结构化输出编译缓存<a class="headerlink" href="#1_1" title="Permanent link">&para;</a></h3>
+<p>当前 PDF 写的是“LRU 置换”。现有复习材料记录的实际实现口径是“FIFO、默认容量 100，命中不调序”。面试前应以当前代码再次核实：</p>
+<ul>
+<li>如果实现确实是 FIFO，应修改简历，面试时不要继续说 LRU；</li>
+<li>如果后来已升级为 LRU，应准备说明数据结构、命中是否调序、锁粒度和容量配置。</li>
+</ul>
+<h3 id="2-ttft-70-50">2. TTFT 70% 与端到端 50%<a class="headerlink" href="#2-ttft-70-50" title="Permanent link">&para;</a></h3>
+<p>当前 PDF 写“真实客户场景验证”。回答时至少绑定条件：8K 上下文、高前缀重复率、短输出或对应输出分布。除非手里有正式 A/B 报告和原始记录，否则不要扩展成“所有客户流量稳定降低 70%”或“客户线上 P99 降低 70%”。</p>
+<h3 id="3-5000-1">3. 5000+ 行与约 1 万行<a class="headerlink" href="#3-5000-1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>5000+</code> 对应结构化输出累计贡献范围；</li>
+<li>“削减约 1 万行”对应 Server 重构；</li>
+<li>不要把 Tool Call、结构化输出和 Server 重构的行数混算；</li>
+<li>面试官追问时，价值优先讲模块边界、复杂度和测试，不要把行数当核心成果。</li>
+</ul>
+<h3 id="4_1">4. 团队协作信息<a class="headerlink" href="#4_1" title="Permanent link">&para;</a></h3>
+<p>当前简历没有团队人数、项目周期、正式 title、是否唯一 owner 等信息。请在面试前补齐以下真实答案：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>项目周期：________
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>核心参与人数：________
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>我的正式职责：________
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>我独立决策的范围：________
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>需要谁评审或拍板：________
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>测试与上线流程：________
+</code></pre></div>
+<hr />
+<h2 id="10">九、上场前 10 分钟速记卡<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<h3 id="_18">一句话身份<a class="headerlink" href="#_18" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>我做的是 MindIE 大模型推理服务，擅长把调度、缓存和约束解码问题推进成可交付特性。</p>
+</blockquote>
+<h3 id="_19">一个主项目<a class="headerlink" href="#_19" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>多实例随机路由稀释 Prefix Cache → 同源 tokenize → 全局真实 KV 索引 → 亲和与负载联合决策 → Scheduler 权威仲裁 → 支持 PD/DP rank → 降低 TTFT。</p>
+</blockquote>
+<h3 id="_20">一个技术难题<a class="headerlink" href="#_20" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>结构化输出要求 mask、sample、accept 严格逐步一致；异步流水破坏状态时序 → 从线程、游标、初始化顺序定位并修复。</p>
+</blockquote>
+<h3 id="_21">一个业务题框架<a class="headerlink" href="#_21" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>目标 → 基线 → 指标拆解 → 主因 → 方案对比 → MVP/灰度/回退 → 数据验收。</p>
+</blockquote>
+<h3 id="_22">三句主动收口<a class="headerlink" href="#_22" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>这个方案的收益边界是长输入、高前缀重复、Prefill 主导；如果流量特征不同，我不会硬套。</p>
+<p>亲和是优化链路，任何异常都必须能回退基础负载均衡。</p>
+<p>如果重新做，我会更早建设标准化 A/B、全链路指标和参数自动推荐。</p>
+</blockquote>
+<h3 id="_23">禁止临场编造<a class="headerlink" href="#_23" title="Permanent link">&para;</a></h3>
+<ul>
+<li>团队人数、项目周期、个人 title；</li>
+<li>未保存的 P99、QPS 或成本数据；</li>
+<li>未经代码确认的 LRU/FIFO；</li>
+<li>把代表性场景结果泛化为所有客户和所有模型；</li>
+<li>把服务侧工作描述成自研 NPU kernel 或底层通信实现。</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

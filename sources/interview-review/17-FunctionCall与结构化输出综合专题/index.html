@@ -1,0 +1,1739 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/interview-review/17-FunctionCall%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E7%BB%BC%E5%90%88%E4%B8%93%E9%A2%98/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>专题 17：Function Call 与结构化输出综合专题（交叉与串线） - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#17function-call" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              专题 17：Function Call 与结构化输出综合专题（交叉与串线）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-tool-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 概念关系：Tool Call 是结构化输出的特化子集
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-tool_choice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. tool_choice 语义如何映射到约束（面试高频追问）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-structural-tag2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Structural Tag——约束与解析的统一收敛点（2026 年主流方案）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 交叉场景的工程细节（深度追问弹药）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 交叉场景的工程细节（深度追问弹药）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-tool-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 编译缓存在 tool call 场景的复用与挑战
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-reasoning-tool-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Reasoning + Tool Call + 约束的三方组合
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 约束与流式解析的时序
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 失败模式对照表
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-kv-cache-agent-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 与 KV cache / Agent 循环的交叉（呼应 KV 亲和条目）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 面试快问快答（交叉视角）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 简历叙事升级（把三个条目串成一条线）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 参考与关联专题
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="17function-call">专题 17：Function Call 与结构化输出综合专题（交叉与串线）<a class="headerlink" href="#17function-call" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>对应简历条目："Tool Call / Reasoning 解析"与"结构化输出（xgrammar）"两条特性（<code>cvs/林炜-推理框架方向.pdf</code>）。
+源材料：<code>/Users/lvv/wiki/repos/mindie-pyserver/function-call.md</code> + 本工作区 <code>MindIE-LLM/</code>、<code>vllm/</code> 源码核实。
+定位：简历上 Tool Call 和结构化输出是两个独立条目，本文的目标是把它们讲成**一条链路的两端**——这是面试里最能体现系统性理解的叙事方式。两个特性各自的独立复习见 <code>14-FunctionCall专题.md</code> 与 <code>16-结构化输出复习专题.md</code>；xgrammar 原理深潜见 <code>03-结构化输出与约束解码专题.md</code>。</p>
+</blockquote>
+<hr />
+<h2 id="1-tool-call">1. 概念关系：Tool Call 是结构化输出的特化子集<a class="headerlink" href="#1-tool-call" title="Permanent link">&para;</a></h2>
+<p>两者要解决的是同一个问题——<strong>让模型输出符合某种形式规范</strong>——但保证强度不同：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>                 Structured Output（任意 JSON Schema，xgrammar 硬约束）
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                        │ 特化
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                        ▼
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>                    Tool Call
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>                   ┌────┴─────┐
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        路径 A：事后解析          路径 B：约束生成
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        模型自由生成协议文本        grammar 约束采样过程
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        regex/状态机 + JSON 补全   bitmask 屏蔽非法 token
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        软保证（可能解析失败）      硬保证（输出必然合法）
+</code></pre></div>
+<p>MindIE 默认走**路径 A**（<code>ToolCallsProcessor</code> 事后解析），xgrammar 可选叠加约束 arguments。两条路径在架构上完全独立：约束解码作用在**采样阶段**（限制 token 选择），解析器作用在**解码阶段**（协议文本 → OpenAI 格式）——即使开了约束，解析器依然要跑，因为约束只保证"格式合法"，不负责"字段抽取与流式增量"。</p>
+<ul>
+<li>路径 A 的实现细节（4-Case 状态机、JSON Completor、DSML Hard Cut-off）见 <code>14-FunctionCall专题.md</code> 第 3 节。</li>
+<li>路径 B 的实现细节（xgrammar Schema→PDA→bitmask、编译缓存）见 <code>16-结构化输出复习专题.md</code> 与 <code>03</code> 深潜。</li>
+</ul>
+<h2 id="2-tool_choice">2. tool_choice 语义如何映射到约束（面试高频追问）<a class="headerlink" href="#2-tool_choice" title="Permanent link">&para;</a></h2>
+<p>OpenAI API 的 <code>tool_choice</code> 四种取值，对约束解码的要求完全不同：</p>
+<table>
+<thead>
+<tr>
+<th>tool_choice</th>
+<th>语义</th>
+<th>约束方案</th>
+<th>难度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>none</code></td>
+<td>禁止调用工具</td>
+<td>无需约束（或屏蔽 start token）</td>
+<td>易</td>
+</tr>
+<tr>
+<td>具名函数（forced）</td>
+<td>必须调用指定函数</td>
+<td>直接把该函数的 parameters schema 编译成 grammar 全程约束</td>
+<td>易——退化为普通结构化输出</td>
+</tr>
+<tr>
+<td><code>required</code></td>
+<td>必须调用某个工具（任选）</td>
+<td>各函数 schema 取 <strong>anyOf 并集</strong> 编译（name 字段约束为函数名枚举）</td>
+<td>中</td>
+</tr>
+<tr>
+<td><code>auto</code></td>
+<td>模型自行决定说话还是调用工具</td>
+<td><strong>朴素 grammar 无法表达</strong>——输出可能是自由文本、也可能是"自由文本 + tool call 块"</td>
+<td>难——需要 Structural Tag</td>
+</tr>
+</tbody>
+</table>
+<p><code>auto</code> 是关键难点：全程约束会把模型的自由回答也逼成 JSON；不约束又回到软保证。这就引出了业界的收敛方案。</p>
+<h2 id="3-structural-tag2026">3. Structural Tag——约束与解析的统一收敛点（2026 年主流方案）<a class="headerlink" href="#3-structural-tag2026" title="Permanent link">&para;</a></h2>
+<p>xgrammar 的 <strong>Structural Tag</strong> 机制：定义若干 <strong>trigger</strong>（如 <code>&lt;tool_call&gt;</code>），模型输出自由文本时不受任何约束，一旦采样出 trigger 序列，立即切入对应 tag 的 grammar 约束（按该函数的 JSON Schema 约束到结束标签），结束后回到自由文本。<strong>一次前向里动态切换"无约束 ↔ 有约束"状态</strong>，完美表达 <code>auto</code> 语义，同时兼容 reasoning（<code>&lt;think&gt;</code> 块自然处于无约束段）。</p>
+<p>vLLM 已经把这条路走成了体系（本仓库核实）：</p>
+<ul>
+<li><code>vllm/vllm/v1/structured_output/backend_xgrammar.py:108</code>——<code>compiler.compile_structural_tag(tags, triggers)</code>，structural tag 作为与 json/regex/EBNF 并列的第一等 grammar 类型；</li>
+<li><code>vllm/vllm/tool_parsers/structural_tag_registry.py</code>——<strong>每个模型族注册自己的 structural tag 构造器</strong>，xgrammar 内置 11 个模型的协议模板（<code>llama</code>、<code>kimi</code>、<code>deepseek_r1</code>、<code>deepseek_v3_1</code>、<code>qwen_3</code>、<code>qwen_3_coder</code>、<code>harmony</code>、<code>deepseek_v3_2</code>、<code>glm_4_7</code>、<code>deepseek_v4</code> 等，见 <code>XGRAMMAR_BUILTIN_STRUCTURAL_TAG_MODELS</code>），并区分 <code>auto/required/forced</code> 三种 <code>SimplifiedToolChoice</code> 生成不同约束；</li>
+<li><code>vllm/vllm/tool_parsers/</code> 目录下 40+ 个模型的 ToolParser 与 structural tag 并存——<strong>约束保证合法性，parser 负责流式抽取</strong>，两者协同而非替代。</li>
+</ul>
+<p><strong>趋势判断（面试可讲）</strong>：tool call 的协议知识正在从"分散在各家框架的 parser 代码里"收敛到"xgrammar 内置 structural tag 模板"——上游（xgrammar）统一维护模型协议，推理框架只做编排。vLLM 的 <code>structural_tag_registry.py</code> 明确注释 "Keep this list in sync with xgrammar.builtin_structural_tag"，就是这个收敛的证据。</p>
+<p><strong>MindIE 的差距（可作为"如果重做会怎么改进"的答案）</strong>：经核实，<code>MindIE-LLM/mindie_llm/text_generator/plugins/structured_output/</code> 下没有 structural tag 支持，tool call 走纯路径 A、结构化输出走全程约束，两者未打通。改进方向即引入 structural tag：<code>auto</code> 场景下也能给 arguments 硬保证，且 name 字段约束为函数名枚举后可以**从机制上杜绝幻觉工具名**。</p>
+<h2 id="4">4. 交叉场景的工程细节（深度追问弹药）<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="41-tool-call">4.1 编译缓存在 tool call 场景的复用与挑战<a class="headerlink" href="#41-tool-call" title="Permanent link">&para;</a></h3>
+<p>MindIE <strong>现行**编译缓存（SHA-256 key + **FIFO / 默认 100</strong>，命中不调序；<strong>禁说 LRU/128</strong>）直接适用于 tool call：对**规范化后的 tools 数组**（排序 + 去空白）整体做 SHA-256 作为缓存 key。Agent 场景下同一 session 的 tools 集合固定、跨请求高度重复，命中率天然高（专题 03 估计 85–95%）；但对比普通结构化输出有一个差异——<code>required</code>/<code>auto</code> 场景编译的是**多函数 schema 的并集 grammar**，任何一个函数的增删改都会改变 key，长尾自定义工具场景命中率会显著下降。这和 KV 亲和调度是同构问题：<strong>schema 亲和路由</strong>（同 tools 集合的请求进同实例）可以同时提高编译缓存与 KV prefix cache 的命中率——一句话把简历上三个特性串起来。</p>
+<h3 id="42-reasoning-tool-call">4.2 Reasoning + Tool Call + 约束的三方组合<a class="headerlink" href="#42-reasoning-tool-call" title="Permanent link">&para;</a></h3>
+<p>Qwen3 <code>enable_thinking=True</code> 时输出 <code>&lt;think&gt;...&lt;/think&gt;&lt;tool_call&gt;{...}&lt;/tool_call&gt;</code>。解析侧：ReasoningParser 与 ToolCallsProcessor **串行**共享同一次 <code>TokenizerWrapper.decode</code>（先剥 think 再解析 tool call）。约束侧：think 块必须无约束（约束思维链会严重损害推理质量），structural tag 的 trigger 机制恰好天然支持——这是"为什么 auto 场景不能全程约束"之外的第二个理由。vLLM 里对应 <code>StructuredOutputManager</code> 的 <code>should_fill_bitmask</code> / <code>should_advance</code> 在 reasoning 未结束前跳过约束（详见 <code>03</code> 第 3.5.5 节）。</p>
+<h3 id="43">4.3 约束与流式解析的时序<a class="headerlink" href="#43" title="Permanent link">&para;</a></h3>
+<p>开约束后 parser 不能省：约束保证 token 合法，但流式 delta 的抽取（name 先发、arguments 逐步发、<code>DeltaToolCall</code> 的 index 管理）仍是 parser 的职责。反过来，约束能简化 parser 的容错路径——JSON Completor 的 <code>BraceOnly</code> 补救、regex 抢救 name 这些兜底逻辑在硬保证下理论上不再触发。</p>
+<h3 id="44">4.4 失败模式对照表<a class="headerlink" href="#44" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>失败模式</th>
+<th>路径 A（事后解析）应对</th>
+<th>路径 B（约束生成）应对</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>arguments 非法 JSON</td>
+<td>JSON Completor 补括号 → regex 抢救 → 降级空 arguments</td>
+<td>机制上不会发生</td>
+</tr>
+<tr>
+<td>幻觉工具名（调用不存在的函数）</td>
+<td>解析后校验 name ∈ tools，失败降级为 content</td>
+<td>name 约束为枚举，机制上杜绝</td>
+</tr>
+<tr>
+<td>标签后幻觉继续输出</td>
+<td>DSML Hard Cut-off 永久静默</td>
+<td>结束标签后回到自由文本（仍可能废话，需配合 stop）</td>
+</tr>
+<tr>
+<td>参数类型错误（"3" vs 3）</td>
+<td>Schema-aware type coercion 智能转换</td>
+<td>schema 里 type: integer 直接约束</td>
+</tr>
+<tr>
+<td>模型不产生 tool call（该调不调）</td>
+<td>无法解决（提示词工程）</td>
+<td><code>required</code> 强制进入 tool call 分支</td>
+</tr>
+</tbody>
+</table>
+<h3 id="45-kv-cache-agent-kv">4.5 与 KV cache / Agent 循环的交叉（呼应 KV 亲和条目）<a class="headerlink" href="#45-kv-cache-agent-kv" title="Permanent link">&para;</a></h3>
+<p>多步 Agent 循环 = "暂停生成 → 执行工具 → 注入结果 → 继续生成"。KV 复用分层：</p>
+<ul>
+<li>**System + Tools 定义**命中率极高（Prefix Cache 必选、tools 序列化必须字节稳定——这正是 token 级前缀匹配优于字符级的又一例证：tools 注入位置在 chat template 里，字符层不可见）；</li>
+<li><strong>tool result</strong> 每步全新（但通常只有 10–100 token，prefill 很快）；</li>
+<li><strong>Qwen3 thinking token</strong> 跨步接近零复用（可主动 evict）。</li>
+</ul>
+<h2 id="5">5. 面试快问快答（交叉视角）<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>核心答点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tool Call 和结构化输出什么关系？</td>
+<td>特化子集；两条实现路径（事后解析软保证 / 约束生成硬保证）；structural tag 是收敛点</td>
+</tr>
+<tr>
+<td>tool_choice=auto 为什么难约束？</td>
+<td>输出可能是自由文本或文本+工具调用混合，静态 grammar 表达不了；需 trigger 驱动的 structural tag 动态切换约束状态</td>
+</tr>
+<tr>
+<td>tool_choice 四种取值怎么映射约束？</td>
+<td>none 无需约束；forced 单函数 schema 全程约束（退化为普通结构化输出）；required 多函数 anyOf 并集 + name 枚举；auto 需 structural tag</td>
+</tr>
+<tr>
+<td>Structural Tag 是什么，为什么是收敛点？</td>
+<td>trigger 驱动的动态约束切换（无约束↔有约束），完美表达 auto 且兼容 reasoning；xgrammar 内置模型协议模板，把 parser 知识上收</td>
+</tr>
+<tr>
+<td>幻觉工具名怎么防？</td>
+<td>路径 A 解析侧校验 name ∈ tools；路径 B name 枚举化从机制杜绝</td>
+</tr>
+<tr>
+<td>开约束还要 parser 吗？</td>
+<td>要。约束管 token 合法性（采样阶段），parser 管字段抽取与流式增量（解码阶段），职责正交</td>
+</tr>
+<tr>
+<td>编译缓存和 KV 亲和什么关系？</td>
+<td>同构——schema/tools 亲和路由同时提高编译缓存与 KV prefix 命中率；tools 注入在 chat template 层，token 级匹配才能命中</td>
+</tr>
+<tr>
+<td>MindIE 和 vLLM 在这块的差距？</td>
+<td>MindIE tool call 走纯路径 A、结构化输出走全程约束，两者未打通；vLLM 已用 structural tag 按模型注册收敛，是 MindIE 下一步该补的</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6">6. 简历叙事升级（把三个条目串成一条线）<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<p>现简历中 Tool Call、结构化输出、KV 亲和是三个并列条目。面试自我陈述时建议用这条线串起来（可背）：</p>
+<blockquote>
+<p>"这三个特性在我手里其实是一条链路：<strong>结构化输出**解决'模型输出必须合法'（xgrammar 约束采样）；**Tool Call</strong> 是它的特化场景——我实现了 Qwen3/DeepSeek 多协议的解析器体系，也清楚业界正在用 structural tag 把'约束'和'解析'收敛到一起，vLLM 已经按模型注册 structural tag 模板，这是 MindIE 下一步该补的；而 Agent 多步循环里 System+Tools 前缀高度重复，正是 <strong>KV 亲和调度</strong> 收益最大的负载——tools 注入发生在 chat template 层，字符级匹配看不到，token 级匹配才能精确命中，这也是我们对标 vLLM Router 时做 token 级匹配的原始动机之一。"</p>
+</blockquote>
+<h2 id="7">7. 参考与关联专题<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<ul>
+<li>源分析文档：<code>/Users/lvv/wiki/repos/mindie-pyserver/function-call.md</code></li>
+<li>xgrammar Structural Tag：github.com/mlc-ai/xgrammar（<code>structural_tag</code> 模块；vLLM 侧见 <code>vllm/vllm/tool_parsers/structural_tag_registry.py</code>）</li>
+<li>vLLM Tool Calling 文档：docs.vllm.ai → Features → Tool Calling</li>
+<li>关联专题：</li>
+<li><code>14-FunctionCall专题.md</code>——Tool Call 全链路、协议适配器、流式状态机、JSON Completor、DSML（路径 A 细节）</li>
+<li><code>16-结构化输出复习专题.md</code>——结构化输出功能点/技术点/编译缓存复习（路径 B 概览）</li>
+<li><code>03-结构化输出与约束解码专题.md</code>——xgrammar 原理、vLLM 架构深潜、开销与副作用</li>
+<li><code>04-KV亲和调度与Mooncake专题.md</code>——前缀复用与亲和调度</li>
+<li><code>08-简历项目内容修订.md</code>——简历条目本体</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

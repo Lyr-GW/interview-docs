@@ -1,0 +1,2128 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/interview-review/10-Mooncake%E4%BC%A0%E8%BE%93%E5%BC%95%E6%93%8E%E4%B8%8E%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86%E6%B7%B1%E5%BA%A6%E6%8B%93%E5%B1%95/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>专题 10：Mooncake 深度拓展 —— Transfer Engine 怎么传、Mooncake Store 怎么管 - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#10mooncake-transfer-engine-mooncake-store" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              专题 10：Mooncake 深度拓展 —— Transfer Engine 怎么传、Mooncake Store 怎么管
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0. 一图总览：三层架构与职责边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-transfer-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 传输怎么做：Transfer Engine
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. 传输怎么做：Transfer Engine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-segment-batchtransfer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 两个核心抽象：Segment 与 BatchTransfer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 多协议后端：一套接口，多种传输介质
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Endpoint 管理、连接池与故障处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 元数据服务与关键运行参数
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-mooncake-store" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 管理怎么做：Mooncake Store
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 管理怎么做：Mooncake Store">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-master-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Master（控制面）与 Client（数据面）分离
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-key-replicareplica" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 对象模型：Key → Replica，Replica 状态机
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-replicateconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 副本策略：ReplicateConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-segment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Segment 生命周期
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 驱逐策略：可插拔 + 后台批量执行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-ha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 高可用（HA）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 关键权衡：调度到"没缓存"的节点，还值不值得跨节点搬 KV？
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 关键权衡：调度到&#34;没缓存&#34;的节点，还值不值得跨节点搬 KV？">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-mooncake-store-pd-connector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 能不能抓：可以，这是 Mooncake Store 而不是 PD Connector 的职责
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-prefill-vs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 重复 prefill vs 跨节点传输，哪个更贵：论文的严格推导
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 什么时候反而不该传，直接本地重算更快
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 三个真实系统各自的策略：谁做了完整成本模型，谁在偷懒简化
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 串联：一次 PD 分离 + 跨实例前缀命中的完整链路
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 面试高频问答（聚焦传输 + 管理，与 04 的一分钟版互补）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 参考
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="10mooncake-transfer-engine-mooncake-store">专题 10：Mooncake 深度拓展 —— Transfer Engine 怎么传、Mooncake Store 怎么管<a class="headerlink" href="#10mooncake-transfer-engine-mooncake-store" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>与专题 04（<code>04-KV亲和调度与Mooncake专题.md</code>）的关系：04 讲清楚了"KV 亲和调度为什么需要 Mooncake、Motor 怎么用 Conductor 的索引"，本篇是 04 第 4 章的**放大镜**——只聚焦两个问题：
+1. <strong>Transfer Engine 如何把一段 KV cache 从 A 机器搬到 B 机器</strong>（传输机制、协议、选路、容错）；
+2. <strong>Mooncake Store 如何管理这些 KV cache 对象</strong>（元数据、副本、生命周期、淘汰、高可用）。</p>
+<p>所有结论均可在工作区 <code>Mooncake/</code> 源码中核实，关键路径已标注文件名。图表用 Mermaid 绘制。</p>
+</blockquote>
+<hr />
+<h2 id="0">0. 一图总览：三层架构与职责边界<a class="headerlink" href="#0" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph TB
+    subgraph "调度 / 索引层"
+        Conductor["Conductor&lt;br/&gt;全局调度器 + KV 前缀索引&lt;br/&gt;(订阅 kv-events, 维护 PrefixCacheTable)"]
+    end
+
+    subgraph "存储 / 管理层 —— Mooncake Store"
+        Master["Master Service&lt;br/&gt;控制面：元数据 / 分配 / 副本放置 / 驱逐 / HA"]
+        ClientP["Client (Prefill 实例)"]
+        ClientD["Client (Decode 实例)"]
+    end
+
+    subgraph "传输层 —— Transfer Engine"
+        TE["TransferEngine&lt;br/&gt;Segment 抽象 + BatchTransfer API"]
+        RDMA["RdmaTransport"]
+        TCP["TcpTransport"]
+        NVMEoF["NVMeoFTransport"]
+        NVLink["NvlinkTransport"]
+    end
+
+    subgraph "元数据服务"
+        ETCD["etcd / Redis / HTTP&lt;br/&gt;(Segment 元数据、Master 选主)"]
+    end
+
+    Conductor --&gt;|查询/注册 最长前缀命中| ClientP
+    Conductor --&gt;|查询/注册 最长前缀命中| ClientD
+    ClientP --&gt;|Put/Get 对象元数据| Master
+    ClientD --&gt;|Put/Get 对象元数据| Master
+    ClientP -.数据面点对点直传，不经过 Master.-&gt; ClientD
+    ClientP --&gt; TE
+    ClientD --&gt; TE
+    TE --&gt; RDMA
+    TE --&gt; TCP
+    TE --&gt; NVMEoF
+    TE --&gt; NVLink
+    Master &lt;--&gt; ETCD
+    TE &lt;--&gt; ETCD</code></pre>
+<p><strong>关键设计判断（面试高频）：控制面与数据面分离</strong>——Master 只管"这个 key 的 KV cache 在哪几个 Segment 上、状态如何"，真正的数据搬运（GB 级）完全由 Client 之间通过 Transfer Engine 点对点完成，不经过 Master、不占用 Master 的网络带宽。这也是为什么 Master 可以是单点瓶颈也不影响整体吞吐——它只做轻量的元数据操作。</p>
+<hr />
+<h2 id="1-transfer-engine">1. 传输怎么做：Transfer Engine<a class="headerlink" href="#1-transfer-engine" title="Permanent link">&para;</a></h2>
+<h3 id="11-segment-batchtransfer">1.1 两个核心抽象：Segment 与 BatchTransfer<a class="headerlink" href="#11-segment-batchtransfer" title="Permanent link">&para;</a></h3>
+<p>源码：<code>mooncake-transfer-engine/include/transfer_engine.h</code></p>
+<ul>
+<li><strong>Segment</strong>：一段可被远程读写的连续地址空间。每个进程启动时自动创建一个以自己 <code>local_server_name</code> 命名的 <strong>RAM Segment</strong>，逻辑上覆盖整个虚拟地址空间；实际只有注册过的部分（<strong>Buffer</strong>）才能被 RDMA 访问。此外还有 <strong>NVMeof Segment</strong>，代表远端 NVMe 上可挂载的文件，用于 KV cache 落盘/取回。</li>
+<li><strong>BatchTransfer</strong>：一次批量、异步的 Read/Write 请求集合，可以在一个 Segment 内的多段不连续地址和另一批 Segment 的对应地址间做同步，语义类似"更灵活的异步 AllScatter/AllGather"。</li>
+</ul>
+<p>对应 C++ API（<code>TransferEngine</code> 类）核心调用序列：</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant App as 应用(vLLM/SGLang Worker)
+    participant TE as TransferEngine
+    participant Meta as 元数据服务(etcd/redis/http)
+    participant Remote as 远端 TransferEngine
+
+    App-&gt;&gt;TE: init(metadata_conn_string, local_server_name)
+    TE-&gt;&gt;Meta: 注册 rpc_meta + Segment 骨架
+    App-&gt;&gt;TE: registerLocalMemory(addr, length, location)
+    TE-&gt;&gt;Meta: 更新 Segment 的 buffers/rkey 信息
+    App-&gt;&gt;TE: openSegment(remote_segment_name)
+    TE-&gt;&gt;Meta: 拉取远端 Segment 元数据(devices, priority_matrix, buffers)
+    App-&gt;&gt;TE: allocateBatchID + submitTransfer(entries)
+    TE-&gt;&gt;TE: 拓扑感知选路 + 按64KB切片
+    TE-&gt;&gt;Remote: RDMA Write/Read（GPUDirect，零拷贝）
+    App-&gt;&gt;TE: getTransferStatus(batch_id) 轮询完成</code></pre>
+<p>要点：</p>
+<ul>
+<li><strong>零拷贝</strong>：无论是 RDMA（GPUDirect，网卡直接读写 GPU 显存）还是 NVMe-oF（PCIe 直连 NVMe 到 DRAM/VRAM），数据搬运都不经过 CPU 中转、不做 memcpy。</li>
+<li><strong>异步 + 批量</strong>：<code>submitTransfer</code> 提交一批请求立即返回，通过 <code>getTransferStatus</code>/<code>getBatchTransferStatus</code> 轮询，天然适合把 KV cache 传输和 prefill 计算做 pipeline 重叠（论文里的 <em>streaming KVCache transfer</em>，逐层生成逐层传，不等全部算完再传）。</li>
+</ul>
+<h3 id="12">1.2 多协议后端：一套接口，多种传输介质<a class="headerlink" href="#12" title="Permanent link">&para;</a></h3>
+<p><code>Transport</code> 抽象出统一接口，具体实现按后端分文件：<code>rdma_transport/</code>、<code>tcp_transport/</code>、<code>nvmeof_transport/</code>、<code>nvlink_transport/</code>、<code>hip_transport/</code>（AMD ROCm）、<code>ascend_transport/</code>（华为昇腾 HCCL）、<code>efa_transport/</code>（AWS EFA）等。</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>首选协议</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>跨节点 DRAM ↔ DRAM/VRAM（主力）</td>
+<td>RDMA (GPUDirect)</td>
+<td>绕过 CPU 和内核，微秒级延迟，多网卡可聚合带宽</td>
+</tr>
+<tr>
+<td>无 RDMA 网络环境</td>
+<td>TCP</td>
+<td>通用兜底，走 socket，延迟高但无硬件依赖</td>
+</tr>
+<tr>
+<td>KV cache 落盘/取回</td>
+<td>NVMe-oF (cuFile/GDS)</td>
+<td>PCIe 直连 NVMe 到 DRAM/VRAM，也是零拷贝</td>
+</tr>
+<tr>
+<td>单机多卡</td>
+<td>NVLink / HIP IPC</td>
+<td>利用卡间高速互联，不走网卡</td>
+</tr>
+<tr>
+<td>昇腾 NPU 集群</td>
+<td>Ascend Transport (HCCL)</td>
+<td>vLLM-Ascend 集成用的就是它</td>
+</tr>
+</tbody>
+</table>
+<p>同一份上层代码（Mooncake Store 的 Put/Get）不关心底层协议，<code>TransferEngine</code> 会根据 Segment 元数据里的 <code>protocol</code> 字段和内存位置自动选择合适的 <code>Transport</code> 实例——这正是"统一传输语义 API"的含义。</p>
+<p><strong>补充：跨厂商异构加速卡场景下，为什么通用 RDMA 传输要"先落 DRAM 再转显存"？</strong></p>
+<p>这是异构互联的通用限制，不是某家方案独有的取舍：同厂商加速卡之间（如 NVLink/NVSwitch，昇腾的 HCCS）有专用高速互联，网卡/互联控制器能直接读写对方的显存/HBM；但跨厂商场景下，通用 RDMA 网卡不一定拿得到目标加速卡显存的直接访问权限（没有对应的 GPUDirect/HBM-Direct 驱动支持），只能先把数据从源端 HBM 拷到本地 DRAM，再用 RDMA 把 DRAM 数据传到对端，对端再从 DRAM 拷回目标显存——多一次中转。</p>
+<p>Mooncake 自己在**异构昇腾传输**（910B 做 Prefill、H20 做 Decode 的跨芯片场景）里就是这么处理的，见 <code>Mooncake/docs/source/design/transfer-engine/heterogeneous_ascend.md</code>：</p>
+<p>```12:13:Mooncake/docs/source/design/transfer-engine/heterogeneous_ascend.md
+The copy bandwidth from HBM to DRAM is constrained by the size of data blocks. Small
+data blocks smaller than 2MB result in underutilized bandwidth. We have implemented
+an optimization using "data aggregation + pipeline parallelism": first, small data
+blocks are aggregated into 8MB blocks within HBM before being transferred to DRAM,
+while data copying and RDMA transmission are executed in parallel.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>关键优化点：HBM→DRAM 的拷贝带宽受数据块大小限制（小于 2MB 的小块利用率低），所以先在 HBM 内把小块聚合成 8MB 大块再转 DRAM，且**拷贝和 RDMA 传输并行执行**（流水线掩盖中转延迟），而不是拷完再传。这个&quot;聚合+流水线&quot;手法可以当作任何&quot;需要中转的异构传输场景&quot;的通用应对模板来记。
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>### 1.3 拓扑感知路径选择（Topology-Aware Path Selection）
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>这是 Transfer Engine 区别于&quot;随便拿一张网卡传数据&quot;的核心创新，源码见 `mooncake-transfer-engine/src/topology.cpp`。
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>**问题**：现代推理服务器有多 CPU 插槽、多 GPU、多 RDMA 网卡，如果传输时随意选网卡，数据要跨 UPI（跨 CPU 插槽互联）或 PCIe Switch 中转，带宽和延迟都会打折扣。
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>**做法**：
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>1. 节点启动时探测硬件拓扑（NUMA 节点、GPU、RDMA 网卡的 PCIe 挂载关系），生成一份**拓扑矩阵**并广播到集群（存入 etcd 的 Segment 元数据 `priority_matrix` 字段）；
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>2. 矩阵把每种内存类型（如 `cpu:0`、`cuda:0`）关联到一份 **preferred 网卡列表**和一份 **secondary 列表**：与该内存同 NUMA 节点/同 PCIe Switch 下的网卡进入 preferred；
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>3. 正常情况下只从 preferred 列表选网卡，保证 RDMA 走本地 NUMA 或本地 PCIe Switch 下的 GPUDirect 路径；只有链路故障时才降级用 secondary 列表；
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>4. 单次传输若超过 64KB，会被**切片**，不同分片可以走不同网卡路径，多网卡协同工作，实现带宽聚合。
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>```mermaid
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>flowchart LR
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    subgraph &quot;本地节点&quot;
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        B0[&quot;Buffer0&lt;br/&gt;cpu:0 / cuda:0&quot;] --- N1[&quot;mlx5_1&lt;br/&gt;(cpu:0 preferred)&quot;]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        B0x[&quot;Buffer0&#39;&lt;br/&gt;cpu:1&quot;] --- N0[&quot;mlx5_0&lt;br/&gt;(cpu:1 preferred)&quot;]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    end
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    subgraph &quot;目标节点&quot;
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        N3[&quot;mlx5_3&lt;br/&gt;(cpu:1 preferred)&quot;] --- B1[&quot;Buffer1&lt;br/&gt;cpu:1&quot;]
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    end
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    N1 -.RDMA Write/Read&lt;br/&gt;(GPUDirect, 本地NUMA/PCIe内).-&gt; N3
+</code></pre></div></p>
+<p>配套的**多网卡带宽聚合**：8×400Gbps 级别的网卡聚合带宽可以接近 DRAM 带宽，这也是论文里强调"当聚合带宽足够高时，跨节点复用 KVCache 比重新 prefill 更划算"的物理基础。这个"划算不划算"背后有一套严格的带宽阈值推导（LLaMA3-70B 场景下 6~19 GB/s 打平，现代 RDMA 网络轻松提供 100+ GB/s）——完整公式和"什么时候反而不该传"的讨论见第 3 节。</p>
+<h3 id="14-endpoint">1.4 Endpoint 管理、连接池与故障处理<a class="headerlink" href="#14-endpoint" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>按需建连</strong>：本地 RDMA 网卡与远端 RDMA 网卡之间的连接抽象为 <strong>Endpoint</strong>（内部含一个或多个 QP），Endpoint 在首次请求时才建立，不预先全连接。</li>
+<li><strong>连接池 + SIEVE 淘汰</strong>：为防止 Endpoint 数量无限增长拖慢请求处理，Mooncake 对活跃连接数设上限，用 **SIEVE 算法**做淘汰（<code>MC_ENDPOINT_STORE_TYPE</code> 可选 <code>FIFO</code>/<code>SIEVE</code>，默认 <code>SIEVE</code>）。被淘汰/删除的 Endpoint 先进入等待队列，待其未完成的 in-flight 分片全部结束后再异步回收（避免正在传输的连接被误杀）。</li>
+<li><strong>故障自动切换</strong>：链路失败时（网卡掉线、QP 出错），自动识别可用的备用路径重新提交请求到另一张 RDMA 网卡；出问题的 RDMA context/CQ 会被临时隔离，故障恢复后再重新纳入可用池——这是"自动 failover"能力的具体实现方式，不是简单重试。</li>
+</ul>
+<h3 id="15">1.5 元数据服务与关键运行参数<a class="headerlink" href="#15" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Transfer Engine 自身也依赖一个轻量元数据服务（<code>etcd</code> / <code>redis</code> / <code>http</code>，见 <code>transfer_metadata_plugin.cpp</code>）来存 Segment 的地址、设备列表、<code>rkey</code>、拓扑矩阵等，这与 Mooncake Store Master 用 etcd 做高可用是两个独立但可共用的机制。</li>
+<li>生产可调参数（环境变量，<code>MC_*</code>）覆盖了 QP 数量（<code>MC_NUM_QP_PER_EP</code>）、切片粒度（<code>MC_SLICE_SIZE</code>）、重试次数（<code>MC_RETRY_CNT</code>）、握手超时（<code>MC_HANDSHAKE_CONNECT_TIMEOUT</code>，防止连到已下线节点卡住整个内核 TCP 超时周期）、多网卡负载均衡（<code>MC_MLX5_QP_LAG_PORT_BALANCE</code>）等——面试如果被问"生产环境怎么调优"，可以提这几个方向：QP/CQ 规模、切片大小、握手超时、设备亲和性（<code>MC_ENABLE_DEST_DEVICE_AFFINITY</code>，rail-optimized 拓扑下优先选同名远端网卡减少 QP 数）。</li>
+<li><strong>实测性能</strong>：论文给出 Transfer Engine 的 RDMA 传输比同类方案快约 <strong>2.4×~4.6×</strong>；官方 benchmark 单机可跑出 19.87 GiB/s（超过单卡网卡理论上限，说明多网卡聚合生效）。</li>
+</ul>
+<hr />
+<h2 id="2-mooncake-store">2. 管理怎么做：Mooncake Store<a class="headerlink" href="#2-mooncake-store" title="Permanent link">&para;</a></h2>
+<h3 id="21-master-client">2.1 Master（控制面）与 Client（数据面）分离<a class="headerlink" href="#21-master-client" title="Permanent link">&para;</a></h3>
+<p>源码：<code>mooncake-store/src/master_service.cpp</code>（Master）、<code>mooncake-store/src/client_service.cpp</code>（Client）。</p>
+<ul>
+<li><strong>Master</strong> 只做"账本"：对象元数据（key → 副本列表）、空间分配决策、副本放置策略、后台驱逐、Segment 上下线、HA 选主。所有操作走 RPC（<code>PutStart</code>/<code>PutEnd</code>/<code>GetReplicaList</code>/<code>BatchEvict</code> 等），本身不搬数据。</li>
+<li><strong>Client</strong> 做"搬砖"：<code>Put</code>/<code>Get</code>/<code>BatchPut</code>/<code>BatchGet</code> 对象 API 的实际数据搬运，通过 Transfer Engine 与目标 Segment 点对点直传，不经过 Master。</li>
+</ul>
+<pre class="mermaid"><code>sequenceDiagram
+    participant PClient as Prefill Client
+    participant Master as Master Service
+    participant TE as Transfer Engine
+    participant DClient as Decode Client
+
+    Note over PClient,Master: 写入 KV cache（Put）
+    PClient-&gt;&gt;Master: PutStart(key, size, ReplicateConfig)
+    Master-&gt;&gt;Master: 分配空间 + 选定副本所在 Segment(s)
+    Master--&gt;&gt;PClient: 返回目标 Buffer 地址/rkey 列表
+    PClient-&gt;&gt;TE: submitTransfer 写入各副本 Segment
+    PClient-&gt;&gt;Master: PutEnd(key) — 标记 COMPLETE
+
+    Note over DClient,Master: 复用 KV cache（Get / 前缀命中）
+    DClient-&gt;&gt;Master: GetReplicaList(key)
+    Master--&gt;&gt;DClient: 返回可用副本的位置描述符
+    DClient-&gt;&gt;TE: submitTransfer 从副本 Segment 读取
+    TE--&gt;&gt;DClient: 数据到达本地 DRAM/VRAM（零拷贝）</code></pre>
+<p>这套"两阶段提交"（<code>PutStart</code> 分配 + 写入 + <code>PutEnd</code> 确认完成）保证了并发场景下不会有 Client 读到"分配了但还没写完"的半成品数据——对应下面的副本状态机。</p>
+<p><strong>补充：Master 元数据是全局一把锁，还是分片锁？</strong>——是分片锁，且分片数量、路由方式都能在源码里精确核实。<code>master_service.h</code> 把对象元数据切成 <strong>1024 个 shard</strong>，每个 shard 有自己的 mutex，用 key 的哈希取模路由到对应分片，而不是一个全局锁串行化所有 Put/Get：</p>
+<p>```1206:1235:Mooncake/mooncake-store/include/master_service.h
+static constexpr size_t kNumShards = 1024;  // Number of metadata shards
+...
+std::array<MetadataShard, kNumShards> metadata_shards_;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>```1372:1381:Mooncake/mooncake-store/include/master_service.h
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>return std::hash&lt;std::string&gt;{}(user_key) % kNumShards;
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>...
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>return std::hash&lt;std::string&gt;{}(key) % kNumShards;
+</code></pre></div></p>
+<p>文件头部注释里还规定了严格的**加锁顺序**（避免死锁）：<code>client_mutex_ → tenant_quota_policy_mutex_ → snapshot_mutex_ → metadata_shards_[shard_idx_].mutex → tenant_quota_shards_[shard_idx_].mutex → segment_mutex_</code>。这是典型的"哈希分片 + 分片锁降低锁竞争"设计，任何自建集群级 KV 元数据服务（不管是不是叫 Mooncake）大概率都会收敛到同一个模式——如果被问到"怎么设计一个能扛高并发的 KV 元数据服务"，这就是标准答案骨架：先按 key 哈希分片、每片一把锁，再考虑要不要在分片锁之前加一层布隆过滤器做"快速确定不存在"的短路判断（Mooncake 本身没做布隆过滤器这层，是可以主动提的优化点）。</p>
+<h3 id="22-key-replicareplica">2.2 对象模型：Key → Replica，Replica 状态机<a class="headerlink" href="#22-key-replicareplica" title="Permanent link">&para;</a></h3>
+<p>源码：<code>mooncake-store/include/replica.h</code>。每个 key 对应一组 <code>Replica</code>，每个 Replica 有类型（<code>MEMORY</code> / <code>DISK</code> / <code>LOCAL_DISK</code> / <code>NOF_SSD</code>）和独立的状态机：</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; UNDEFINED
+    UNDEFINED --&gt; INITIALIZED: PutStart 分配空间
+    INITIALIZED --&gt; PROCESSING: 开始写入
+    PROCESSING --&gt; COMPLETE: PutEnd 确认写完
+    COMPLETE --&gt; PROCESSING: Upsert 覆盖写
+    COMPLETE --&gt; REMOVED: 主动删除 / 驱逐
+    INITIALIZED --&gt; FAILED: 写入超时/客户端异常
+    PROCESSING --&gt; FAILED: 写入超时/客户端异常
+    FAILED --&gt; INITIALIZED: 重新分配(可重试)</code></pre>
+<p>只有 <code>COMPLETE</code> 状态的副本才能被 <code>Get</code> 读取；<code>refcnt</code>（引用计数）在有请求正在读取该副本时 &gt;0，驱逐器不会淘汰"正忙"（<code>is_busy()</code>）的副本，这是防止"读的时候被驱逐掉"竞态的关键机制。</p>
+<h3 id="23-replicateconfig">2.3 副本策略：<code>ReplicateConfig</code><a class="headerlink" href="#23-replicateconfig" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>replica_num</code> / <code>nof_replica_num</code>：DRAM 副本数、NVMe-oF SSD 副本数，可分别配置——冷数据可以只留 SSD 副本，热点数据加多个 DRAM 副本；</li>
+<li><code>preferred_segments</code>：指定优先放置的 Segment（配合"就近部署"降低跨机传输）；</li>
+<li><code>with_soft_pin</code> / <code>with_hard_pin</code>：软钉住（驱逐时最后考虑）/硬钉住（禁止驱逐，比如正在被多个下游引用的系统 prompt 前缀）；</li>
+<li><code>group_ids</code>：把多个 key 分到一组，共享元数据路由、租约续期、驱逐行为的合并处理（减小大量小 KV block 时的元数据开销）。</li>
+<li>三种写入模式 <code>ReplicaWriteMode</code>：<code>SINGLE_REPLICA</code>（单副本，最省资源）、<code>FLEXIBLE_DUAL_REPLICA</code>（DRAM+SSD 各一份，兼顾速度与成本）、<code>RELIABLE_MULTI_REPLICA</code>（任一维度 &gt;1，追求可靠性/热点承载）。</li>
+</ul>
+<p><strong>这就是论文里"热点 block 主动复制到多个节点、冷 block 换出"的落地方式</strong>：Conductor/上层根据访问频率动态调整某个 key 的 <code>ReplicateConfig</code>（提高 <code>replica_num</code>，或去掉 soft pin 让它更快被淘汰）。</p>
+<h3 id="24-segment">2.4 Segment 生命周期<a class="headerlink" href="#24-segment" title="Permanent link">&para;</a></h3>
+<p>源码：<code>mooncake-store/include/segment.h</code>。Segment 代表一台机器贡献出来的一块存储资源（DRAM/SSD），有独立状态机，支持**优雅下线**（不是直接拔线）：</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; UNDEFINED
+    UNDEFINED --&gt; OK: MountSegment（节点上线注册）
+    OK --&gt; DRAINING: 开始下线：不再接受新分配，但仍可读
+    DRAINING --&gt; DRAINED: 该 Segment 上的副本迁移/淘汰完毕
+    OK --&gt; GRACEFULLY_UNMOUNTING: 触发优雅卸载，计时器启动
+    GRACEFULLY_UNMOUNTING --&gt; UNMOUNTING: 计时结束
+    DRAINED --&gt; UNMOUNTING: 等待正式卸载
+    UNMOUNTING --&gt; [*]: UnmountSegment 完成</code></pre>
+<p>意义：扩缩容 Prefill/Decode 节点池时，可以先把某台机器标记 <code>DRAINING</code>，让它上面缓存的 KV cache 自然被读完/淘汰完，再安全下线，不会导致正在被引用的副本突然丢失。</p>
+<h3 id="25">2.5 驱逐策略：可插拔 + 后台批量执行<a class="headerlink" href="#25" title="Permanent link">&para;</a></h3>
+<p>源码：<code>mooncake-store/include/eviction_strategy.h</code> + <code>master_service.cpp</code> 的 <code>BatchEvict</code>。</p>
+<ul>
+<li><strong>策略抽象</strong> <code>EvictionStrategy</code>：<code>AddKey</code> / <code>UpdateKey</code>（访问时移到链表头，LRU 语义）/ <code>EvictKey</code>（从链表尾淘汰）。目前内置 <code>LRUEvictionStrategy</code>（最近最少使用）和 <code>FIFOEvictionStrategy</code>（先进先出，不响应访问更新）；Transfer Engine 的 Endpoint 池用的是 SIEVE（一种近似 LRU 但更省锁开销的算法，二者是不同层面的驱逐，不要混淆——一个淘汰"连接"，一个淘汰"数据对象"）。</li>
+<li><strong>触发方式</strong>：Master 有后台线程周期性调用 <code>BatchEvict(evict_ratio_target, evict_ratio_lowerbound)</code>，把使用率降到目标水位以下；为避免一次淘汰太多打爆队列，每个周期只处理"淘汰队列上限的一部分"（<code>kEvictionBatchRatio</code> 之类的限流）。</li>
+<li><strong>保护机制</strong>：<code>is_busy()</code>（refcnt&gt;0，正被读）和 <code>with_hard_pin</code> 的副本永不进入淘汰候选；<code>with_soft_pin</code> 的副本优先级最低（最后淘汰）。</li>
+</ul>
+<pre class="mermaid"><code>flowchart TD
+    Timer["后台定时器 / 内存水位触发"] --&gt; Check{"使用率 &gt; 目标水位?"}
+    Check -- 否 --&gt; Idle["跳过本轮"]
+    Check -- 是 --&gt; Scan["扫描驱逐候选队列&lt;br/&gt;(按 LRU/FIFO 顺序)"]
+    Scan --&gt; Filter{"is_busy() 或 hard_pin?"}
+    Filter -- 是 --&gt; Skip["跳过，保留"]
+    Filter -- 否 --&gt; Evict["EvictKey() 释放空间&lt;br/&gt;标记 Replica=REMOVED"]
+    Evict --&gt; Limit{"达到本轮限流上限?"}
+    Limit -- 否 --&gt; Scan
+    Limit -- 是 --&gt; Idle</code></pre>
+<h3 id="26-ha">2.6 高可用（HA）<a class="headerlink" href="#26-ha" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Master 选主</strong>：多 Master 实例通过 etcd 做 leader 选举（<code>mooncake-store/src/ha/</code>，<code>MasterViewHelper::ElectLeader</code>），Client 和 Transfer Engine 通过 <code>Master 视图</code> 元数据感知当前 leader 地址；</li>
+<li><strong>故障恢复</strong>：Master 重启/切主后，存活的 Client 会重新 <code>MountSegment</code> 把本地贡献的存储资源重新注册回新 Master；<code>CleanupStaleHandles</code> 之类的逻辑会清理属于已下线 Client 的 <code>LOCAL_DISK</code> 副本（通过对比"存活 client 集合"判断陈旧副本）；</li>
+<li><strong>快照</strong>（源码里能看到 <code>snapshot</code> 相关测试）：Master 元数据可以做快照，加速故障后的状态恢复，避免全量重新扫描所有 Client。</li>
+</ul>
+<hr />
+<h2 id="3-kv">3. 关键权衡：调度到"没缓存"的节点，还值不值得跨节点搬 KV？<a class="headerlink" href="#3-kv" title="Permanent link">&para;</a></h2>
+<p>这是 04/10 两篇文档背后一个容易被追问的核心问题：<strong>如果请求被调度到了本地没有对应前缀缓存的 Prefill 节点（比如 Conductor 路由没命中、或负载均衡覆盖了亲和性决策），这个节点还能不能从集群里"抓"别处已经算好的 KV cache 过来用？重新算一遍 prefill 和跨节点搬这段 KV，到底哪个更贵？</strong></p>
+<h3 id="31-mooncake-store-pd-connector">3.1 能不能抓：可以，这是 Mooncake Store 而不是 PD Connector 的职责<a class="headerlink" href="#31-mooncake-store-pd-connector" title="Permanent link">&para;</a></h3>
+<p>要先分清两条不同的路径，容易被面试问混：</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>触发者</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Conductor 路由</strong>（专题 04 第 2 节）</td>
+<td>调度层，请求还没开始处理前</td>
+<td>"计算追着缓存走"——尽量把请求送到已经持有最长前缀命中的节点，理想情况下不需要传输</td>
+</tr>
+<tr>
+<td><strong>Mooncake Store <code>Get()</code> 兜底</strong>（本节）</td>
+<td>Prefill 节点自己，请求已经落地之后</td>
+<td>"缓存追着计算走"——不管当前节点是不是 Conductor 选出来的最优节点，只要前缀 block 的 KV 存在于集群任意 Segment 上，当前节点都能主动 <code>GetReplicaList(key)</code> 查到位置，再通过 Transfer Engine RDMA 把它读过来，只对未命中的尾部 <code>[p:n]</code> 做增量 prefill</td>
+</tr>
+</tbody>
+</table>
+<p>第二条路径正是 vLLM <code>MooncakeStoreConnector</code> / SGLang <code>HiCache</code> L3（专题 11 有详细对比）存在的意义：<strong>KV cache 是集群共享资源，取用权不取决于"当初是哪个节点算的"</strong>。所以答案是肯定的——即便调度"失手"送到了冷节点，这个节点仍然可以把别处的缓存拉过来，代价只是多了一次跨节点 RDMA，而不是必须从头算。</p>
+<h3 id="32-prefill-vs">3.2 重复 prefill vs 跨节点传输，哪个更贵：论文的严格推导<a class="headerlink" href="#32-prefill-vs" title="Permanent link">&para;</a></h3>
+<p>Mooncake 论文（FAST'25）§2.2 给出了完整的数学分析，不是拍脑袋估的，公式如下（<code>l</code>=层数，<code>d</code>=模型维度，<code>n</code>=当前 prompt 总长度，<code>p</code>=命中的前缀长度，<code>gqa</code>=Q head 数/KV head 数，<code>s</code>=元素字节数，<code>a</code>/<code>b</code>=常数系数）：</p>
+<ul>
+<li><strong>Prefill 计算量</strong>（Equation 1）：<code>flops(n) = l × (a·n²·d + b·n·d²)</code>——注意力部分随长度**平方**增长，MLP/QKVO 投影部分随长度**线性**增长；</li>
+<li><strong>复用前缀 p 能省下的算力</strong>：<code>l × (a·p²·d + b·p·d²)</code>；</li>
+<li><strong>需要传输的数据量</strong>：<code>p × l × (2d/gqa) × s</code>（K、V 各一份，GQA 场景下头数按 <code>gqa</code> 折算）；</li>
+<li><strong>划算条件</strong>（Equation 2，<code>G</code>=GPU 算力吞吐，<code>B</code>=有效传输带宽）：</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>B/G &gt; 2ds / (gqa × (a·p·d + b·d²))
+</code></pre></div>
+<p><strong>关键洞察</strong>：右边分母里有一个 <code>a·p·d</code> 项——<strong>p 越大，分母越大，所需的最低带宽阈值反而越低</strong>。直觉解释：注意力重算的开销是 <code>p²</code> 量级（平方增长），而要传输的数据量只是 <code>p</code> 量级（线性增长），前缀越长，"重算"相对"搬运"就越吃亏，复用的性价比只会越来越高，不会随长度增长而变差。</p>
+<p><strong>论文给出的具体数字</strong>（LLaMA3-70B）：
+- 8× A800（<code>G=8×312 TFLOPS</code>），前缀长度 8192 时，最低有效带宽阈值仅 <strong>6 GB/s</strong>；
+- 8× H800（算力更强，<code>G</code> 更大），阈值上升到 <strong>19 GB/s</strong>（GPU 越快，需要更快的网络才能喂饱它，符合直觉）；
+- 现代 RDMA 网络轻松做到 100+ GB/s 聚合带宽（论文实测 4×200Gbps 下 87 GB/s，8×400Gbps 下 190 GB/s），<strong>比阈值高一到两个数量级</strong>——意味着在绝大多数长上下文、大模型场景下，跨节点传输的开销远小于重新 prefill 的开销，不是"差不多"，是"差一个数量级以上"。</p>
+<h3 id="33">3.3 什么时候反而不该传，直接本地重算更快<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<p>阈值分析是"稳态"结论，但现实里还有几个因素会把天平拨回"本地重算"这一侧，面试如果被追问"是不是任何时候都该传"要能接住：</p>
+<ol>
+<li><strong>前缀太短</strong>：<code>p</code> 很小时，省下的算力（<code>~p²</code> 量级里的低阶项，实际很小）可能还不够抵消一次 RDMA 握手/元数据查询（<code>GetReplicaList</code> RPC）的固定延迟开销——这也是为什么 Motor 的 KV 亲和查询会有"prompt 短于一个 block 直接走 fast path 跳过查询"的短路逻辑（专题 04 第 2.2 节），Mooncake Store 的 block size 通常也设在 256 token 量级，不会为几十个 token 的前缀去查表传输；</li>
+<li><strong>网络本身不够快</strong>：论文 §5.4.2 实测给出建议阈值——集群总带宽低于 100 Gbps 时 TTFT 会明显恶化，是"实测建议下限"而不是上面理论最小阈值（理论阈值是 6~19 GB/s ≈ 48~152 Gbps，实测建议留了安全边际，因为传输阶段不可能完美和计算重叠）；</li>
+<li><strong>热点拥塞</strong>：如果某个高频复用的前缀 block 只有一份副本，大量 Decode/Prefill 节点同时抢着读，这一份 Segment 的 NIC 会成为瓶颈——这就是专题 04/10 反复提到的"热点 block 主动复制到多个节点"（<code>ReplicateConfig.replica_num</code>）要解决的问题，本质是把"传输开销"从一份带宽的瓶颈分摊成多份带宽；</li>
+<li><strong>传输本身能被计算重叠掉，进一步压低传输的"有效成本"</strong>：即使传输时间本身不为零，只要它能和后续的增量 prefill / decode 计算重叠（Mooncake 的分层流式传输设计），它占用的"额外墙钟时间"可以趋近于零——这进一步放大了传输相对重算的优势。</li>
+</ol>
+<p><strong>一句话总结（背）</strong>："能不能传——能，Mooncake Store 的 Get 语义决定了 KV cache 是集群共享资源，跟当前节点是不是 Conductor 选中的最优节点无关；该不该传——几乎总是该传，因为重算的代价是前缀长度的平方增长，传输的代价只是线性增长，前缀越长传输越划算，论文给的实测阈值是 6~19 GB/s，现代 RDMA 网络的实际带宽比这个阈值高一到两个数量级；真正不该传的场景是前缀短到 RDMA 握手/查表的固定开销盖过了省下的算力，或者网络本身太差、或者一份缓存被太多节点同时抢导致拥塞——这些都是可以用 block 粒度阈值、多副本策略解决的工程问题，不是'传输天然更贵'。"</p>
+<h3 id="34">3.4 三个真实系统各自的策略：谁做了完整成本模型，谁在偷懒简化<a class="headerlink" href="#34" title="Permanent link">&para;</a></h3>
+<p>上面 3.1/3.2/3.3 讲的是理论上"该怎么权衡"，但 Mooncake 论文（Conductor）、Motor（KV 亲和调度）、vLLM 自己的 <code>MooncakeStoreConnector</code> 三个真实系统，对这个权衡的**实现精细度是不一样的**，面试如果被连续追问"那具体谁是这么做的"，要能分清层次：</p>
+<table>
+<thead>
+<tr>
+<th>系统</th>
+<th>做决策的层级</th>
+<th>策略类型</th>
+<th>有没有显式的 Ttransfer 成本项</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mooncake Conductor</strong>（论文 Algorithm 1）</td>
+<td>调度层，请求分配给哪个 Prefill 实例之前</td>
+<td><strong>完整成本模型</strong>：对每个候选实例都估算 <code>TTFT = Ttransfer + Tqueue + Tprefill</code>，取全局最小</td>
+<td><strong>有</strong>，且有显式的 <code>kvcache_balancing_threshold</code> 门限——只有远端命中比本地命中长出的部分超过门限才真正触发跨节点传输</td>
+</tr>
+<tr>
+<td><strong>Motor <code>KvCacheAffinityPolicy</code></strong></td>
+<td>调度层（Coordinator），比 Conductor 更上一层的路由决策</td>
+<td>简化打分：<code>unified</code> 模式 <code>score = prefill_load_scale × max(0, isl − overlap_credit × matched) + load_weight × load</code></td>
+<td><strong>没有</strong>——<code>overlap_credit</code> 默认 <code>1.0</code>，隐式假设命中即可几乎免费复用，不单独建模传输耗时</td>
+</tr>
+<tr>
+<td><strong>vLLM <code>MooncakeStoreConnector</code></strong>（scheduler 侧）</td>
+<td>执行层，请求已经落在某个 Prefill 实例之后</td>
+<td>二元查表：<code>get_num_new_matched_tokens</code> 只做存在性查询，命中数超过本地已算 token 数就无条件决定拉取</td>
+<td><strong>没有</strong>——<code>lookup()</code> 只回答"存不存在、有多少"，不比较值不值</td>
+</tr>
+</tbody>
+</table>
+<p>Mooncake Conductor 的调度算法核心片段（真实伪代码，非改写）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>if best_len − instance.prefix_len &gt; kvcache_balancing_threshold then
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    prefix_len ← best_len
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    transfer_len ← best_len − instance.prefix_len
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    Ttransfer ← EstimateKVCacheTransferTime(transfer_len)
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>else
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    prefix_len ← instance.prefix_len
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    Ttransfer ← 0
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>Tqueue ← EstimatePrefillQueueTime(instance)
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>Tprefill ← EstimatePrefillExecutionTime(len(R.prompt_tokens), prefix_len)
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>if TTFT &gt; Ttransfer + Tqueue + Tprefill then
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    TTFT ← Ttransfer + Tqueue + Tprefill; p ← instance
+</code></pre></div>
+<p>Motor 对应的打分逻辑（<code>motor/coordinator/scheduler/policy/kv_cache_affinity.py</code>）：</p>
+<p>```262:264:MindIE-PyMotor/motor/coordinator/scheduler/policy/kv_cache_affinity.py
+matched_tokens = min(matched, isl) if isl &gt; 0 else 0
+prefill_cost = max(0.0, isl - overlap_credit * matched_tokens)
+load_cost = ep.workload.calculate_workload_score(PDRole.ROLE_P)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>vLLM `MooncakeStoreConnector` 对应的判定逻辑（`vllm/distributed/kv_transfer/kv_connector/v1/mooncake/store/scheduler.py`）：
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>```73:120:vllm/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/store/scheduler.py
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>def get_num_new_matched_tokens(self, request, num_computed_tokens):
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    token_len = request.num_tokens // self._block_size * self._block_size
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    if token_len &lt; self._block_size:
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        return 0, False
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    num_external_hit_tokens = self.client.lookup(
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>        request.request_id, token_len, request.block_hashes,
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>        non_block=self.lookup_async,
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    )
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    ...
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    if need_to_allocate &lt;= 0:
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>        return 0, False
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    ...
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    return need_to_allocate, self.load_async
+</code></pre></div></p>
+<p><strong>三层为什么可以这样分工，不算"vLLM/Motor 偷懒"</strong>：这是典型的分层设计——<strong>"该不该传"这个最贵的决策（需要维护实时负载、离线拟合的 prefill 时间模型、动态网络拥塞估计）只在调度层算一次</strong>（Mooncake Conductor 的 Algorithm 1，或者 Motor 的打分），一旦请求被分配到具体实例，执行层（vLLM Connector）只需要"老实执行"，不需要重新验证这个决策是否还成立——重复计算没有意义，只会增加延迟。真正的风险点在于：<strong>如果有人把 <code>MooncakeStoreConnector</code> 从 Mooncake Conductor/Motor 这类调度层剥离、单独使用</strong>（比如只用 vLLM 自带的负载均衡 + <code>MooncakeStoreConnector</code> 兜底），那"该不该传"这个判断就没人做了，退化成"是命中就传"的贪心策略——在前缀很短、命中增益很小的场景下可能不划算，这也是为什么面试官如果问"独立部署 MooncakeStoreConnector 有什么风险"，可以直接指出这一点。</p>
+<hr />
+<h2 id="4-pd">4. 串联：一次 PD 分离 + 跨实例前缀命中的完整链路<a class="headerlink" href="#4-pd" title="Permanent link">&para;</a></h2>
+<p>结合专题 04 的 Conductor 调度视角，把"调度→传输→管理"串成一条完整时序：</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant User as 用户请求
+    participant Cond as Conductor
+    participant P as Prefill 实例(Client)
+    participant Master as Store Master
+    participant TE as Transfer Engine
+    participant D as Decode 实例(Client)
+
+    User-&gt;&gt;Cond: 请求 token ids
+    Cond-&gt;&gt;Cond: 查 PrefixCacheTable，找最长前缀命中实例
+    alt 命中已有 KV cache
+        Cond--&gt;&gt;P: 路由到持有最长前缀的 Prefill 实例
+        P-&gt;&gt;Master: GetReplicaList(前缀 key)
+        Master--&gt;&gt;P: 返回副本位置
+        P-&gt;&gt;TE: 直接 RDMA 读取，跳过对应 token 的重复计算
+    else 未命中，从头 prefill
+        Cond--&gt;&gt;P: 按负载选一个 Prefill 实例
+    end
+    P-&gt;&gt;P: 增量 prefill 剩余 token，逐层生成 KV
+    P-&gt;&gt;TE: 流式、分层、异步传输 KV（与计算 pipeline 重叠）
+    TE-&gt;&gt;D: RDMA Write 到 Decode 节点显存/内存
+    P-&gt;&gt;Master: PutStart/PutEnd 把新算出的 KV 写入 Store（供未来复用）
+    D-&gt;&gt;D: 自回归解码，逐 token 生成
+    D--&gt;&gt;User: 流式返回 token
+    Note over Master: 后台异步：更新 LRU、必要时复制热点 block、驱逐冷 block</code></pre>
+<p>这张图把三个组件的分工说清楚：<strong>Conductor 决定"去哪"，Master 决定"东西在哪、还能不能用"，Transfer Engine 负责"怎么把东西真正搬过去"</strong>——面试被问"KV 亲和调度怎么落地到 Mooncake"时，这是最完整的回答骨架。</p>
+<hr />
+<h2 id="5-04">5. 面试高频问答（聚焦传输 + 管理，与 04 的一分钟版互补）<a class="headerlink" href="#5-04" title="Permanent link">&para;</a></h2>
+<p><strong>Q1：Transfer Engine 为什么能做到零拷贝？</strong></p>
+<blockquote>
+<p>RDMA 场景下用 GPUDirect RDMA，网卡直接读写远端 GPU 显存/DRAM，不经过 CPU、不做 memcpy；NVMe-oF 场景下用 cuFile/GPUDirect Storage，数据从远端 NVMe 经 PCIe 直达本地 DRAM/VRAM，同样绕过 CPU。上层统一抽象成 Segment + BatchTransfer，屏蔽了协议差异。</p>
+</blockquote>
+<p><strong>Q2：多网卡怎么聚合带宽，会不会传输时选错网卡导致跨 NUMA？</strong></p>
+<blockquote>
+<p>每台机器启动时探测 NUMA/PCIe 拓扑生成矩阵，按内存位置（<code>cpu:0</code>/<code>cuda:0</code>）区分 preferred/secondary 网卡列表，正常只走 preferred（本地 NUMA 或本地 PCIe Switch 下的 GPUDirect 路径）；超过 64KB 的传输会切片，不同分片走不同网卡路径并行，从而聚合多网卡带宽；链路故障时降级用 secondary 列表并自动重试。</p>
+</blockquote>
+<p><strong>Q3：Master 会不会成为单点瓶颈？</strong></p>
+<blockquote>
+<p>不会，因为 Master 走的是控制面/数据面分离架构：Master 只处理元数据 RPC（<code>PutStart</code>/<code>GetReplicaList</code> 等，KB 级请求），真正的 GB 级数据搬运由 Client 间通过 Transfer Engine 点对点完成，完全不经过 Master。Master 本身也支持多实例 + etcd 选主做高可用。</p>
+</blockquote>
+<p><strong>Q4：Mooncake Store 怎么决定一个 KV block 该不该保留多个副本？</strong></p>
+<blockquote>
+<p>通过 <code>ReplicateConfig</code>：<code>replica_num</code>（DRAM 副本数）、<code>nof_replica_num</code>（SSD 副本数）可独立配置，配合 <code>with_soft_pin</code>/<code>with_hard_pin</code> 控制驱逐优先级。热点前缀可以配置更多副本分散读压力，冷数据降级到 SSD 副本甚至允许被驱逐。</p>
+</blockquote>
+<p><strong>Q5：驱逐策略和淘汰时的一致性怎么保证？</strong></p>
+<blockquote>
+<p>Replica 有独立状态机（<code>INITIALIZED → PROCESSING → COMPLETE → REMOVED</code>），只有 <code>COMPLETE</code> 才可读；驱逐候选队列跳过 <code>refcnt&gt;0</code>（正被读取/正忙）和 <code>hard_pin</code> 的副本，<code>soft_pin</code> 副本优先级最低但可淘汰。后台 <code>BatchEvict</code> 按批限流执行，避免一次性淘汰过多打爆系统。</p>
+</blockquote>
+<p><strong>Q6：节点下线（扩缩容）时 KV cache 怎么处理，会不会数据丢失导致下游读失败？</strong></p>
+<blockquote>
+<p>Segment 有优雅下线状态机：<code>OK → DRAINING</code>（停止新分配但仍可读）→ <code>DRAINED</code>（副本迁移/淘汰完毕）→ <code>UNMOUNTING</code>。不是直接拔线，给了在用副本自然消耗完的窗口。</p>
+</blockquote>
+<p><strong>Q7：RDMA 连接是不是一开始就全连接好？出故障怎么处理？</strong></p>
+<blockquote>
+<p>按需建连（Endpoint 首次请求时才建立），用连接池 + SIEVE 算法限制活跃连接数上限，防止连接数无限增长拖慢请求处理；被淘汰的连接先进等待队列，未完成的分片传输完再回收。链路故障时自动切换到备用网卡重新提交请求，故障的 RDMA context/CQ 会被临时隔离直到问题解决。</p>
+</blockquote>
+<p><strong>Q8：Transfer Engine 和 Mooncake Store 是什么关系，能分开用吗？</strong></p>
+<blockquote>
+<p>Transfer Engine 是纯传输库（Segment + BatchTransfer 语义），可以独立拿来做点对点高速数据搬运（P2P Store 场景）；Mooncake Store 是在 Transfer Engine 之上加了一层对象管理（Master 元数据 + 副本 + 驱逐 + HA），提供 Put/Get 这种更高层的 KV cache 存取语义。类比：Transfer Engine 相当于"高速公路"，Mooncake Store 相当于"物流公司的调度和仓储系统"。</p>
+</blockquote>
+<p><strong>Q9：Master 的元数据锁怎么设计才能扛住高并发 Put/Get？</strong></p>
+<blockquote>
+<p>不能用一个全局锁串行化所有请求。Mooncake Master 实测是哈希分片方案：<code>kNumShards = 1024</code>，按 <code>hash(key) % 1024</code> 把对象元数据路由到 1024 个独立分片，每个分片有自己的 mutex，配合严格的加锁顺序规范（先 client_mutex_，再 shard mutex，最后 segment_mutex_）避免死锁。这是高并发 KV 元数据服务的标准解法；如果还要再优化，可以在分片锁前面加一层布隆过滤器做"快速判断一定不存在"的短路，省掉一次哈希和加锁开销（Mooncake 目前没有这一层）。</p>
+</blockquote>
+<p><strong>Q10：请求被调度到没有缓存的 Prefill 节点，还能不能把别处的 KV cache 抓过来？重算和传输谁贵？</strong></p>
+<blockquote>
+<p>能，这是 Mooncake Store <code>Get()</code> 语义本身决定的——KV cache 是集群共享对象，不是"谁算的归谁"，当前节点查到 key 在别的 Segment 上就能直接 RDMA 拉过来，跟 Conductor 当初有没有把请求路由对没关系（详见第 3 节）。谁贵谁便宜看论文 §2.2 的公式：重算的 FLOPs 随前缀长度 <code>p</code> 平方增长（<code>a·p²·d</code> 项，主要是 attention），要传输的数据量只随 <code>p</code> 线性增长，所以前缀越长传输越划算；LLaMA3-70B 在 8×A800 上的实测阈值只要 6 GB/s，现代 RDMA 网络（100+ GB/s）比这个阈值高一到两个数量级，绝大多数场景传输明显比重算便宜。只有前缀很短（RDMA 握手/查表的固定开销盖过省下的算力）、网络本身很差、或者热点 block 只有一份副本被并发抢导致拥塞时，才会出现"传不如算"，这些都是可以靠 block 粒度阈值和多副本策略工程化解决的问题。</p>
+</blockquote>
+<p><strong>Q11：Mooncake、Motor、vLLM 三个系统，谁真的在做"传输值不值得"这个成本比较？</strong></p>
+<blockquote>
+<p>只有 Mooncake Conductor 的论文 Algorithm 1 做了完整版：对每个候选 Prefill 实例都估算 <code>Ttransfer+Tqueue+Tprefill</code>，取全局 TTFT 最小的实例，并且有一个显式的 <code>kvcache_balancing_threshold</code> 门限决定要不要真的触发跨节点传输。Motor 的 <code>KvCacheAffinityPolicy</code> 是简化版，只在打分里把命中的 token 数从要算的量里扣掉（<code>overlap_credit</code> 默认按 100% 折算，隐式假设复用几乎免费），没有单独建模传输耗时。vLLM 自己的 <code>MooncakeStoreConnector</code>（scheduler 侧 <code>get_num_new_matched_tokens</code>）更简单，纯粹是"Store 里有没有更长命中"的二元查表，有就无条件拉取，完全不比较值不值。三者由粗到细排列刚好是：vLLM Connector（执行层，只管拉不管算不算账）&lt; Motor（路由层，简化打分）&lt; Mooncake Conductor（调度层，完整成本模型）——这是合理的分层设计，"该不该传"这个最贵的判断只在最上层算一次，下层负责老实执行，不重复验证。详见第 3.4 节。</p>
+</blockquote>
+<hr />
+<h2 id="6">6. 参考<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<ul>
+<li>论文：《Mooncake: Trading More Storage for Less Computation — A KVCache-centric Architecture for Serving LLM Chatbot》FAST'25 最佳论文，arXiv:2407.00079</li>
+<li>官方文档：kvcache-ai.github.io/Mooncake（Design → Transfer Engine / Mooncake Store / Conductor）</li>
+<li>源码：工作区 <code>Mooncake/</code> 仓</li>
+<li>传输：<code>mooncake-transfer-engine/include/transfer_engine.h</code>、<code>src/topology.cpp</code>、<code>src/transport/</code></li>
+<li>管理：<code>mooncake-store/include/{replica.h, segment.h, eviction_strategy.h}</code>、<code>src/master_service.cpp</code>、<code>src/client_service.cpp</code>、<code>src/ha/</code></li>
+<li>专题 04：<code>04-KV亲和调度与Mooncake专题.md</code>（Conductor 调度视角、Motor/router 对照、集成落地）</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

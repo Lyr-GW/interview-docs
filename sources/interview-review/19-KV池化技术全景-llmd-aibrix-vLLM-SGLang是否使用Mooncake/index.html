@@ -1,0 +1,2261 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/interview-review/19-KV%E6%B1%A0%E5%8C%96%E6%8A%80%E6%9C%AF%E5%85%A8%E6%99%AF-llmd-aibrix-vLLM-SGLang%E6%98%AF%E5%90%A6%E4%BD%BF%E7%94%A8Mooncake/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>专题 19：KV Cache 池化技术全景 —— llm-d / AIBrix / vLLM / SGLang / Dynamo 是否使用 Mooncake Store - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#19kv-cache-llm-d-aibrix-vllm-sglang-dynamo-mooncake-store" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              专题 19：KV Cache 池化技术全景 —— llm-d / AIBrix / vLLM / SGLang / Dynamo 是否使用 Mooncake Store
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0. 结论速览表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 整体格局图
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-vllmmooncake-12-kvconnector-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. vLLM：Mooncake 只是 12+ 个 KVConnector 里的 1 个
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-sglangmooncake-hicache-8-l3-backend-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. SGLang：Mooncake 只是 HiCache 8 个 L3 backend 里的 1 个
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-llm-dmooncake-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. llm-d：Mooncake 是"非原生但生产级"的可选路径，PD 分离完全不用它
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. llm-d：Mooncake 是&#34;非原生但生产级&#34;的可选路径，PD 分离完全不用它">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-tiered-prefix-cache-mooncake" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 五条 Tiered Prefix Cache 路径，Mooncake 只是其中一条
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-mooncake-llm-d-mooncake" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Mooncake 部署细节（llm-d 提供的是目前最完整的 Mooncake 生产部署参考）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-mooncakestoreconnector-mooncakeconnectorpd-llm-d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 关键澄清：MooncakeStoreConnector（前缀共享）≠ MooncakeConnector（PD 传输），llm-d 只用了前者
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-llm-d-router-token-04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 llm-d Router 的前缀感知路由：近似（字符级）+ 精确（token 级）两套实现，正好对应专题 04 的对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-aibrix-mooncake" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. AIBrix：基本不用 Mooncake，是完全独立自研的池化框架
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. AIBrix：基本不用 Mooncake，是完全独立自研的池化框架">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-aibrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 AIBrix 自己的分层架构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-rolling-hash-gateway-mooncake" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 跨实例前缀复用：靠自己的 Rolling Hash + Gateway 索引，不靠 Mooncake
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-conductor-aibrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 "conductor" 这个名字在 AIBrix 里也存在，但是完全独立的实现
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-nvidia-dynamomooncake-sglang-kvbm-g1-g4-nixl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. NVIDIA Dynamo：Mooncake 只在 SGLang 集成的旁支出现，KVBM 核心是自研 G1-G4 + NIXL
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. NVIDIA Dynamo：Mooncake 只在 SGLang 集成的旁支出现，KVBM 核心是自研 G1-G4 + NIXL">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-kvbmkv-block-manager-mooncake" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 KVBM（KV Block Manager）自己的四层分级，和 Mooncake 无关
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-mooncake-sglang-kvbm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Mooncake 真正出现的两个地方，都是"SGLang 引擎原生能力"，不是 KVBM 自己接入的
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-dynamo-kv-aware-overlap-cost-mooncake-conductor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Dynamo 的 KV-aware 路由：多层 overlap 折算 cost，比 Mooncake Conductor 更细
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-vllmtrt-llm-connector-sglang" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 与推理引擎的集成：vLLM/TRT-LLM 复用官方 connector 体系，SGLang 走原生能力
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-mooncake" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 横向对比：谁把 Mooncake 当"一等公民"
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 面试高频问答
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 关键文件/证据速查表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 参考
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="19kv-cache-llm-d-aibrix-vllm-sglang-dynamo-mooncake-store">专题 19：KV Cache 池化技术全景 —— llm-d / AIBrix / vLLM / SGLang / Dynamo 是否使用 Mooncake Store<a class="headerlink" href="#19kv-cache-llm-d-aibrix-vllm-sglang-dynamo-mooncake-store" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>承接专题 04/10/11。前面三篇把 Mooncake 自己讲透了，本篇跳出 Mooncake 视角，回答一个更大的问题：<strong>在当前的 LLM 推理生态里，KV cache 池化到底是不是"默认用 Mooncake"？</strong></p>
+<p><strong>与工作区其他两份综述的关系（避免重复阅读困惑）</strong>：<code>docs/kv knowledge/12-KV池化完整综述.md</code>（覆盖 vLLM/SGLang/Mooncake/LMCache/Dynamo/llm-d/AIBrix/Motor 全景，偏概念分层与架构对比）和 <code>docs/interview-review/15-vLLM-Router与SGLang-KV亲和性设计调研.md</code>（偏路由算法对标）已经覆盖了这个生态的大部分内容。<strong>本文的独特价值是本轮基于最新代码仓的三个专项深挖</strong>：① AIBrix 的 <code>conductor</code> 打分策略源码（TTFT 公式）与其"几乎不用 Mooncake"的证据链（<code>pd/transfer/mooncake.go</code> TODO stub）；② llm-d 的 Mooncake 生产部署细节（<code>PYTHONHASHSEED</code> 坑、embedded/standalone 两种模式的 Master/Client 参数）与"PD 分离统一用 NixlConnector、不用 MooncakeConnector"这个反直觉结论；③ Dynamo KVBM 的 G1-G4 与 Mooncake 的边界核实（KVBM 核心不用 Mooncake，只在 SGLang 集成旁支查询共享池）。如果只看一份，先看《KV池化完整综述》建立全景，再看本文补充这三处细节。 结论提前说：<strong>不是</strong>——Mooncake Store 只是"可插拔存储 backend 市场"里的一个选项，vLLM/SGLang/llm-d 都同时支持好几种互相竞争的方案（LMCache、NIXL、Mooncake、AIBrix 自己的 L1/L2 引擎、HF3FS、EIC 等），AIBrix 甚至完全自研了一套不依赖 Mooncake 的独立池化框架。本文基于 <code>vllm/</code>、<code>sglang/</code>、<code>llm-d/</code>、<code>aibrix/</code>、<code>dynamo/</code> 五个仓库的最新代码/文档逐一核实。</p>
+</blockquote>
+<hr />
+<h2 id="0">0. 结论速览表<a class="headerlink" href="#0" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>系统</th>
+<th>是否用 Mooncake Store</th>
+<th>用在哪个环节</th>
+<th>是否为默认/推荐路径</th>
+<th>其他可选 backend</th>
+<th>KV-aware 路由组件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>vLLM</strong></td>
+<td>是，但只是 12+ 个 KVConnector 里的 1 个</td>
+<td><code>MooncakeConnector</code>（PD 传输）+ <code>MooncakeStoreConnector</code>（跨实例前缀共享），均原生注册</td>
+<td>否，默认是 <code>OffloadingConnector</code>（原生 CPU offload，零外部依赖）</td>
+<td>LMCache、NIXL、FlexKV、HF3FS、MoRI-IO、SimpleCPUOffload...</td>
+<td>vLLM 自身**没有**跨实例路由能力，是外部系统的职责</td>
+</tr>
+<tr>
+<td><strong>SGLang</strong></td>
+<td>是，但只是 HiCache 8 个 L3 backend 里的 1 个</td>
+<td>HiCache L3 层（<code>MooncakeStore</code> 类）+ disaggregation transfer backend 之一</td>
+<td>否，同级还有 nixl/hf3fs/aibrix/eic/simm/mori/file</td>
+<td>nixl、hf3fs、<strong>aibrix</strong>（AIBrix 自己的引擎反过来可以插进 SGLang！）、eic、simm、mori、file</td>
+<td>无内置全局路由，依赖外部 <code>sgl-model-gateway</code></td>
+</tr>
+<tr>
+<td><strong>llm-d</strong></td>
+<td>是，<code>MooncakeStoreConnector</code> 有完整 K8s 部署清单（Helm/Kustomize）</td>
+<td>KV cache <strong>分层 offload / 跨实例前缀共享</strong>，<strong>不是</strong> PD 传输</td>
+<td>否，官方推荐**原生路径**（vLLM <code>OffloadingConnector</code> / SGLang HiCache），Mooncake 是"需要额外能力时才选"的选项</td>
+<td>LMCache、vLLM 原生 Offloading、SGLang 原生 HiCache；<strong>PD 分离统一走 <code>NixlConnector</code>，<code>MooncakeConnector</code> 只在文档里提及，无实际部署</strong></td>
+<td><strong>llm-d Router / EPP</strong>：<code>prefix-cache-scorer</code>（权重3）+ <code>kv-cache-utilization-scorer</code>/<code>queue-scorer</code>（负载均衡，权重2）+ <code>no-hit-lru-scorer</code>；分近似（字符级）和精确（事件驱动 token 级）两套实现</td>
+</tr>
+<tr>
+<td><strong>AIBrix</strong></td>
+<td><strong>否，几乎不用</strong>——只在 PD 传输的一个 TODO stub 里出现，L2 存储 backend 列表里**没有** Mooncake</td>
+<td>无实质集成</td>
+<td>不适用</td>
+<td>自研 L1(DRAM)+L2 框架，L2 支持 InfiniStore/HPKV/EIC/PrisKV/RocksDB/SHFS</td>
+<td>Gateway 自研 <code>prefix-cache</code> 路由 + PD 场景**同名但独立实现**的 <code>conductor</code> 打分策略</td>
+</tr>
+<tr>
+<td><strong>NVIDIA Dynamo</strong></td>
+<td>是，但**不在 KVBM 核心里**，是 SGLang 集成的旁支能力</td>
+<td>SGLang HiCache 共享池查询（<code>HicacheSharedKvCache</code>）+ SGLang disagg 传输 backend 之一</td>
+<td>否，KVBM 自己的 G1-G4 分层走的是 NIXL，不是 Mooncake</td>
+<td>KVBM（自研 G1-G4）、NIXL（默认传输层）、LMCache、FlexKV（FlexKV 内部用 Mooncake TE）</td>
+<td><strong>KvRouter/KvScheduler/KvIndexer</strong>：device/host/disk/shared-cache 多层 overlap 折算 prefill cost，选 cost 最低的 worker</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话总结</strong>：五个系统里，<strong>只有 llm-d 把 Mooncake Store 当成一条完整、生产级的部署路径</strong>（有专门的 Helm chart、Master/Client 拆分、embedded/standalone 两种模式）；vLLM 和 SGLang 把它当成众多平级 connector/backend 之一；Dynamo 只在 SGLang 集成的旁支用到；<strong>AIBrix 基本不用 Mooncake，走的是完全独立自研的 L1/L2 池化框架</strong>。</p>
+<hr />
+<h2 id="1">1. 整体格局图<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph TB
+    subgraph "推理引擎层"
+        vLLM["vLLM&lt;br/&gt;KVConnectorFactory (12+ connectors)"]
+        SGL["SGLang&lt;br/&gt;HiCache backend_factory (8 backends)"]
+    end
+
+    subgraph "编排/路由层（跑在推理引擎之上）"
+        LLMD["llm-d Router (EPP)&lt;br/&gt;Filter→Score→Pick 插件框架"]
+        AIBGW["AIBrix Gateway&lt;br/&gt;prefix-cache / conductor 打分"]
+        DYNRT["Dynamo KvRouter/KvScheduler&lt;br/&gt;多层 overlap cost 模型"]
+    end
+
+    subgraph "KV 池化后端候选池（互相竞争，任选其一）"
+        Mooncake["Mooncake Store&lt;br/&gt;(Master+Client, RDMA)"]
+        LMCache["LMCache"]
+        NIXL["NIXL (Dynamo/vLLM 默认)"]
+        AIBEngine["AIBrix 自研 L1/L2&lt;br/&gt;+ InfiniStore/HPKV/EIC/..."]
+        KVBM["Dynamo KVBM&lt;br/&gt;G1-G4 自研分层"]
+        Native["vLLM OffloadingConnector&lt;br/&gt;/ SGLang 原生 HiCache"]
+        HF3FS["HF3FS / SHFS / RocksDB&lt;br/&gt;等文件系统类"]
+    end
+
+    vLLM -.可选.-&gt; Mooncake
+    vLLM -.可选.-&gt; LMCache
+    vLLM -.可选.-&gt; NIXL
+    vLLM -.默认推荐.-&gt; Native
+    SGL -.可选.-&gt; Mooncake
+    SGL -.可选.-&gt; AIBEngine
+    SGL -.可选.-&gt; HF3FS
+    LLMD --&gt; vLLM
+    LLMD --&gt; SGL
+    LLMD -.推荐原生.-&gt; Native
+    LLMD -.可选.-&gt; Mooncake
+    LLMD -.PD分离统一用.-&gt; NIXL
+    AIBGW --&gt; vLLM
+    AIBGW --&gt; SGL
+    AIBGW -.自研池化.-&gt; AIBEngine
+    DYNRT --&gt; vLLM
+    DYNRT --&gt; SGL
+    DYNRT --&gt; KVBM
+    DYNRT -.SGLang旁支.-&gt; Mooncake</code></pre>
+<p><strong>看这张图要抓住的核心信息</strong>：Mooncake 只是"候选池"里的一个节点，且不同系统对它的依赖程度差异极大——从"完整生产部署"（llm-d）到"完全不用"（AIBrix）。</p>
+<hr />
+<h2 id="2-vllmmooncake-12-kvconnector-1">2. vLLM：Mooncake 只是 12+ 个 KVConnector 里的 1 个<a class="headerlink" href="#2-vllmmooncake-12-kvconnector-1" title="Permanent link">&para;</a></h2>
+<p><code>vllm/distributed/kv_transfer/kv_connector/factory.py</code> 当前注册的全部 connector（主分支实测）：</p>
+<table>
+<thead>
+<tr>
+<th>Connector</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ExampleConnector</code> / <code>ExampleHiddenStatesConnector</code></td>
+<td>官方示例，教学用</td>
+</tr>
+<tr>
+<td><code>LMCacheConnectorV1</code> / <code>LMCacheMPConnector</code></td>
+<td>集成 LMCache（另一个独立的分布式 KV cache 项目）</td>
+</tr>
+<tr>
+<td><code>NixlConnector</code> / <code>NixlPullConnector</code> / <code>NixlPushConnector</code></td>
+<td>集成 NVIDIA NIXL</td>
+</tr>
+<tr>
+<td><code>MultiConnector</code></td>
+<td>组合多个 connector（比如 PD 传输 + 前缀共享叠加使用）</td>
+</tr>
+<tr>
+<td><code>MoRIIOConnector</code></td>
+<td>AMD MoRI-IO 传输后端</td>
+</tr>
+<tr>
+<td><code>OffloadingConnector</code></td>
+<td><strong>vLLM 原生</strong>，零外部依赖，直接 CPU RAM/文件系统 offload</td>
+</tr>
+<tr>
+<td><code>DecodeBenchConnector</code></td>
+<td>压测用</td>
+</tr>
+<tr>
+<td><code>MooncakeConnector</code> / <code>MooncakeStoreConnector</code></td>
+<td>Mooncake（PD 传输 / 跨实例前缀共享），专题 11 深挖过</td>
+</tr>
+<tr>
+<td><code>FlexKVConnectorV1</code></td>
+<td>腾讯+NVIDIA 的 FlexKV（内部用 Mooncake Transfer Engine 做传输，但对外是独立 connector）</td>
+</tr>
+<tr>
+<td><code>SimpleCPUOffloadConnector</code></td>
+<td>更简化版的 CPU offload</td>
+</tr>
+<tr>
+<td><code>HF3FSKVConnector</code></td>
+<td>深度求索开源的 3FS 分布式文件系统</td>
+</tr>
+</tbody>
+</table>
+<p><strong>vLLM 官方默认推荐的是 <code>OffloadingConnector</code></strong>（零外部依赖），Mooncake 是"需要跨节点共享池能力时"的可选项之一，和 LMCache、NIXL、FlexKV 是平级竞争关系，不是唯一方案。</p>
+<hr />
+<h2 id="3-sglangmooncake-hicache-8-l3-backend-1">3. SGLang：Mooncake 只是 HiCache 8 个 L3 backend 里的 1 个<a class="headerlink" href="#3-sglangmooncake-hicache-8-l3-backend-1" title="Permanent link">&para;</a></h2>
+<p><code>sglang/srt/mem_cache/storage/backend_factory.py</code> 当前注册的全部 backend：</p>
+<table>
+<thead>
+<tr>
+<th>Backend 名</th>
+<th>实现类</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>file</code></td>
+<td><code>HiCacheFile</code></td>
+<td>本地磁盘</td>
+</tr>
+<tr>
+<td><code>nixl</code></td>
+<td><code>HiCacheNixl</code></td>
+<td>NVIDIA NIXL</td>
+</tr>
+<tr>
+<td><code>mooncake</code></td>
+<td><code>MooncakeStore</code></td>
+<td>Mooncake（专题 11 深挖过）</td>
+</tr>
+<tr>
+<td><code>hf3fs</code></td>
+<td><code>HiCacheHF3FS</code></td>
+<td>DeepSeek 3FS</td>
+</tr>
+<tr>
+<td><strong><code>aibrix</code></strong></td>
+<td><code>AibrixKVCacheStorage</code></td>
+<td><strong>AIBrix 自己的引擎，反过来可以当 SGLang 的 L3 backend 用！</strong>——这说明 AIBrix 和 Mooncake 在 SGLang 生态里是**平级竞品**，不是谁依赖谁</td>
+</tr>
+<tr>
+<td><code>eic</code></td>
+<td><code>EICStorage</code></td>
+<td>火山引擎 Elastic Instant Cache</td>
+</tr>
+<tr>
+<td><code>simm</code></td>
+<td><code>HiCacheSiMM</code></td>
+<td>共享推理内存管理器</td>
+</tr>
+<tr>
+<td><code>mori</code></td>
+<td><code>UMBPStore</code></td>
+<td>AMD MoRI 相关（类名与 backend 名不完全对应，注册表里如此）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>同一棵 <code>HiRadixCache</code> 树的 L3 层可以插拔换成上述任意一个</strong>，Mooncake 没有特殊地位。</p>
+<hr />
+<h2 id="4-llm-dmooncake-pd">4. llm-d：Mooncake 是"非原生但生产级"的可选路径，PD 分离完全不用它<a class="headerlink" href="#4-llm-dmooncake-pd" title="Permanent link">&para;</a></h2>
+<h3 id="41-tiered-prefix-cache-mooncake">4.1 五条 Tiered Prefix Cache 路径，Mooncake 只是其中一条<a class="headerlink" href="#41-tiered-prefix-cache-mooncake" title="Permanent link">&para;</a></h3>
+<p>llm-d 的 <code>guides/tiered-prefix-cache/README.md</code> 明确列出五条互斥的部署路径：</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>实现</th>
+<th>官方态度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vLLM native</td>
+<td><code>OffloadingConnector</code></td>
+<td><strong>官方推荐</strong>："requires no extra components"</td>
+</tr>
+<tr>
+<td>SGLang HiCache</td>
+<td>原生 HiCache</td>
+<td><strong>官方推荐</strong>（native 的 SGLang 等价物）</td>
+</tr>
+<tr>
+<td>LMCache</td>
+<td>LMCache connector</td>
+<td>非原生，需要额外组件</td>
+</tr>
+<tr>
+<td><strong>MooncakeStore</strong></td>
+<td><code>MooncakeStoreConnector</code></td>
+<td>非原生，需要额外组件（Mooncake Master，可选 Mooncake Client）</td>
+</tr>
+<tr>
+<td>TPU</td>
+<td>vLLM TPU 原生 connector</td>
+<td>TPU 专用</td>
+</tr>
+</tbody>
+</table>
+<p>原文态度非常直接：</p>
+<blockquote>
+<p>"We recommend each model server's <strong>native</strong> offloading path... Reach for a non-native connector (for example LMCache) <strong>only when you need a capability the native path does not yet provide</strong>."</p>
+</blockquote>
+<p>也就是说，llm-d 把 Mooncake 定位成"原生方案覆盖不了某个需求时的补充选项"，不是首选。</p>
+<h3 id="42-mooncake-llm-d-mooncake">4.2 Mooncake 部署细节（llm-d 提供的是目前最完整的 Mooncake 生产部署参考）<a class="headerlink" href="#42-mooncake-llm-d-mooncake" title="Permanent link">&para;</a></h3>
+<p>两种模式（<code>docs/architecture/advanced/kv-management/kv-offloader.md</code>）：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>说明</th>
+<th><code>global_segment_size</code></th>
+<th>组件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Embedded</strong></td>
+<td>每个 vLLM rank 就地贡献 CPU DRAM</td>
+<td><code>&gt; 0</code>（如 <code>"80GB"</code>）</td>
+<td>Mooncake Master + vLLM</td>
+</tr>
+<tr>
+<td><strong>Standalone-store</strong></td>
+<td>独立 Mooncake Client 进程拥有 CPU+SSD 池，vLLM 只是请求方</td>
+<td><code>0</code></td>
+<td>Master + Client + vLLM</td>
+</tr>
+</tbody>
+</table>
+<p>启动配置（embedded 模式）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;embedded&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;metadata_server&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;P2PHANDSHAKE&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;master_server_address&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mooncake-master-store.mooncake.svc.cluster.local:50051&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">&quot;global_segment_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;80GB&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">&quot;protocol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rdma&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">&quot;enable_offload&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><code>--kv-transfer-config '{"kv_connector":"MooncakeStoreConnector","kv_role":"kv_both"}'</code></p>
+<p>Master 的关键淘汰/租约参数（<code>helpers/mooncake-master-store/base/configmap.yaml</code>）：<code>eviction_high_watermark_ratio=0.95</code>、<code>eviction_ratio=0.05</code>、<code>default_kv_lease_ttl=5000ms</code>、<code>default_kv_soft_pin_ttl=1800000ms</code>（30分钟）、<code>enable_snapshot=true</code>——这些数字和专题 10 讲的驱逐机制（LRU、soft pin、快照）完全对得上，是理论到生产配置的直接映射。</p>
+<p><strong>一个非常值得记的生产坑</strong>（面试加分点）：</p>
+<blockquote>
+<p>KV cache block 的 key 是内容寻址（vLLM block hash），但 <strong>Python 的 <code>hash()</code> 默认按进程随机种子</strong>，不同 vLLM 实例对同样的 token 会算出不同 hash，导致永远命中不上彼此的缓存。**必须**给所有共享同一个 Mooncake Store 的 vLLM 实例设置固定的 <code>PYTHONHASHSEED=0</code>。</p>
+</blockquote>
+<h3 id="43-mooncakestoreconnector-mooncakeconnectorpd-llm-d">4.3 关键澄清：<code>MooncakeStoreConnector</code>（前缀共享）≠ <code>MooncakeConnector</code>（PD 传输），llm-d 只用了前者<a class="headerlink" href="#43-mooncakestoreconnector-mooncakeconnectorpd-llm-d" title="Permanent link">&para;</a></h3>
+<p>llm-d 文档原文明确区分：</p>
+<blockquote>
+<p>"<code>MooncakeStoreConnector</code> (distributed cache offloading) is distinct from <code>MooncakeConnector</code> (point-to-point KV transfer for P/D disaggregation). They share the same Transfer Engine for RDMA data movement but serve different purposes."</p>
+</blockquote>
+<p><strong>实测结论：llm-d 仓库里 <code>MooncakeConnector</code> 只在这段说明性文字里出现过，没有找到任何实际部署 yaml</strong>。llm-d 的 <strong>PD 分离统一使用 <code>NixlConnector</code></strong>（所有硬件变体：GPU/AMD/XPU/AWS/Wide-EP 全部如此），这是本次调研一个很反直觉但很重要的发现——<strong>做 KV cache 跨实例共享时 llm-d 会考虑 Mooncake，但做 PD 点对点传输时完全不考虑 Mooncake，只用 NIXL</strong>。</p>
+<h3 id="44-llm-d-router-token-04">4.4 llm-d Router 的前缀感知路由：近似（字符级）+ 精确（token 级）两套实现，正好对应专题 04 的对比<a class="headerlink" href="#44-llm-d-router-token-04" title="Permanent link">&para;</a></h3>
+<p>llm-d 提供两种实现，选择权交给用户：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>近似实现</th>
+<th>精确实现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>匹配粒度</td>
+<td><strong>字符近似</strong>（无 tokenizer，按字符/token 比例估算）</td>
+<td><strong>精确 token</strong>（真实调 vLLM tokenizer）</td>
+</tr>
+<tr>
+<td>状态来源</td>
+<td>EPP 本地 LRU 索引（路由后自行"假设"目标 pod 会缓存）</td>
+<td>订阅 vLLM 的 <strong>KVEvents</strong>（ZMQ），维护全局精确索引</td>
+</tr>
+<tr>
+<td>依赖</td>
+<td>无</td>
+<td>vLLM render 端点 + ZMQ</td>
+</tr>
+<tr>
+<td>PD 支持</td>
+<td>基础</td>
+<td>原生/精细（能定位具体 block 做传输）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>这和专题 04 第 3 节对比的"router 仓字符级 radix tree vs Motor token 级方案"是同一个技术选型问题在另一个项目里的重现</strong>——llm-d 很聪明地把两种方案都做了，让用户按"轻量但近似"vs"精确但要多起一个 tokenizer 服务"自己选，而不是像 Motor 和 vLLM production-stack router 那样各自押注一种方案。</p>
+<p>打分公式（<code>prefix-cache-scorer</code> 权重 3，是所有 scorer 里最高的）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">schedulingProfiles</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">plugins</span><span class="p">:</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pluginRef</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">queue-scorer</span><span class="w">                  </span><span class="c1"># 权重2，负载均衡</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pluginRef</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kv-cache-utilization-scorer</span><span class="w">    </span><span class="c1"># 权重2，负载均衡</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pluginRef</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prefix-cache-scorer</span><span class="w">             </span><span class="c1"># 权重3，前缀命中优先</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">pluginRef</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no-hit-lru-scorer</span><span class="w">                </span><span class="c1"># 权重2，冷请求打散</span>
+</code></pre></div>
+<p>理念上和 Mooncake Conductor 的"前缀命中优先 + 负载均衡"高度一致，工程实现是**多插件加权打分**（Filter→Score→Pick 框架），不是单体 Conductor。</p>
+<hr />
+<h2 id="5-aibrix-mooncake">5. AIBrix：基本不用 Mooncake，是完全独立自研的池化框架<a class="headerlink" href="#5-aibrix-mooncake" title="Permanent link">&para;</a></h2>
+<p>这是本次调研最大的反差点——<strong>AIBrix 的 KV cache 池化和 Mooncake 几乎没有关系</strong>。</p>
+<h3 id="51-aibrix">5.1 AIBrix 自己的分层架构<a class="headerlink" href="#51-aibrix" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Gateway（前缀感知路由 + PD conductor 打分）
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>        ↓
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>vLLM/SGLang 侧：AIBrixOffloadingConnector / AIBrixPDReuseConnector
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        ↓
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>BaseKVCacheManager
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>   ├─ L1Cache（本机 DRAM，S3FIFO/LRU/FIFO 淘汰）—— 不跨实例共享
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>   └─ L2Cache → Connector（direct 模式直连单 backend / cluster 模式经 Placement+Redis MetaService 选点）
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        ↓
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>InfiniStore / HPKV / EIC / PrisKV / RocksDB（本地） / SHFS / MOCK
+</code></pre></div>
+<p><strong>Mooncake 在 AIBrix 里出现的全部三处，且都不是核心依赖</strong>：
+1. PD 分离场景的传输 backend 选项之一，但代码是 <strong>TODO stub</strong>（<code>pd/transfer/mooncake.go</code> 里 <code>MooncakeAgent</code> 是空实现）；
+2. Benchmark 流量重放工具支持读取 <strong>Mooncake trace 格式**的数据集（<code>--trace-type mooncake</code>），这只是数据源格式，不是运行时依赖；
+3. vLLM v0.14.0 patch 里，AIBrix 的 connector 注册代码和 vLLM 自带的 <code>MooncakeConnector</code> 注册代码**并列共存</strong>——说明二者是平级的可选 connector，AIBrix 完全没有包装或依赖 Mooncake。</p>
+<p><strong>L2 存储后端列表里没有 Mooncake</strong>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># l2/connectors/connector.py 的工厂分支</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="s2">&quot;ROCKSDB&quot;</span> <span class="o">|</span> <span class="s2">&quot;INFINISTORE&quot;</span> <span class="o">|</span> <span class="s2">&quot;HPKV&quot;</span> <span class="o">|</span> <span class="s2">&quot;PRISKV&quot;</span><span class="o">/</span><span class="s2">&quot;PRIS&quot;</span> <span class="o">|</span> <span class="s2">&quot;MOCK&quot;</span> <span class="o">|</span> <span class="s2">&quot;EIC&quot;</span> <span class="o">|</span> <span class="s2">&quot;SHFS&quot;</span>
+</code></pre></div>
+<h3 id="52-rolling-hash-gateway-mooncake">5.2 跨实例前缀复用：靠自己的 Rolling Hash + Gateway 索引，不靠 Mooncake<a class="headerlink" href="#52-rolling-hash-gateway-mooncake" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>数据面</strong>：多个引擎实例把 KV block 写到同一个 L2 backend，Key 用 <code>RollingHashKeyBuilder</code>（链式滚动哈希，前一个 block 的 hash 参与下一个 block 计算，保证前缀一致性）——概念上和 vLLM 的 block hash 链、Mooncake 的 block key 是同一套思路，但完全是 AIBrix 自己实现的。</li>
+<li><strong>控制面</strong>：Gateway 的 <code>PrefixHashTable</code>/<code>SyncPrefixHashTable</code>（两级 hash 索引：前缀 hash → {model → {pod: 最近使用时间}}），<code>SyncPrefixHashTable</code> 还能订阅引擎侧真实的 KV Event 提升精度。</li>
+</ul>
+<h3 id="53-conductor-aibrix">5.3 "conductor" 这个名字在 AIBrix 里也存在，但是完全独立的实现<a class="headerlink" href="#53-conductor-aibrix" title="Permanent link">&para;</a></h3>
+<p>AIBrix 的 PD 场景有一个叫 <code>conductorPrefillPolicy</code> 的打分策略，<strong>命名撞车但代码完全独立</strong>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// estimated_TTFT(pod) = queue(reqCnt, PrefillTimePerRequest) + prefix(matched_tokens) + prefill(unmatched_tokens)</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">type</span><span class="w"> </span><span class="nx">conductorPrefillPolicy</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nx">tok</span><span class="w">                </span><span class="nx">tokenizer</span><span class="p">.</span><span class="nx">Tokenizer</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nx">prefixCacheIndexer</span><span class="w"> </span><span class="o">*</span><span class="nx">prefixcacheindexer</span><span class="p">.</span><span class="nx">PrefixHashTable</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nx">metricCache</span><span class="w">        </span><span class="nx">cache</span><span class="p">.</span><span class="nx">MetricCache</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
+</code></pre></div>
+<p>这个 TTFT 估算公式（排队时间 + 前缀命中部分耗时 + 未命中部分 prefill 耗时，取最小值的 pod）跟 Mooncake Conductor 论文 Algorithm 1 的思路**高度相似**（面试如果被问"AIBrix 是不是抄了 Mooncake Conductor"，准确的回答是"思路收敛到了同一个方案，但是独立实现，AIBrix 没有依赖 Mooncake 的 Go 版 Conductor 代码"）。</p>
+<hr />
+<h2 id="6-nvidia-dynamomooncake-sglang-kvbm-g1-g4-nixl">6. NVIDIA Dynamo：Mooncake 只在 SGLang 集成的旁支出现，KVBM 核心是自研 G1-G4 + NIXL<a class="headerlink" href="#6-nvidia-dynamomooncake-sglang-kvbm-g1-g4-nixl" title="Permanent link">&para;</a></h2>
+<h3 id="61-kvbmkv-block-manager-mooncake">6.1 KVBM（KV Block Manager）自己的四层分级，和 Mooncake 无关<a class="headerlink" href="#61-kvbmkv-block-manager-mooncake" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>含义</th>
+<th>实现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G1</td>
+<td>GPU HBM</td>
+<td><code>DeviceStorage</code></td>
+</tr>
+<tr>
+<td>G2</td>
+<td>CPU pinned memory</td>
+<td><code>PinnedStorage</code></td>
+</tr>
+<tr>
+<td>G3</td>
+<td>本地 SSD/NVMe</td>
+<td><code>DiskStorage</code></td>
+</tr>
+<tr>
+<td>G4</td>
+<td>远程/云存储</td>
+<td><code>NixlStorage</code>（KVBM 视为不透明 blob store）</td>
+</tr>
+</tbody>
+</table>
+<p><code>KvBlockManager</code> + <code>OffloadManager</code>/<code>TransferManager</code> 统一调度这四层之间的迁移（Device↔Host、Host↔Disk、Disk→Device onboard），<strong>底层传输走 NIXL，不是 Mooncake</strong>。三层架构：LLM Runtime Connector → KVBM Logic → <strong>NIXL Layer</strong>（统一传输/存储抽象）。</p>
+<h3 id="62-mooncake-sglang-kvbm">6.2 Mooncake 真正出现的两个地方，都是"SGLang 引擎原生能力"，不是 KVBM 自己接入的<a class="headerlink" href="#62-mooncake-sglang-kvbm" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>SGLang HiCache 共享池查询</strong>：Dynamo 的 <code>HicacheSharedKvCache</code>（<code>lib/llm/src/kv_router/shared_cache.rs</code>）直接用 HTTP 查询 Mooncake master 的 <code>/batch_query_keys</code> 接口，让 Router 在打分时"顺便"折算一下"这个 block 是不是任何 worker 都能从共享池拿到"，但这依赖的前提是 <strong>SGLang worker 自己配置了 <code>--hicache-storage-backend mooncake</code></strong>——Dynamo 只是去查询，不负责这套 Mooncake 部署。</li>
+<li><strong>SGLang disaggregation 传输 backend</strong>：<code>--disaggregation-transfer-backend mooncake</code>，和 <code>nixl</code> 是平级的可选项，同样是 SGLang 引擎原生 flag，Dynamo 透传而已。</li>
+</ol>
+<p><strong>没有找到"NIXL 内部把 Mooncake Transfer Engine 当 backend plugin"的代码证据</strong>（这点在 Mooncake 官方 README 的更新日志里提到过"NIXL officially supports Mooncake Transfer Engine as a backend plugin"，但那是 NIXL 独立仓库 <code>ai-dynamo/nixl</code> 里的事，不在本 <code>dynamo</code> 仓库范围内，无法在这个仓库里核实）。</p>
+<h3 id="63-dynamo-kv-aware-overlap-cost-mooncake-conductor">6.3 Dynamo 的 KV-aware 路由：多层 overlap 折算 cost，比 Mooncake Conductor 更细<a class="headerlink" href="#63-dynamo-kv-aware-overlap-cost-mooncake-conductor" title="Permanent link">&para;</a></h3>
+<p><code>KvRouter</code>/<code>KvScheduler</code>/<code>KvIndexer</code> 的 cost 公式（cost 越低越优）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>adjusted_prefill_blocks = max(
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    prefill_blocks
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    - overlap_score_credit * device_overlap_blocks     # G1 命中折扣
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    - host_cache_hit_weight * host_overlap_blocks       # G2 命中折扣
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    - disk_cache_hit_weight * disk_overlap_blocks       # G3 命中折扣
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    - shared_cache_multiplier * shared_beyond_blocks,   # 共享池(如Mooncake)命中折扣
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    0,
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>)
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>cost = prefill_load_scale * adjusted_prefill_blocks + decode_blocks
+</code></pre></div>
+<p>这比 Mooncake Conductor Algorithm 1 的"只区分本地命中 vs 远端命中"更细——<strong>Dynamo 把命中分成 G1/G2/G3/共享池四个层级分别打折</strong>，理念上是 Mooncake Conductor 思路的进一步细化（多级折扣而不是二元的"本地/远端"）。</p>
+<h3 id="64-vllmtrt-llm-connector-sglang">6.4 与推理引擎的集成：vLLM/TRT-LLM 复用官方 connector 体系，SGLang 走原生能力<a class="headerlink" href="#64-vllmtrt-llm-connector-sglang" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>vLLM</strong>：自研 <code>DynamoConnector</code>，但**严格继承 vLLM 的 <code>KVConnectorBase_V1</code>**；PD 场景用 <code>PdConnector</code>（继承 vLLM 的 <code>MultiConnector</code>），组合 KVBM/LMCache/FlexKV + vLLM 自带的 <code>NixlConnector</code>。</li>
+<li><strong>TensorRT-LLM</strong>：<code>DynamoKVBMConnectorLeader/Worker</code>，挂载在 TRT-LLM 自己的 <code>kv_connector_config</code> 插件机制上。</li>
+<li><strong>SGLang</strong>：<strong>不走 connector 体系</strong>，是引擎原生的 HiCache/disagg 能力，Dynamo 只在路由侧多查一次共享池。</li>
+</ul>
+<hr />
+<h2 id="7-mooncake">7. 横向对比：谁把 Mooncake 当"一等公民"<a class="headerlink" href="#7-mooncake" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph LR
+    subgraph "生产级完整部署（一等公民）"
+        LLMD2["llm-d&lt;br/&gt;Helm chart + Master/Client拆分&lt;br/&gt;+ PYTHONHASHSEED坑都写清楚了"]
+    end
+    subgraph "平级可选 backend（多选一）"
+        VLLM2["vLLM&lt;br/&gt;12+ connector 之一"]
+        SGL2["SGLang&lt;br/&gt;HiCache 8 backend 之一"]
+    end
+    subgraph "旁支/边缘能力"
+        DYN2["Dynamo&lt;br/&gt;仅 SGLang 集成的旁支查询"]
+    end
+    subgraph "完全不用"
+        AIB2["AIBrix&lt;br/&gt;自研 L1/L2，Mooncake 仅 TODO stub"]
+    end</code></pre>
+<p>面试如果被问"业界 KV cache 池化是不是都在用 Mooncake"，<strong>正确答案是"不是，Mooncake 只是众多方案里工程最成熟、开源最早的一个，各家的态度从'当生产首选'到'完全不用、自研一套'都有"</strong>，具体理由：</p>
+<ol>
+<li><strong>vLLM/SGLang 官方都不把 Mooncake 当默认</strong>——默认都是各自的原生方案（<code>OffloadingConnector</code>/原生 HiCache），Mooncake 是"需要跨节点共享池"时的可选项，和 LMCache、NIXL、FlexKV、AIBrix 引擎平级竞争；</li>
+<li><strong>llm-d 给了 Mooncake 目前最完整的生产部署参考</strong>（Helm chart、两种部署模式、淘汰/租约参数、<code>PYTHONHASHSEED</code> 这种生产级坑都写了），但官方仍然推荐先用原生方案；</li>
+<li>**AIBrix 完全独立自研**了一套 L1/L2 池化框架（InfiniStore/HPKV/EIC/PrisKV/RocksDB/SHFS 做 L2 backend），Mooncake 在这套体系里几乎没有存在感，只在 PD 传输的一个未完成 stub 和 benchmark 数据格式里出现过；</li>
+<li><strong>Dynamo 的 KVBM 自己有一套 G1-G4 分层 + NIXL 传输</strong>，跟 Mooncake 完全独立，Mooncake 只在"Dynamo 支持的 SGLang 引擎"这一层被间接用到（SGLang 自己配置了才生效，Dynamo 不负责）。</li>
+</ol>
+<hr />
+<h2 id="8">8. 面试高频问答<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<p><strong>Q1：现在做 KV cache 池化是不是就是用 Mooncake Store？</strong></p>
+<blockquote>
+<p>不是。Mooncake 只是一个开源最早、工程比较成熟的方案，但 vLLM、SGLang 官方默认都推荐各自的原生方案（零外部依赖），Mooncake 和 LMCache、NIXL、FlexKV、AIBrix 自研引擎是平级竞争关系。llm-d 给了 Mooncake 目前最完整的生产部署参考，但也说"没有额外需求就先用原生方案"；AIBrix 干脆完全自研了一套不依赖 Mooncake 的 L1/L2 框架。</p>
+</blockquote>
+<p><strong>Q2：AIBrix 为什么不用 Mooncake？</strong></p>
+<blockquote>
+<p>从代码看不是"不能用"，而是"选择了独立路线"——AIBrix 自己实现了分层缓存管理框架（L1 DRAM + L2 可插拔 Connector 抽象 + Placement 一致性选点 + K8s Operator 编排），远端存储依赖 InfiniStore/HPKV/EIC 等外部系统，但这套框架和 Mooncake Store 是平级的竞品关系，不是谁包装谁。有意思的是 SGLang 的 HiCache backend 列表里反而有一个 <code>aibrix</code> 选项，说明两者在 SGLang 生态里是互相竞争的可插拔后端。</p>
+</blockquote>
+<p><strong>Q3：llm-d 做 PD 分离用 Mooncake 吗？</strong></p>
+<blockquote>
+<p>不用。llm-d 的 PD 分离全部硬件变体统一使用 <code>NixlConnector</code>，<code>MooncakeConnector</code>（PD 点对点传输）只在文档里被提及用来做概念区分，仓库里没有任何实际部署配置。Mooncake 在 llm-d 里只用在"KV cache 分层 offload / 跨实例前缀共享"这一个环节（<code>MooncakeStoreConnector</code>），这是两个完全不同的产品线，容易被面试官拿来试探是否真的懂区分。</p>
+</blockquote>
+<p><strong>Q4：Dynamo 的 KVBM 是不是基于 Mooncake？</strong></p>
+<blockquote>
+<p>不是。KVBM 是 NVIDIA 自研的 G1-G4 分层块管理器（GPU/CPU pinned/本地SSD/远程存储），底层传输统一走 NIXL，跟 Mooncake 没有代码级依赖。Mooncake 只在"Dynamo 支持 SGLang 引擎"这条线上被间接用到——如果 SGLang worker 自己配置了 <code>--hicache-storage-backend mooncake</code>，Dynamo 的 Router 会额外去查一次 Mooncake 的共享池接口来更准确地估算 prefill 成本，但这是可选的旁支能力，不是 KVBM 核心。</p>
+</blockquote>
+<p><strong>Q5：这么多系统、这么多 backend，选型的判断依据是什么？</strong></p>
+<blockquote>
+<p>核心是三个维度权衡：① 要不要跨节点共享（本机 CPU RAM offload 用原生方案就够，要真正的集群级共享池才需要 Mooncake/LMCache/AIBrix 引擎级方案）；② 硬件/网络条件（有 RDMA 网络才能发挥 Mooncake/NIXL 的优势，否则退化到 TCP 或干脆用文件系统类方案如 HF3FS/SHFS）；③ 运维成本（原生方案零外部依赖，Mooncake/AIBrix 引擎都需要额外部署 Master/Client 或 Gateway，llm-d 的态度"先用原生，需要额外能力才上非原生方案"是目前业界比较有共识的判断顺序）。</p>
+</blockquote>
+<hr />
+<h2 id="9">9. 关键文件/证据速查表<a class="headerlink" href="#9" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>系统</th>
+<th>组件</th>
+<th>文件路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vLLM</td>
+<td>Connector 全量注册表</td>
+<td><code>vllm/vllm/distributed/kv_transfer/kv_connector/factory.py</code></td>
+</tr>
+<tr>
+<td>SGLang</td>
+<td>HiCache backend 全量注册表</td>
+<td><code>sglang/python/sglang/srt/mem_cache/storage/backend_factory.py</code></td>
+</tr>
+<tr>
+<td>llm-d</td>
+<td>Tiered Prefix Cache 五条路径对比</td>
+<td><code>llm-d/guides/tiered-prefix-cache/README.md</code></td>
+</tr>
+<tr>
+<td>llm-d</td>
+<td>KV Offloading 架构文档（含 Mooncake 完整说明）</td>
+<td><code>llm-d/docs/architecture/advanced/kv-management/kv-offloader.md</code></td>
+</tr>
+<tr>
+<td>llm-d</td>
+<td>Mooncake Master/Client Helm 部署</td>
+<td><code>llm-d/helpers/mooncake-master-store/</code>、<code>llm-d/helpers/mooncake-client/</code></td>
+</tr>
+<tr>
+<td>llm-d</td>
+<td>前缀感知路由（近似+精确两套）</td>
+<td><code>llm-d/docs/architecture/advanced/kv-management/prefix-cache-aware-routing.md</code></td>
+</tr>
+<tr>
+<td>llm-d</td>
+<td>PD 分离统一用 NixlConnector 的证据</td>
+<td><code>llm-d/guides/pd-disaggregation/modelserver/gpu/vllm/base/patch-prefill.yaml</code></td>
+</tr>
+<tr>
+<td>AIBrix</td>
+<td>L1/L2 池化框架</td>
+<td><code>aibrix/python/aibrix_kvcache/aibrix_kvcache/{l1,l2}/</code></td>
+</tr>
+<tr>
+<td>AIBrix</td>
+<td>Mooncake PD 传输 TODO stub</td>
+<td><code>aibrix/pkg/plugins/gateway/algorithms/pd/transfer/mooncake.go</code></td>
+</tr>
+<tr>
+<td>AIBrix</td>
+<td>Gateway <code>conductor</code> 打分策略</td>
+<td><code>aibrix/pkg/plugins/gateway/algorithms/pd/prefill_scorer.go</code></td>
+</tr>
+<tr>
+<td>Dynamo</td>
+<td>KVBM G1-G4 设计文档</td>
+<td><code>dynamo/docs/design-docs/kvbm-design.md</code></td>
+</tr>
+<tr>
+<td>Dynamo</td>
+<td>SGLang HiCache 共享池查询（Mooncake）</td>
+<td><code>dynamo/lib/llm/src/kv_router/shared_cache.rs</code></td>
+</tr>
+<tr>
+<td>Dynamo</td>
+<td>KV Router cost 公式</td>
+<td><code>dynamo/docs/design-docs/router-design.md</code>、<code>dynamo/lib/kv-router/src/scheduling/selector.rs</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10">10. 参考<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<ul>
+<li>专题 04：<code>04-KV亲和调度与Mooncake专题.md</code>（Motor/router 字符级 vs token 级对比，可与本文第 4.4 节的 llm-d 近似/精确两套实现对照阅读）</li>
+<li>专题 10：<code>10-Mooncake传输引擎与存储管理深度拓展.md</code>（Mooncake 自身的传输/驱逐/租约机制，可与本文第 4.2 节 llm-d 的生产配置参数对照）</li>
+<li>专题 11：<code>11-Mooncake在vLLM与SGLang中的实现对比.md</code>（vLLM/SGLang 对 Mooncake 自身的集成细节）</li>
+<li>本文所有结论基于工作区 <code>vllm/</code>、<code>sglang/</code>、<code>llm-d/</code>、<code>aibrix/</code>、<code>dynamo/</code> 五个仓库当前快照，行号可能随版本更新漂移，核心结论（生态格局）不受影响。</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

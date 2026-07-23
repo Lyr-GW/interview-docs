@@ -1,0 +1,2459 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/interview-review/03-%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E4%B8%8E%E7%BA%A6%E6%9D%9F%E8%A7%A3%E7%A0%81%E4%B8%93%E9%A2%98/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>专题 03：结构化输出 / 约束解码——xgrammar 原理、对比、开销与副作用 - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#03-xgrammar" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              专题 03：结构化输出 / 约束解码——xgrammar 原理、对比、开销与副作用
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 问题定义
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-xgrammar-q30" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. xgrammar 原理（Q30 满分版，必背）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 工作区代码佐证
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#35-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 vLLM 结构化输出架构深潜（设计与实现细节）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.5 vLLM 结构化输出架构深潜（设计与实现细节）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#351" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5.1 全链路图
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#352-structuredoutputmanager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5.2 StructuredOutputManager 的职责与设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#353" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5.3 后端抽象层设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#354-scheduler-bitmask-cpugpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5.4 scheduler 与 bitmask 生成的时序、CPU→GPU 传输
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#355" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5.5 投机解码场景的特殊处理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.5.5 投机解码场景的特殊处理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        三阶段时序（先搞清：临时推进 ≠ 正式提交）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rollback-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么必须「先 rollback，再 verify」——不是风格偏好
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实现细节（与上表对应）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#356-vllm-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5.6 与 vLLM V1 架构的整合（进程边界）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#357" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5.7 配置与可观测性
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#36-mindie-mask-bug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 MindIE 同步 / 异步采样路径与 mask 错位 bug 复盘（简历重点追问）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.6 MindIE 同步 / 异步采样路径与 mask 错位 bug 复盘（简历重点追问）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#361-t-mask-t-1-grammar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6.1 先建立不变量：第 t 步 mask 必须由第 t-1 步采样后的 grammar 状态生成
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#362" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6.2 同步路径为什么天然正确
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#363" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6.3 旧异步路径的根因：把同步钩子原样放进流水线，跨错了线程边界
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#364" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6.4 错位时具体会输出什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#365-mask-forward_loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6.5 修复：让异步 mask 与状态推进都在 forward_loop 内形成同线程闭环
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#366-overlap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6.6 对异步性能的影响：牺牲一小段错误 overlap，保留主流水收益
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#367" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6.7 面试追问速答
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-q25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 主流后端对比（Q25 加分项）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-q32q34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 编译开销与缓存（Q32–Q34 完整版）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#55" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 关键性能数据（面试可用数值，速查表）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-q31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 副作用（Q31 满分版，必背）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 理想的一段自我陈述（可直接背）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 参考链接
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="03-xgrammar">专题 03：结构化输出 / 约束解码——xgrammar 原理、对比、开销与副作用<a class="headerlink" href="#03-xgrammar" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>对应题目：Q25/Q30（原理，答得不错）、Q31–Q34（副作用与缓存，答了一半）。这是候选人的强项，本文目标是把"答得不错"升级为"降维打击"。</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 问题定义<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>结构化输出（structured output / guided decoding）：让 LLM 的输出**保证**符合某种形式规范——JSON Schema、正则、EBNF 语法、工具调用格式。仅靠 prompt 无法保证 100% 合法，约束解码在**采样阶段**硬性屏蔽非法 token：每步解码前算出"当前状态下合法的 token 集合"，把非法 token 的 logit 置 −inf。</p>
+<p>核心难点是**词表与语法的错位**：语法定义在字符/字节层，而模型输出的是 token（一个 token 可能横跨多个语法单元，如 <code>{"na</code> 这种 token 同时消费了 <code>{</code>、<code>"</code>、<code>na</code>）。所以引擎必须能对 10 万+ 词表的每个 token 判断"从当前语法状态出发，接受这个 token 后是否仍合法"——每步都做全词表检查，朴素实现开销巨大。</p>
+<h2 id="2-xgrammar-q30">2. xgrammar 原理（Q30 满分版，必背）<a class="headerlink" href="#2-xgrammar-q30" title="Permanent link">&para;</a></h2>
+<p>xgrammar（CMU Catalyst / MLC 团队，MLSys 2025）的处理链路：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>@startuml
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>title xgrammar 编译期与运行期链路
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>start
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>partition 编译期 {
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  :JSON Schema;
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  :转换为 EBNF 上下文无关文法（CFG）;
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  :编译为字节级下推自动机（byte-level PDA）;
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  :预计算 adaptive token mask cache;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>}
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>partition 运行期 {
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  :读取当前 PDA 栈状态;
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>  :生成 token bitmask;
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>  :将 bitmask 应用到 logits;
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  :采样 token;
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>}
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>stop
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>@enduml
+</code></pre></div>
+<p><strong>为什么是 PDA 而不是 FSM？</strong> JSON 是递归结构（对象套对象、数组套数组），嵌套深度无界，正则/有限状态机（FSM）表达不了，需要带栈的下推自动机。面试里候选人说的"有限状态机"是常见的口误——说 PDA 更准确（简单正则约束确实可以退化为 FSM）。</p>
+<p><strong>核心优化一：token 二分类 + 掩码预计算（xgrammar 的灵魂）</strong>
+把词表中的 token 分为两类：
+- <strong>context-independent tokens</strong>（上下文无关，通常 &gt;99%）：仅凭 PDA 当前位置（栈顶节点）即可判定合法性，与栈的深层内容无关 → <strong>编译期预计算**好每个 PDA 位置的合法性，存入以栈顶节点为 key 的 adaptive token mask cache；
+- **context-dependent tokens</strong>（&lt;1%）：需要检查整个栈才能判定 → 运行时用**持久化执行栈**（persistent execution stack，支持快速分支/回滚）现场检查。</p>
+<p>运行时每步只需：查缓存拿到 99% token 的掩码 + 现场检查剩下 1%，mask 生成从"全词表模拟"降到微秒级。</p>
+<p><strong>核心优化二：存储与系统协同</strong>
+- 掩码缓存按内容自适应选择存储格式（合法集小存白名单、非法集小存黑名单、否则存 bitmask），控制内存；
+- PDA 结构做编译器式优化（内联、等价状态合并）；
+- <strong>与 GPU 计算 overlap</strong>：mask 生成在 CPU 上进行，与 GPU 前向并行，把开销藏进 GPU 时间线；bitmask 以 int32 压缩位图传给 GPU，用 Triton/CUDA kernel 一次 <code>logits.masked_fill_(-inf)</code>。</p>
+<h2 id="3">3. 工作区代码佐证<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<p><strong>vLLM（<code>vllm/</code> 仓）：</strong>
+- <code>vllm/v1/structured_output/backend_xgrammar.py</code> —— xgrammar 后端：<code>xgr.GrammarCompiler(cache_enabled=True, cache_limit_bytes=VLLM_XGRAMMAR_CACHE_MB×1024²)</code> 做**编译缓存**（缓存上限由环境变量 <code>VLLM_XGRAMMAR_CACHE_MB</code> 控制，见 <code>vllm/envs.py</code>）；
+- <code>vllm/v1/structured_output/__init__.py</code> —— <code>StructuredOutputManager</code>：编译任务丢进 <code>ThreadPoolExecutor</code> 异步执行，不阻塞主循环；
+- <code>vllm/v1/structured_output/backend_guidance.py</code> / <code>backend_outlines.py</code> / <code>backend_lm_format_enforcer.py</code> —— 多后端并存，<code>vllm/config/structured_outputs.py</code> 的 <code>backend</code> 字段选择（默认 auto，具体优先级/fallback 顺序见 3.5.3）；
+- <code>vllm/v1/core/sched/scheduler.py</code> —— scheduler 侧 <code>get_grammar_bitmask()</code> 生成掩码；<code>vllm/v1/worker/gpu/structured_outputs.py</code> —— GPU 侧 Triton kernel 应用 bitmask（CPU→GPU 传输细节见 3.5.4）；
+- <code>vllm/v1/structured_output/request.py</code> —— 请求级 grammar 状态（支持投机解码场景的多位置 mask：rollback/accept_tokens 前瞻，详见 3.5.5）。</p>
+<blockquote>
+<p>关于 <code>StructuredOutputManager</code> 的编译调度、后端抽象层、进程边界、配置与可观测性等更细的设计细节，见下面新增的 3.5 节，避免在这里重复展开。</p>
+</blockquote>
+<p><strong>MindIE-LLM（<code>MindIE-LLM/</code> 仓，即候选人交付的特性）：</strong>
+- <code>mindie_llm/text_generator/plugins/structured_output/structured_output_manager.py</code> —— 总控：延迟导入 xgrammar、编译 grammar、matcher 缓存、生成 bitmask；
+- <code>mindie_llm/text_generator/plugins/structured_output/structured_output_grammar.py</code> —— <code>XgrammarGrammar</code> 封装 <code>GrammarMatcher</code>：逐 token <code>accept_token</code>、<code>fill_next_token_bitmask</code>、终止检测；
+- <code>mindie_llm/text_generator/plugins/structured_output/structured_output_bitmask.py</code> —— bitmask 应用到 logits（CPU/NPU 路径 <code>masked_fill_</code> 置 −inf）;
+- <code>mindie_llm/text_generator/samplers/logits_handlers/pta_handlers.py</code> —— <code>GuidedDecodingLogitsHandler</code>（<code>@register_class("guided_decoding")</code>）在采样前挂载；
+- 文档：<code>docs/zh/user_guide/feature/structured_output.md</code>。</p>
+<p>对照可见 MindIE 的实现结构（manager/grammar/bitmask/logits handler 四层）确实是 vLLM 架构的迁移，与候选人 Q26 的叙述互相印证。</p>
+<h2 id="35-vllm">3.5 vLLM 结构化输出架构深潜（设计与实现细节）<a class="headerlink" href="#35-vllm" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>本节是对第 3 节"工作区代码佐证"的展开，逐个模块深挖到具体类/方法，用于应对面试官"你说说 vLLM 具体怎么实现的"这类追问。以下所有结论均基于本地 <code>vllm/vllm/v1/structured_output/</code> 目录及相关文件的实际代码，<strong>没有代码依据的地方会明确标注"未见明确实现"，不臆造</strong>。</p>
+</blockquote>
+<h3 id="351">3.5.1 全链路图<a class="headerlink" href="#351" title="Permanent link">&para;</a></h3>
+<p>一个带约束的请求从 API 层到采样完成的完整链路：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>@startuml
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>title vLLM V1 结构化输出全链路
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>actor Client
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>participant &quot;API / SamplingParams&quot; as API
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>box &quot;EngineCore 进程（CPU）&quot; #E8F4FF
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>participant &quot;EngineCore&quot; as Core
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>participant &quot;Scheduler&quot; as Scheduler
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>participant &quot;StructuredOutputManager&quot; as SO
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>participant &quot;ModelExecutor&quot; as Executor
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>end box
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>box &quot;Worker 进程（GPU）&quot; #FFF4E8
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>participant &quot;StructuredOutputsWorker&quot; as Worker
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>participant &quot;Sampler&quot; as Sampler
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>end box
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>Client -&gt; API: response_format / guided_json / regex / grammar
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>API -&gt; API: 构造 StructuredOutputsParams\n校验 backend 与 fallback
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>alt 校验失败
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    API --&gt; Client: 参数错误
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>else 校验通过
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    API -&gt; Core: Request 入队
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    Core -&gt; SO: grammar_init(request)
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    SO -&gt; SO: 懒初始化 backend
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    SO -&gt; SO: ThreadPoolExecutor 异步编译\ngrammar 字段保存 Future
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    loop 每个 EngineCore.step
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>        Core -&gt; Scheduler: schedule()
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>        Scheduler --&gt; Core: scheduler_output
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>        Core -&gt; Executor: execute_model(non_block=True)
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>        Executor -&gt; Worker: 启动 GPU forward
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>        par GPU 前向
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>            Worker -&gt; Worker: model forward
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>            Worker --&gt; Executor: future 完成
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>        else CPU 生成 mask
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>            Core -&gt; Scheduler: get_grammar_bitmask(scheduler_output)
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>            Scheduler -&gt; SO: grammar_bitmask()
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>            SO -&gt; SO: fill_bitmask\n投机场景逐位置前瞻
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>            SO --&gt; Scheduler: GrammarOutput(np.ndarray)
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>            Scheduler --&gt; Core: GrammarOutput
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>        end
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>        Core -&gt; Executor: future.result()
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>        Core -&gt; Executor: sample_tokens(GrammarOutput)
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>        Executor -&gt; Worker: IPC 发送 bitmask + request ids
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>        Worker -&gt; Worker: pin memory + non-blocking H2D\nTriton/xgrammar kernel masked_fill(-inf)
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>        Worker -&gt; Sampler: 受约束 logits
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>        Sampler --&gt; Worker: sampled token
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>        Worker --&gt; Core: 采样结果
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>        Core -&gt; Scheduler: 更新请求结果
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>        Scheduler -&gt; SO: accept_tokens 推进 PDA 状态
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>    end
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>end
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>@enduml
+</code></pre></div>
+<p><strong>关键点</strong>：bitmask 的生成完全在 CPU / EngineCore 进程，GPU worker 进程只负责"搬运 + apply"，这与第 2 节说的"mask 生成与 GPU 计算 overlap"是同一件事的两个视角——<code>EngineCore.step()</code> 里 <code>execute_model(non_block=True)</code> 和 <code>get_grammar_bitmask()</code> 紧挨着调用，前者把 GPU 前向丢进后台执行，后者紧接着在 CPU 上算 bitmask，两者并发发生。</p>
+<p>面试可以这样说："vLLM 把 bitmask 生成放在 scheduler 所在的 EngineCore 进程（CPU），worker 进程只做 H2D 拷贝和 apply，这样 CPU 算 mask 和 GPU 跑前向天然是并发的，不需要额外做 overlap，架构上就长这样。"</p>
+<h3 id="352-structuredoutputmanager">3.5.2 <code>StructuredOutputManager</code> 的职责与设计<a class="headerlink" href="#352-structuredoutputmanager" title="Permanent link">&para;</a></h3>
+<p><code>StructuredOutputManager</code>（<code>vllm/v1/structured_output/__init__.py</code>）是**engine 级**（一个 EngineCore 进程一个实例，不是每请求一个）的总控类，职责：</p>
+<ul>
+<li><strong>backend 单例化</strong>：<code>self.backend</code> 全局只初始化一次（代码注释明确写了"V1 目前不支持同一引擎里混用多个后端"），首次调用 <code>grammar_init</code> 时按 <code>request.sampling_params.structured_outputs._backend</code> 创建对应 Backend 实例。</li>
+<li><strong>异步编译解耦主循环</strong>：<code>grammar_init()</code> 把 <code>_create_grammar()</code> 提交给 <code>self.executor</code>（<code>ThreadPoolExecutor</code>，<code>max_workers = (cpu_count+1)//2</code>，代码注释解释了为什么不用默认的 <code>cpu_count*5</code>——编译是 CPU-bound 不是 IO-bound，线程数拉太高没有意义）。<code>request.structured_output_request.grammar</code> 被赋值为一个 <code>Future</code>；<code>StructuredOutputRequest.grammar</code> 是个 property，内部 <code>_check_grammar_completion()</code> 用 <code>future.result(timeout=0.0001)</code> 做非阻塞轮询——<strong>没编译完就不会把请求放进 batch</strong>，这正是第 6 节"编译未完成的请求挡在 batch 外"的具体实现方式。</li>
+<li><strong>例外</strong>：<code>external_launcher</code> 模式下 <code>_use_async_grammar_compilation</code> 被设为 <code>False</code>，同步编译。原因代码里写得很清楚——外部启动器模式每个 TP rank 都有自己的 scheduler，异步编译会导致不同 rank 上"编译完成"的时间点不一致，破坏 external_launcher 依赖的确定性假设。这是个很具体、可以直接背的死角知识点。</li>
+<li><strong>去重（如实说明）</strong>：<code>StructuredOutputManager</code> 本身**没有**维护一个 Python 侧的"schema → 编译产物"哈希表来做请求间去重——每次 <code>grammar_init</code> 都会调用 <code>backend.compile_grammar()</code>。真正的去重发生在更底层：<code>XgrammarBackend.__post_init__</code> 里创建的 <code>xgr.GrammarCompiler(cache_enabled=True, cache_limit_bytes=...)</code> 是 xgrammar 库自带的编译产物缓存（与第 5 节讲的缓存是同一个东西），相同 schema 第二次编译时由 xgrammar 内部命中缓存，vLLM 侧代码没有额外的去重层。这点面试如果被问"vLLM 自己有没有做请求级去重"，如实回答"没有独立的去重表，缓存下沉给了 xgrammar 编译器"更准确，不要说成是 <code>StructuredOutputManager</code> 自己维护的缓存。</li>
+<li><strong>bitmask 批量填充的并行优化</strong>：当结构化输出请求数超过 <code>fill_bitmask_parallel_threshold</code>（硬编码 128）且没有投机解码时，<code>grammar_bitmask()</code> 会把请求切成 <code>fill_bitmask_parallel_batch_size=16</code> 一批，丢进另一个专用线程池 <code>executor_for_fillmask</code>（<code>min(cpu_count//2, 8)</code> 个 worker）并行调用 <code>fill_bitmask</code>；小 batch 或有投机解码时走串行分支（因为投机解码分支里有逐 token 状态推进的顺序依赖，天然不可并行，见 3.5.5）。</li>
+<li><strong>grammar 初始化失败的错误处理（如实说明）</strong>：<code>_create_grammar()</code> 里有一条明确的 TODO 注释——"we still need to handle xgrammar compilation failures, though it should be unlikely as we test that up front as well"。也就是说：大部分非法 schema 已经在 API 层 <code>SamplingParams._validate_structured_outputs()</code> 做过一次编译/校验提前拦截了，但 engine core 内部真正编译（<code>ThreadPoolExecutor</code> 里跑的那次）如果失败，<strong>当前版本没有专门的 catch-and-fallback 逻辑</strong>，异常会以 <code>Future</code> 异常的形式向上冒出来。这是一个可以主动指出的"当前实现尚未完善"的点，回答时不要说成"vLLM 有完善的编译失败重试机制"。</li>
+</ul>
+<p>面试可以这样说："<code>StructuredOutputManager</code> 是 EngineCore 进程里的单例，核心设计是把编译丢给线程池、用 Future 的非阻塞轮询把'还没编译完'变成调度状态的一部分，编译完之前请求就是留在 WAITING，不会进 batch；它自己不做 schema 去重，去重是 xgrammar 编译器自带的缓存做的；编译失败目前代码里留了个 TODO，还没有兜底重试。"</p>
+<h3 id="353">3.5.3 后端抽象层设计<a class="headerlink" href="#353" title="Permanent link">&para;</a></h3>
+<p><code>vllm/v1/structured_output/backend_types.py</code> 定义了两层抽象：</p>
+<ul>
+<li><strong><code>StructuredOutputBackend</code>（engine 级，dataclass + ABC）</strong>：持有 <code>vllm_config</code> / <code>tokenizer</code> / <code>vocab_size</code>，定义 <code>compile_grammar(request_type, grammar_spec) -&gt; StructuredOutputGrammar</code>、<code>allocate_token_bitmask(max_num_seqs)</code>、<code>destroy()</code> 三个抽象方法。<code>XgrammarBackend</code>、<code>GuidanceBackend</code>、<code>OutlinesBackend</code>、<code>LMFormatEnforcerBackend</code> 都实现这个接口，<code>StructuredOutputManager.grammar_init()</code> 里按 <code>backend</code> 字段字符串分发（<code>if backend == "xgrammar": ... elif backend == "guidance": ...</code>），四选一，可插拔。</li>
+<li><strong><code>StructuredOutputGrammar</code>（request 级，ABC）</strong>：定义 <code>accept_tokens</code>、<code>validate_tokens</code>、<code>rollback</code>、<code>fill_bitmask</code>、<code>is_terminated</code>、<code>reset</code> 五/六个抽象方法。每个请求持有一个自己的 <code>StructuredOutputGrammar</code> 实例（如 <code>XgrammarGrammar</code>，内部包着一个 <code>xgr.GrammarMatcher</code>），维护该请求独立的 PDA/自动机状态。</li>
+</ul>
+<p><strong><code>backend="auto"</code> 的优先级/fallback 逻辑（<code>vllm/sampling_params.py::SamplingParams._validate_structured_outputs</code>，逐字对照代码，不是推测）</strong>：</p>
+<ol>
+<li>先尝试 <code>validate_xgrammar_grammar(self)</code>；成功则 <code>_backend = "xgrammar"</code>，<strong>结束</strong>。</li>
+<li>若第 1 步抛 <code>ValueError</code>（xgrammar 校验失败或 schema 含 xgrammar 不支持的特性），判断是否要跳过 guidance：</li>
+<li>tokenizer 是非 tekken 的 Mistral tokenizer，或者</li>
+<li>schema 命中 <code>has_guidance_unsupported_json_features</code>（guidance 也不支持的 JSON Schema 特性）；</li>
+<li>满足其一则跳过 guidance，直接 fallback 到 <strong>outlines</strong>（<code>validate_structured_output_request_outlines</code>，<code>_backend = "outlines"</code>）。</li>
+<li>否则 fallback 到 <strong>guidance</strong>（<code>validate_guidance_grammar</code>，<code>_backend = "guidance"</code>）。</li>
+<li><code>lm-format-enforcer</code> <strong>不参与 auto 的自动选择</strong>，只有用户显式指定 <code>backend="lm-format-enforcer"</code> 才会用。</li>
+</ol>
+<p>也就是说 auto 模式的优先级是 <strong>xgrammar &gt; guidance &gt; outlines</strong>（outlines 只在"guidance 也搞不定"时兜底），这与第 4 节表格里"xgrammar 当前是主流默认选择"的结论完全一致，3.5.3 是对那句话的具体代码级证据。</p>
+<p><code>disable_any_whitespace</code>（仅 xgrammar/guidance 支持，<code>vllm/config/structured_outputs.py</code> 里用 <code>model_validator</code> 强制校验，非法组合直接在配置阶段报错）和 <code>disable_additional_properties</code>（仅 guidance 支持）也是同样的强校验思路，把"后端能力差异"提前到配置校验阶段而不是运行时才报错。</p>
+<p>面试可以这样说："auto 模式不是随便选的，是有严格优先级的：先试 xgrammar，失败了看是不是 Mistral 非 tekken 分词器或者有 guidance 也不支持的 schema 特性，是的话降级到 outlines，不是的话降级到 guidance；lm-format-enforcer 必须用户手动指定，auto 不会选它。这个逻辑体现了 vLLM 团队对几个后端能力边界的取舍：xgrammar 最快优先用，guidance 表达能力最强兜底，outlines 是最后一道防线。"</p>
+<h3 id="354-scheduler-bitmask-cpugpu">3.5.4 scheduler 与 bitmask 生成的时序、CPU→GPU 传输<a class="headerlink" href="#354-scheduler-bitmask-cpugpu" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>生成时机与位置</strong>：确认是在 <strong>scheduler（CPU 侧，<code>vllm/v1/core/sched/scheduler.py::Scheduler.get_grammar_bitmask()</code>）</strong>，不是 worker/GPU 侧生成——这与第 3 节的描述一致。原因可以从代码接口反推：<code>StructuredOutputGrammar.fill_bitmask(bitmask, idx)</code> 底层调用的是 <code>xgr.GrammarMatcher.fill_next_token_bitmask</code>，这是纯 CPU/host 端 API，操作的是 PDA 状态和一个 CPU 侧的 <code>torch.Tensor</code> bitmask，不涉及任何 GPU 数据依赖，天然适合放在 CPU 侧、和 GPU 前向并发进行。</li>
+<li><strong>调用时机</strong>：<code>EngineCore.step()</code>（<code>vllm/v1/engine/core.py</code>）里，<code>scheduler.get_grammar_bitmask(scheduler_output)</code> 紧跟在 <code>model_executor.execute_model(scheduler_output, non_block=True)</code> 之后调用——后者是非阻塞的，立刻返回一个 <code>future</code>，GPU 前向在后台跑；<code>get_grammar_bitmask()</code> 在这段等待期间同步执行，即 <strong>bitmask 生成与 GPU 前向计算并发</strong>。在带 batch queue 的 <code>step_with_batch_queue()</code> 里逻辑更复杂一点：如果本 step 存在"待定的投机解码 token"（<code>pending_structured_output_tokens</code>），bitmask 计算会被推迟到下一轮拿到 draft token 校验结果之后才做（<code>deferred_scheduler_output</code> 分支），这是为了保证投机解码的草稿 token 先经过验证再生成对应位置的 bitmask。</li>
+<li><strong>CPU → GPU 传输方式</strong>：<code>GrammarOutput</code>（<code>vllm/v1/core/sched/output.py</code>，一个只有 <code>structured_output_request_ids: list[str]</code> 和 <code>grammar_bitmask: npt.NDArray[np.int32]</code> 两个字段的 dataclass）经由 executor（uniproc/multiproc/ray，取决于部署形态）从 EngineCore 进程传给 worker 进程/子进程，走的是普通的 IPC/序列化通道，代码注释里特意说明"转成 np.ndarray 而不是 tensor，因为序列化/反序列化效率更高"。</li>
+<li><strong>到 GPU 之后的拷贝细节</strong>（<strong>pin memory + 异步 H2D</strong>，两套并存的实现，都验证了这个结论）：</li>
+<li>新的 <code>gpu/</code> model runner 路径：<code>vllm/v1/worker/gpu/structured_outputs.py::StructuredOutputsWorker.apply_grammar_bitmask</code>——用专门的 <code>self.copy_stream = torch.cuda.Stream()</code>，先把 numpy bitmask 包成 CPU tensor 走 <code>async_copy_to_gpu()</code>（<code>vllm/v1/worker/gpu/buffer_utils.py</code>：内部 <code>x.pin_memory()</code> + <code>out.copy_(pinned, non_blocking=True)</code>），再把 batch-index 映射表也构造成 <code>pin_memory=True</code> 的 CPU tensor 后 <code>non_blocking=True</code> 拷贝，最后用当前流 <code>wait_stream(copy_stream)</code> 做同步，再启动自研 Triton kernel <code>_apply_grammar_bitmask_kernel</code> 对 logits 做原地 <code>-inf</code> 填充。</li>
+<li>旧的 <code>GPUModelRunner</code> 路径：<code>vllm/v1/structured_output/utils.py::apply_grammar_bitmask</code>——先在 CPU 上把 bitmask 按 batch 内请求顺序重排（因为 scheduler 侧 bitmask 的顺序和 GPU runner batch 里请求的顺序不一定一致），重排用的 tensor 显式 <code>pin_memory=PIN_MEMORY</code> 分配，再 <code>.to(logits.device, non_blocking=True)</code> 异步搬运，最后直接调用 xgrammar 官方提供的 <code>xgr.apply_token_bitmask_inplace</code> kernel（而不是 vLLM 自己写的 Triton kernel）。</li>
+<li>两条路径殊途同归：<strong>pin memory + <code>non_blocking=True</code> 的异步 H2D 拷贝</strong>，只是新旧两代 model runner 各自的 kernel 实现不同（一个是 vLLM 自研 Triton kernel，一个是直接用 xgrammar 官方 kernel）。目前代码库里这两套 model runner 是并存的，这也是当前 vLLM 内部架构演进中的一个真实细节，不是我编的。</li>
+</ul>
+<p>面试可以这样说："bitmask 生成确定是在 scheduler 所在的 CPU 进程，因为 xgrammar 的 matcher API 本身就是纯 CPU 接口；调用时机是紧跟在 execute_model 的 non-blocking 调用之后，天然和 GPU 前向并发；传输是走 EngineCore 到 worker 进程的 IPC，序列化成 numpy 而不是 tensor 更快；到了 GPU 侧统一是 pin memory + non_blocking 的异步 H2D，再用 kernel 做一次原地 masked_fill，vLLM 现在新老两套 model runner 分别用自研 Triton kernel 和 xgrammar 官方 kernel，思路是一样的。"</p>
+<h3 id="355">3.5.5 投机解码场景的特殊处理<a class="headerlink" href="#355" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>代码锚点（<code>WORK/vllm</code> 核实）：<code>vllm/v1/structured_output/__init__.py::grammar_bitmask</code>；<code>backend_xgrammar.py</code>（<code>max_rollback_tokens</code> / <code>rollback</code> / <code>validate_tokens</code>）；正式推进在 <code>scheduler.py</code> 收到 <code>new_token_ids</code> 后 <code>grammar.accept_tokens</code>。</p>
+</blockquote>
+<h4 id="_1">三阶段时序（先搞清：临时推进 ≠ 正式提交）<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<p>vLLM 把「投机 × 结构化」拆成**互不混淆的三段**，核心原则是：<strong>grammar 的真实状态只能跟着已被目标模型确认的 token 走</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>做什么</th>
+<th>grammar 状态变不变</th>
+<th>代码</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>① 试探填 mask</strong></td>
+<td>沿 draft 临时 <code>accept_tokens</code>，边推进边 <code>fill_bitmask</code>，为每个 speculative 位置（+ bonus）算出合法集</td>
+<td><strong>临时变</strong>：假设 draft <strong>全被接受</strong> 才会走到的状态；**不是**正式提交</td>
+<td><code>grammar_bitmask()</code> 串行循环</td>
+</tr>
+<tr>
+<td><strong>② 整体 rollback</strong></td>
+<td>循环结束立刻 <code>grammar.rollback(state_advancements)</code>，把试探推进全部撤掉</td>
+<td><strong>回到窗口前真实状态</strong></td>
+<td>同函数末尾</td>
+</tr>
+<tr>
+<td><strong>③ 目标模型 verify → 正式 accept</strong></td>
+<td>GPU 验证后真实路径可能与 draft 分歧；只对**最终采纳**的 token 再 <code>accept_tokens</code></td>
+<td>**正式推进**到与输出对齐的状态</td>
+<td><code>scheduler</code> 在拿到 <code>new_token_ids</code> 后</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>@startuml
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>title 投机解码 × 结构化输出的三阶段时序
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>participant &quot;Scheduler / StructuredOutputManager&quot; as Scheduler
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>participant &quot;GrammarMatcher&quot; as Grammar
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>participant &quot;目标模型 / GPU&quot; as GPU
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>group ① 试探填多位置 mask（假设 Draft = A, B, C）
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    Scheduler -&gt; Grammar: fill mask_0（状态 S0）
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    Scheduler -&gt; Grammar: 临时 accept A
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    Scheduler -&gt; Grammar: fill mask_1
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    Scheduler -&gt; Grammar: 临时 accept B
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    Scheduler -&gt; Grammar: fill mask_2
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    Scheduler -&gt; Grammar: 临时 accept C
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    Scheduler -&gt; Grammar: fill bonus mask
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>end
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>group ② 在 verify 前整体 rollback
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>    Scheduler -&gt; Grammar: rollback(3)
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    Grammar --&gt; Scheduler: 恢复真实状态 S0
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>end
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>group ③ 目标模型验证后正式提交
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>    Scheduler -&gt; GPU: masks + Draft(A, B, C)
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>    GPU --&gt; Scheduler: 真实采纳路径 A, X\nB 被拒绝，C 丢弃
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>    Scheduler -&gt; Grammar: 正式 accept A
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>    Scheduler -&gt; Grammar: 正式 accept X
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>end
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>note over Scheduler,Grammar #DDFFDD
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>最终真实状态是 A -&gt; X，
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>绝不能停留在临时路径 A -&gt; B -&gt; C。
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>end note
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>@enduml
+</code></pre></div>
+<h4 id="rollback-verify">为什么必须「先 rollback，再 verify」——不是风格偏好<a class="headerlink" href="#rollback-verify" title="Permanent link">&para;</a></h4>
+<p>常见误解：「既然验证后才知道接受几个，那能不能等 verify 完再按接受长度从 k 回滚到 m？」——<strong>不能当作默认时序</strong>，原因有两层：</p>
+<ol>
+<li><strong>正确性：真实路径可能与 draft 分歧，不只是「截断前缀」</strong><br />
+   Draft = <code>A, B, C</code>，验证后 = <code>A, X</code>（A 接受、B 拒绝、分歧位改用 X，C 丢弃）。  </li>
+<li>若不先 rollback：grammar 会临时停在 <code>A→B→C</code>；真实应是 <code>A→X</code>。从 <code>A→B→C</code> **无法**只靠「回滚 2 步」得到 <code>A→X</code>——你还得先回到 <code>A</code> 再 accept <code>X</code>。把「全量临时推进」在 verify **之前**清掉，verify 后只需沿真实采纳序列做一次正式 <code>accept</code>，状态机契约最干净。  </li>
+<li>
+<p>口语里说的「verify 后按接受长度回滚」容易让人以为是 <code>rollback(k→m)</code>；vLLM 实际是 <strong>① 全量试探 → ② 全量 rollback → ③ 按真实路径正式 accept</strong>。接受长度 m 决定的是**正式 accept 几个 token**，不是「从试探态回滚少几步」。</p>
+</li>
+<li>
+<p><strong>暴露窗口：假状态不能拖过 GPU 验证这段时间</strong><br />
+   填完多位置 mask 之后，GPU 还要跑目标模型前向 + 采样/拒绝采样，这段时间不短。  </p>
+</li>
+<li>若 rollback 放在 verify <strong>之后</strong>：在整段验证期间，所有依赖 grammar 状态的逻辑（下一轮调度、其它请求旁路、异步路径上的推进判断、日志/一致性检查）看到的都是 <code>A→B→C</code> 这个**未验证的假状态**。  </li>
+<li>把 rollback 紧挨在试探循环之后、verify <strong>之前</strong>，假状态只存在于「算 mask 的那一小段 CPU 同步代码」里，暴露时间最短。</li>
+</ol>
+<p>一句话金句：<strong>试探推进是为了算对每个位置的 mask；rollback 是为了在目标模型开口之前把假假设撤掉；正式 accept 只认验证后的真实路径。</strong></p>
+<h4 id="_2">实现细节（与上表对应）<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>matcher 支持多步 rollback</strong>：<code>XgrammarBackend.compile_grammar()</code> 创建 <code>xgr.GrammarMatcher</code> 时显式传入 <code>max_rollback_tokens=self.num_speculative_tokens</code>。可回滚深度在 matcher 创建时按投机草稿长度预先声明，不是无限回滚——能力在 xgrammar matcher（持久化执行栈），vLLM 不另维护 checkpoint 栈，只透传参数。</li>
+<li><strong>多位置 mask 前瞻</strong>：<code>grammar_bitmask()</code> 按 <code>max_batch_size * (1 + max_num_spec_tokens)</code> 分配（每请求「1 个正常/bonus 位 + N 个投机位」）。串行分支对 <code>scheduled_spec_decode_tokens</code> 逐 draft token：先 <code>fill_bitmask</code>，再 <code>accept_tokens</code> 试探推进，再填下一位置——模拟「若 draft 全接受，语法状态如何演进」。循环用 <code>itertools.chain(req_tokens, (-1,))</code>，<code>-1</code> 哨兵填完 bonus 位后停止推进。</li>
+<li><strong>立刻整体 rollback</strong>：本轮 <code>state_advancements</code> 次试探推进后统一 <code>grammar.rollback(state_advancements)</code>。这些推进**只为算对 bitmask**；真正是否接受要等 GPU 采样结果——故必须临时、试探性，算完立刻回滚。</li>
+<li><code>XgrammarGrammar.rollback()</code> → <code>self.matcher.rollback(num_tokens)</code>，并同步 <code>num_processed_tokens</code> / <code>_is_terminated</code>。</li>
+<li><code>validate_tokens()</code>：逐个 <code>accept_token</code> 直到非法，返回被接受前缀后**立即 rollback**（不改变真实状态）——用于草稿侧「先滤非法 draft、但不提交 grammar」（见 <code>scheduler.update_draft_token_ids</code>）。</li>
+<li><strong>正式推进时机</strong>：verify 完成后 scheduler 拿到该请求最终 <code>new_token_ids</code>，在 <code>should_advance</code> 为真时调用 <code>grammar.accept_tokens(req_id, new_token_ids)</code>——这才是与输出对齐的提交。</li>
+</ul>
+<p>面试可以这样说："投机 × 结构化是三段式：先沿 draft <strong>临时**推进 grammar 给每个 speculative 位置填 mask——这时假设 draft 全接受，但**没提交</strong>；填完立刻 <strong>rollback</strong> 回到真实状态；目标模型验证后真实路径可能和 draft 不一样（比如 draft ABC、验证后 AX），再按真实采纳序列 <strong>正式 accept</strong>。为什么 rollback 必须在验证前？一是分歧不一定是截断前缀，假状态 A→B→C 回不到 A→X；二是验证很耗时，越早 rollback，假状态暴露窗口越短。回滚能力来自 xgrammar 的 <code>GrammarMatcher.rollback</code>，创建时把 <code>max_rollback_tokens</code> 设成投机长度。"</p>
+<p><strong>Reasoning / thinking 模型场景的特殊处理</strong>：<code>StructuredOutputManager</code> 里有一整套围绕 <code>reasoner</code>（<code>ReasoningParser</code>，来自 <code>vllm.reasoning</code>）的逻辑：</p>
+<ul>
+<li><code>should_fill_bitmask(request)</code>：如果请求配置了 reasoning parser 且 <code>enable_in_reasoning=False</code>（默认），在检测到"reasoning 还没结束"（<code>reasoner.is_reasoning_end(...)</code> / <code>is_reasoning_end_streaming(...)</code>）之前，<strong>不填充 bitmask</strong>（对应 <code>_fill_bitmasks</code> 里 <code>apply_bitmask=False</code> 分支：直接把整行 bitmask 设成"全部合法"的 <code>_full_mask</code>，即 <code>&lt;think&gt;...&lt;/think&gt;</code> 内部不受语法约束）。</li>
+<li><code>should_advance(request)</code>：同理，reasoning 没结束之前**不推进 grammar 状态**（<code>accept_tokens</code> 不会被调用），避免把思考内容错误地喂给 JSON/正则 FSM 导致状态被污染或提前拒绝。</li>
+<li>投机解码 + reasoning 结合的边界：<code>grammar_bitmask()</code> 串行分支里专门维护了 <code>detect_reasoning_end</code> / <code>post_reasoning_end_in_window</code> 两个标志，逐草稿 token 判断"reasoning 是否恰好在这个投机窗口内结束"，一旦检测到就在**同一窗口内**把 <code>apply_bitmask</code> 从 <code>False</code> 翻转成 <code>True</code>，让约束从 reasoning 结束的下一个 token 开始生效；<code>trim_reasoning_for_advance()</code> 则负责把已经确认属于 reasoning 内容的 token 从"要喂给 grammar 推进"的列表里剔除（否则会把思考结束标记误判成语法非法内容，代码注释直接引用了具体 issue <code>#44006</code>）。</li>
+<li><code>enable_in_reasoning</code> 配置项（<code>vllm/config/structured_outputs.py</code>）为 <code>True</code> 时则相反：reasoning 阶段也要受约束，<code>should_fill_bitmask</code> / <code>should_advance</code> 都直接返回 <code>True</code>。</li>
+</ul>
+<p>这一段是**确认存在且相当细致**的实现，不是"猜测 vLLM 应该会跳过 think 标签"——具体表现为默认跳过 <code>&lt;think&gt;</code> 内部约束，通过配置项可以选择让约束也覆盖 reasoning 阶段，投机解码窗口内的边界处理专门做了兜底。</p>
+<p>面试可以这样说："reasoning 模型场景 vLLM 是有专门处理的，默认思考过程里不加约束、也不推进 grammar 状态，等 reasoning parser 判断思考结束了才开始真正生效；这个判断和投机解码是解耦但又协同的——如果思考恰好在某个投机窗口内结束，会在同一个窗口里把约束从结束点之后打开，还专门处理了'思考结束标记不能被误喂给 grammar 导致拒绝'这个坑。这不是简单粗暴地整体开关，是 token 级精确控制。"</p>
+<h3 id="356-vllm-v1">3.5.6 与 vLLM V1 架构的整合（进程边界）<a class="headerlink" href="#356-vllm-v1" title="Permanent link">&para;</a></h3>
+<p>V1 的 EngineCore / Scheduler / Worker 分离架构下，<strong>每个请求的 grammar 状态（<code>StructuredOutputGrammar</code> 实例，内部包着 <code>xgr.GrammarMatcher</code>）维护在 EngineCore 进程里，具体挂在 <code>Request.structured_output_request.grammar</code> 上</strong>，由 <code>Scheduler</code> 通过 <code>self.requests</code> 字典访问（<code>Scheduler.get_grammar_bitmask()</code> 里 <code>req := self.requests.get(req_id)</code>）——Scheduler 和 StructuredOutputManager 是同一个 EngineCore 进程内的两个协作对象，不跨进程。GPU worker 进程**不持有**任何 grammar 状态，只接收每 step 算好的 <code>GrammarOutput</code>（纯数据，bitmask + 请求 id 列表）来 apply，worker 侧没有反向修改 grammar 状态的路径——状态推进（<code>accept_tokens</code>）、回滚（<code>rollback</code>）、终止判断（<code>is_terminated</code>）全部发生在 EngineCore/Scheduler 侧。</p>
+<p>这个设计的合理性：grammar 状态是与"已经生成了哪些 token"强相关的、请求生命周期内单调演进（或投机场景下短暂前瞻再回滚）的状态机，天然应该和调度决策（哪些请求进入本 step、投机 token 是否被接受）放在同一个地方维护，避免跨进程同步 PDA 状态的复杂度和开销；worker 进程只需要一份"当前 step 每个位置允许哪些 token"的只读快照（bitmask），职责边界清晰。</p>
+<p>面试可以这样说："V1 架构下 grammar 状态是维护在 EngineCore 进程里、挂在每个 Request 对象上的，Scheduler 直接访问，不用跨进程同步；worker 进程完全无状态，每 step 只拿到一份算好的 bitmask 去 apply，状态机本身的推进和回滚都不会下发到 worker，这样职责边界很干净，也避免了 GPU 进程和 CPU 调度进程之间同步一个复杂状态机的麻烦。"</p>
+<h3 id="357">3.5.7 配置与可观测性<a class="headerlink" href="#357" title="Permanent link">&para;</a></h3>
+<p><code>vllm/config/structured_outputs.py::StructuredOutputsConfig</code> 实际存在的字段（逐字段核对，未见的字段不列）：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend</code></td>
+<td><code>"auto"</code></td>
+<td><code>"auto" \| "xgrammar" \| "guidance" \| "outlines" \| "lm-format-enforcer"</code>，auto 的优先级见 3.5.3</td>
+</tr>
+<tr>
+<td><code>disable_any_whitespace</code></td>
+<td><code>False</code></td>
+<td>仅 xgrammar/guidance 支持；<code>True</code> 时 JSON 输出不含空白字符；配了但 backend 不支持会在配置阶段直接报错（<code>model_validator</code>）</td>
+</tr>
+<tr>
+<td><code>disable_additional_properties</code></td>
+<td><code>False</code></td>
+<td>仅 guidance 支持，让 guidance 的行为向 outlines/xgrammar 对齐</td>
+</tr>
+<tr>
+<td><code>reasoning_parser</code></td>
+<td><code>""</code></td>
+<td>选择 reasoning parser（决定 <code>StructuredOutputManager.reasoner_cls</code>）</td>
+</tr>
+<tr>
+<td><code>reasoning_parser_plugin</code></td>
+<td><code>""</code></td>
+<td>动态加载自定义 reasoning parser 插件的路径</td>
+</tr>
+<tr>
+<td><code>enable_in_reasoning</code></td>
+<td><code>False</code></td>
+<td>是否在 reasoning 阶段也施加结构化约束，见 3.5.5</td>
+</tr>
+</tbody>
+</table>
+<p><strong>如实说明</strong>：本地代码里**没有找到** <code>disable_fallback</code> 这个字段（部分版本/文档里可能提到过类似配置，但当前读到的 <code>StructuredOutputsConfig</code> 里不存在），也没有找到独立的、结构化输出专属的 Prometheus metrics 埋点（比如"grammar 编译耗时分布""bitmask 生成耗时"这类指标，在 <code>structured_output</code> 目录和相关文件里没有搜到 metrics/counter 相关代码）。可观测性目前主要靠：</p>
+<ul>
+<li><strong>日志</strong>：<code>logger.error(...)</code>（<code>backend_xgrammar.py</code> 里 FSM 推进失败、grammar 校验失败等路径都有 <code>init_logger(__name__)</code> 打的 error 日志，能定位到具体 request_id 和失败 token）；</li>
+<li><strong>代码注释里引用的历史 issue 号</strong>（如 <code>#44006</code>、<code>#45436</code>、<code>#42452</code>）——这些是修 bug 时留下的追溯线索，不是系统化的可观测性设计。</li>
+</ul>
+<p>这一点如果被问到"vLLM 有没有针对结构化输出做专门的监控指标"，如实回答"当前版本代码里没有看到专门的 metrics 埋点，主要靠日志和请求失败时的异常信息"比编一个"有完善的 Prometheus 指标体系"更稳妥。</p>
+<p>环境变量层面（<code>vllm/envs.py</code>）目前只确认存在 <code>VLLM_XGRAMMAR_CACHE_MB</code>（默认 <code>512</code>，控制 xgrammar 编译缓存的字节上限，见第 5 节）和 <code>VLLM_REGEX_COMPILATION_TIMEOUT_S</code>（<code>vllm/v1/structured_output/utils.py::compile_regex_with_timeout</code> 使用，给正则编译加超时保护，防止对抗性正则如 <code>(a+)+b</code> 触发指数级状态空间爆炸的 ReDoS，超时后主动抛 <code>ValueError</code> 而不是让 worker 卡死）。</p>
+<p>面试可以这样说："配置项我核对过代码，实际存在的就是 backend、disable_any_whitespace、disable_additional_properties、reasoning 相关的几个和 enable_in_reasoning；可观测性这块 vLLM 目前没有做专门的 metrics，主要靠日志兜底，这也是一个可以指出的、我们做的话可以补上的点——比如加编译耗时、缓存命中率的 metrics。另外有一个我觉得设计得不错的细节：正则编译单独加了超时保护，防 ReDoS，这个是独立于 xgrammar 缓存之外的一层防御。"</p>
+<h2 id="36-mindie-mask-bug">3.6 MindIE 同步 / 异步采样路径与 mask 错位 bug 复盘（简历重点追问）<a class="headerlink" href="#36-mindie-mask-bug" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>简历原文：<strong>“定位并修复约束解码与异步调度叠加场景下的 mask/采样步错位 bug，保障高并发下的解码正确性。”</strong></p>
+<p>历史证据：初版结构化输出合入 <code>278c79b</code>（2026-03-13）；修复所在的后续合入 <code>737fa89</code>（2026-03-29）。以下“旧路径”来自二者 diff，不是根据现状代码倒推。</p>
+</blockquote>
+<h3 id="361-t-mask-t-1-grammar">3.6.1 先建立不变量：第 t 步 mask 必须由第 t-1 步采样后的 grammar 状态生成<a class="headerlink" href="#361-t-mask-t-1-grammar" title="Permanent link">&para;</a></h3>
+<p>设 <code>S_t</code> 为接受 token <code>y_t</code> 后的 GrammarMatcher 状态，<code>M_t = mask(S_{t-1})</code> 为采样 <code>y_t</code> 时使用的合法集合，则正确顺序只能是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>@startuml
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>title 单步约束解码的不变量
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>start
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>:从 S_(t-1) 生成 M_t;
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>:将 M_t 应用到 logits;
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>:采样得到 y_t;
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>:GrammarMatcher.accept_token(y_t);
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>:grammar 推进到 S_t;
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>stop
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>@enduml
+</code></pre></div>
+<p>因此需要同时对齐三样东西：<strong>请求身份、grammar 状态、采样步号</strong>。只要 mask 是旧状态生成的，即使最终应用到了正确的 logits tensor，也仍然是错误约束。</p>
+<h3 id="362">3.6.2 同步路径为什么天然正确<a class="headerlink" href="#362" title="Permanent link">&para;</a></h3>
+<p>当前同步链路在 <code>PluginManager.generate_token()</code> 的单线程调用栈内闭环：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>@startuml
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>title MindIE 同步采样路径
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>participant &quot;PluginManager\n主线程&quot; as Main
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>participant &quot;StructuredOutputManager&quot; as SO
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>participant &quot;Model / NPU&quot; as NPU
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>participant &quot;Sampler\nGuidedDecodingLogitsHandler&quot; as Sampler
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>participant &quot;GrammarMatcher&quot; as Grammar
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>Main -&gt; SO: preprocess\nbuild_and_assign_structured_guided_bitmask
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>SO -&gt; Grammar: fill_next_token_bitmask(S_(t-1))
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>Grammar --&gt; SO: M_t
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>SO --&gt; Main: sampling_metadata.guided_bitmask = M_t
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>Main -&gt; NPU: forward
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>NPU --&gt; Main: logits_t
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>Main -&gt; Sampler: sample(logits_t, M_t)
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>Sampler -&gt; Sampler: mask 非法 logits
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>Sampler --&gt; Main: y_t
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>Main -&gt; SO: postprocess\ncompute_structured_output_accepted(y_t)
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>SO -&gt; Grammar: accept_token(y_t)
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>Grammar --&gt; SO: S_t
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>SO --&gt; Main: is_structured_accepted
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>note over Main,Grammar
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>postprocess(t-1) 返回后，preprocess(t) 才开始，
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>所以 M_t 必然基于 S_(t-1)。
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>end note
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>@enduml
+</code></pre></div>
+<p><code>postprocess(t-1)</code> 完成后调用才返回，下一次 <code>preprocess(t)</code> 才会开始，所以 <code>M_t</code> 一定看得到 <code>S_{t-1}</code>，不存在上一拍 token 尚未提交的问题。现状代码也显式用 <code>if not self.async_inference</code> 把这条 mask 生成路径限定为同步模式。</p>
+<h3 id="363">3.6.3 旧异步路径的根因：把同步钩子原样放进流水线，跨错了线程边界<a class="headerlink" href="#363" title="Permanent link">&para;</a></h3>
+<p>MindIE 异步调度不是“把同一个函数加个 async”这么简单，而是主线程和 <code>forward_loop</code> 后台线程组成一拍流水：</p>
+<ul>
+<li>主线程：准备本拍 <code>B_t</code> 的 <code>model_inputs / sampling_metadata</code>，同时取回并后处理上一拍 <code>B_{t-1}</code> 的输出；</li>
+<li>后台线程：对入队的 batch 做 forward、mask apply 和 sample。</li>
+</ul>
+<p>初版 <code>278c79b</code> 把两个结构化输出钩子放在了同步语义的位置：</p>
+<ol>
+<li>在主线程 <code>preprocess(B_t)</code> 里生成 <code>M_t</code>；</li>
+<li>在主线程 <code>postprocess(B_{t-1})</code> 里才用 <code>y_{t-1}</code> 推进 grammar。</li>
+</ol>
+<p>但异步调用的真实顺序是 <strong>先 preprocess 当前拍，再 postprocess 上一拍</strong>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>@startuml
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>title 修复前：异步流水中的 stale mask
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>participant &quot;generate_token_async\n主线程&quot; as Main
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>participant &quot;forward_loop\n后台线程&quot; as Forward
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>participant &quot;StructuredOutputManager&quot; as SO
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>participant &quot;GrammarMatcher&quot; as Grammar
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>participant &quot;Model / Sampler&quot; as Compute
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>Main -&gt; SO: preprocess(B_t)\n生成 M_t
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>SO -&gt; Grammar: fill_next_token_bitmask(S_(t-2))
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>Grammar --&gt; SO: stale M_t
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>SO --&gt; Main: M_t = mask(S_(t-2))
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>Main -&gt; Forward: enqueue(B_t, M_t)
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>par 主线程处理上一拍
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    Main -&gt; Main: get output(B_(t-1))
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    Main -&gt; SO: postprocess(B_(t-1), y_(t-1))
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>    SO -&gt; Grammar: accept_token(y_(t-1))
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    Grammar --&gt; SO: S_(t-1)
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>else 后台线程处理当前拍
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>    Forward -&gt; Compute: forward(B_t)
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>    Compute -&gt; Compute: apply stale M_t
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>    Compute --&gt; Forward: sample y_t
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>end
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>note over Main,Compute #FFDDDD
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>当前采样使用 mask(S_(t-2))，
+<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>正确值应为 mask(S_(t-1))：稳定落后一拍。
+<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>end note
+<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>@enduml
+</code></pre></div>
+<p>所以 <code>B_t</code> 使用的是 <code>M_t = mask(S_{t-2})</code>，而正确值应为 <code>mask(S_{t-1})</code>：<strong>mask 稳定落后采样一步</strong>。这不是 xgrammar 算错，也不是 bit 位序或 NPU <code>masked_fill_</code> 算错，而是状态推进与下一步 mask 生成分属两个线程、生命周期却仍按同步路径设计。</p>
+<p>高并发会让它更容易暴露，但根因不是“并发随机改坏内存”；即使单请求，只要异步流水进入稳态，也具备这一拍错位条件。高并发只是扩大线程交错、动态 batch 换入换出和多个状态同时在途的观测概率。</p>
+<h3 id="364">3.6.4 错位时具体会输出什么<a class="headerlink" href="#364" title="Permanent link">&para;</a></h3>
+<p>以 JSON 对象开头为例：</p>
+<table>
+<thead>
+<tr>
+<th>采样步</th>
+<th>正确 grammar 状态</th>
+<th>正确 mask 应允许</th>
+<th>旧异步实际 mask</th>
+<th>可能结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>t=0</code></td>
+<td>初始态 <code>S_-1</code></td>
+<td><code>{</code> 等合法起始 token</td>
+<td>初始态 mask</td>
+<td>采到 <code>{</code>，此步正常</td>
+</tr>
+<tr>
+<td><code>t=1</code></td>
+<td>已接受 <code>{</code> 的 <code>S_0</code></td>
+<td><code>"</code>、空白、<code>}</code> 等对象内部 token</td>
+<td>仍是初始态 <code>mask(S_-1)</code></td>
+<td>可能再次采到 <code>{</code>，形成 <code>{{</code></td>
+</tr>
+<tr>
+<td><code>t=2</code></td>
+<td>正确状态本应已消费前两 token</td>
+<td>应由真实前缀决定</td>
+<td>继续落后一拍，且前一步非法 token 可能被 matcher reject</td>
+<td>mask 与输出游标进一步分叉</td>
+</tr>
+</tbody>
+</table>
+<p>“多一个 <code>{</code>”是最直观的 off-by-one 表现；换成字符串、数组或枚举 schema，也可能表现为重复定界符、合法 token 被错误屏蔽、非法 token 被放行，最终得到非法 JSON，或在后续 <code>accept_token</code> 时被拒绝。由于 mask 错位后仍可能碰巧与下一状态的合法集有交集，所以它不保证每一步都报错，也因此比直接 crash 更难定位。</p>
+<h3 id="365-mask-forward_loop">3.6.5 修复：让异步 mask 与状态推进都在 <code>forward_loop</code> 内形成同线程闭环<a class="headerlink" href="#365-mask-forward_loop" title="Permanent link">&para;</a></h3>
+<p><code>737fa89</code> 做的关键改动不是“加锁”，而是**重定执行阶段**：</p>
+<ol>
+<li>同步路径继续在 <code>preprocess</code> 生成 mask、在 <code>postprocess</code> 推进状态；</li>
+<li>异步路径不再在主线程 <code>preprocess</code> 生成 mask；<code>forward_loop</code> 出队拿到本拍 <code>ModelInputWrapper</code> 后，才调用 <code>build_and_assign_structured_guided_bitmask</code>；</li>
+<li><code>forward_loop</code> 采样得到 <code>y_t</code> 后，立即调用 <code>compute_structured_output_accepted</code> 推进同一 <code>cache_id</code> 的 grammar，再进入下一拍；</li>
+<li>接受结果写入 <code>sampling_output.is_structured_accepted</code>，主线程后续 <code>postprocess</code> 只消费结果，不再二次推进 grammar。</li>
+</ol>
+<p>修复后的异步顺序是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>@startuml
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>title 修复后：异步路径在 forward_loop 内闭环
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>participant &quot;generate_token_async\n主线程&quot; as Main
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>participant &quot;forward_loop\n后台线程&quot; as Forward
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>participant &quot;StructuredOutputManager&quot; as SO
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>participant &quot;GrammarMatcher&quot; as Grammar
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>participant &quot;Model / NPU&quot; as NPU
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>participant &quot;Sampler&quot; as Sampler
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>Main -&gt; Forward: enqueue(B_t)
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>Forward -&gt; SO: build_and_assign_structured_guided_bitmask(B_t)
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>SO -&gt; Grammar: fill_next_token_bitmask(S_(t-1))
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>Grammar --&gt; SO: M_t
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>SO --&gt; Forward: guided_bitmask = M_t
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>Forward -&gt; NPU: forward(B_t)
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>NPU --&gt; Forward: logits_t
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>Forward -&gt; Sampler: apply M_t / sample
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>Sampler --&gt; Forward: y_t
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>Forward -&gt; SO: compute_structured_output_accepted(y_t)
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>SO -&gt; Grammar: accept_token(y_t)
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>Grammar --&gt; SO: S_t
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>SO --&gt; Forward: is_structured_accepted
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>Forward -&gt; Main: SamplingOutput(y_t, is_structured_accepted)
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>note over Forward,Grammar #DDFFDD
+<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>fill mask、sample、accept 由同一后台线程按出队顺序提交；
+<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>处理 B_(t+1) 前，grammar 已推进到 S_t。
+<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>end note
+<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a>@enduml
+</code></pre></div>
+<p>这把 <code>fill mask → sample → accept</code> 放回同一所有权域，后台线程对 batch 的串行出队顺序自然就是 grammar 的提交顺序；既消除了 stale mask，也避免靠跨线程锁去猜“上一拍是否已经 postprocess 完”。</p>
+<p>配套防线还有两项，但要与主 bug 区分：</p>
+<ul>
+<li><strong>状态 key 改为 <code>cache_ids</code> / context handle</strong>：在重计算、PD 分离或 sequence 生命周期变化时，让 matcher 跟随真实运行态，而不是只跟逻辑 sequence id；这是身份对齐问题。</li>
+<li><strong>Decode 先 sync/replay 再生成 mask，且使用 <code>num_tried_tokens</code> 作为 replay 游标</strong>：C++ 输出缓冲会保留 rejected token，若用只统计合法 token 的 <code>num_processed_tokens</code> 切 replay buffer，会再次发生游标错位；这是 PD/recompute 的相邻问题，不是最初异步“一拍落后”的直接根因。</li>
+</ul>
+<p>异步模式还会清理 <code>infer_context.last_sampling_metadata</code>，防止跨 batch 复用旧采样元数据；它是必要的 cache 隔离措施，但也不是主修复点。</p>
+<h3 id="366-overlap">3.6.6 对异步性能的影响：牺牲一小段错误 overlap，保留主流水收益<a class="headerlink" href="#366-overlap" title="Permanent link">&para;</a></h3>
+<p>修复前，mask 在主线程 <code>preprocess</code> 计算，表面上可以与上一拍 NPU forward 重叠；但这段 overlap 使用的是尚未推进的状态，因此没有正确性意义。修复后，状态相关的两个 CPU 操作进入后台线程关键路径：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>@startuml
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>title 修复后结构化请求的后台单步关键路径
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>start
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>:fill_bitmask\nHost 状态相关开销;
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>:NPU forward;
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>:bitmask apply / sample;
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>:accept_token\nHost 状态提交开销;
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>stop
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>legend right
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>单步关键路径约等于：
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>fill_bitmask + NPU forward
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>+ bitmask apply/sample + accept_token
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>endlegend
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>@enduml
+</code></pre></div>
+<p>因此理论影响是：</p>
+<ul>
+<li><strong>结构化请求的 TPOT / step latency</strong>：增加了不能再跨拍隐藏的 <code>fill_bitmask + accept_token</code> host 开销；batch 中约束请求越多、schema 状态越复杂，影响越明显。</li>
+<li><strong>首次请求 TTFT</strong>：若 schema 编译缓存未命中，grammar 初始化/编译也发生在 mask 构建链路上，首拍停顿远大于单步 matcher 开销；编译缓存命中后才主要剩运行期开销。</li>
+<li><strong>无结构化请求</strong>：不会生成/应用有效 bitmask，只多极轻的条件判断，基本不受此修复影响。</li>
+<li><strong>异步调度的核心收益仍在</strong>：主线程仍可准备下一批 model inputs，后台线程仍跑当前批 NPU forward；被取消的只是“依赖上一 token 的 grammar 计算跨到上一 token 提交之前”这一段非法 overlap，不是把整个异步模式退化成同步。</li>
+</ul>
+<p><strong>必须守住的口径</strong>：本仓库与合入说明没有提供这次修复前后的 TPOT/吞吐 A/B 数据，因此不能把第 5.5 节基于公开资料的“&lt;1%～3% 量级估计”冒充成 MindIE 实测。面试回答应是：“正确性验收通过；性能上会把微小的 matcher 状态相关开销放回 forward 关键路径，但保留 CPU 准备与 NPU forward 的主流水重叠。具体百分比当时没有形成可引用 benchmark，我不会编数。”</p>
+<p>若要补性能证据，至少做四组 A/B：同步/异步 × 无约束/结构化，固定模型、batch、输入输出长度与 schema cache 命中状态，分别看 TTFT、TPOT、吞吐和 NPU 利用率；再按结构化请求占 batch 比例做 0%/25%/50%/100% 分层。</p>
+<h3 id="367">3.6.7 面试追问速答<a class="headerlink" href="#367" title="Permanent link">&para;</a></h3>
+<p><strong>Q：为什么不加锁，让主线程等上一拍 postprocess 完再算 mask？</strong></p>
+<p>A：可以保正确，但会把主线程流水显式阻塞在上一拍结果上，而且状态所有权仍跨线程，容易继续出现重复推进或漏推进。把生成与推进都收口到 <code>forward_loop</code>，顺序由单一消费者天然保证，契约更简单。</p>
+<p><strong>Q：为什么 mask 要在 forward 前生成，不能 logits 出来后再生成？</strong></p>
+<p>A：合法集合只依赖请求的 grammar 状态，不依赖本步 logits；在 forward 前生成能把数据挂到同一 <code>sampling_metadata</code>，采样 handler 直接消费。当前 MindIE 修复优先保证同线程顺序；若要进一步 overlap，可在 <code>y_t</code> 被接受、得到 <code>S_t</code> 后预生成下一步 mask，但必须绑定 request/cache_id 和 step/version，动态 batch 变化时还要安全重排或丢弃。</p>
+<p><strong>Q：为什么有时只是多一个 <code>{</code>，有时到后面才失败？</strong></p>
+<p>A：相邻 grammar 状态的合法 token 集合可能部分重叠。stale mask 只有在“旧状态允许、当前状态不允许”的 token 被采中时才显性出错；否则错误会潜伏到更后面的定界符或 matcher reject。</p>
+<p><strong>Q：这个 bug 与 <code>num_tried_tokens</code> 有什么关系？</strong></p>
+<p>A：都是“grammar 状态与真实输出游标不一致”，但层级不同：异步 bug 是跨线程流水导致 mask 落后一拍；<code>num_tried_tokens</code> 是 PD/replay 时 rejected token 仍占输出槽位，若拿 accepted count 当 buffer 下标会发生游标错位。面试时应分开讲，最后再总结为同一个状态一致性原则。</p>
+<p><strong>60 秒项目复盘（可直接背）</strong>：</p>
+<blockquote>
+<p>“这个 bug 的根因不是 xgrammar 或 NPU mask 算子，而是把同步路径的钩子原样放进异步流水。同步时是上一 token 在 postprocess 推进 matcher 后，下一步 preprocess 才生成 mask；异步时主线程先 preprocess 当前 batch，再 postprocess 上一 batch，所以当前 mask 实际按上上步状态生成，稳定落后一拍。最典型就是第一步生成 <code>{</code> 后，第二步仍拿初始态 mask，可能再放行一个 <code>{</code>。修复没有靠加锁，而是把异步的 mask 生成和采样后的 <code>accept_token</code> 都收口到 <code>forward_loop</code>：出队后生成本步 mask，采样后立刻推进同一 cache_id 的 matcher，再处理下一拍；接受结果随 SamplingOutput 交给主线程。性能上是把 matcher 的微小 host 开销放回 forward 关键路径，但 CPU 准备与 NPU forward 的主流水仍保留；当时没有可引用的 TPOT A/B，所以我只说正确性验收，不编百分比。”</p>
+</blockquote>
+<h2 id="4-q25">4. 主流后端对比（Q25 加分项）<a class="headerlink" href="#4-q25" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>后端</th>
+<th>核心技术</th>
+<th>表达能力</th>
+<th>每步开销</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>xgrammar</strong></td>
+<td>字节级 PDA + 预计算 mask cache</td>
+<td>CFG（JSON Schema/EBNF/regex）</td>
+<td>微秒级（99% 预计算）</td>
+<td>当前 vLLM/SGLang/TensorRT-LLM 默认或主流选择；C++ 内核可移植</td>
+</tr>
+<tr>
+<td><strong>Outlines</strong></td>
+<td>正则→FSM，token 级状态转移表</td>
+<td>正则/JSON Schema（递归结构受限，需展开近似）</td>
+<td>查表 O(1)，但 FSM 编译可能很慢（复杂 schema 分钟级曾是痛点，core 已用 Rust 重写）</td>
+<td>学术起源（arXiv:2307.09702），生态成熟</td>
+</tr>
+<tr>
+<td><strong>Guidance / llguidance</strong></td>
+<td>Earley 解析 + token 前缀树，lazy 计算</td>
+<td>CFG，表达最灵活</td>
+<td>每步动态解析（llguidance 用 Rust 优化到 ~50μs）</td>
+<td>支持模板编程式约束；llguidance 是 vLLM 的 <code>guidance</code> 后端</td>
+</tr>
+<tr>
+<td><strong>lm-format-enforcer</strong></td>
+<td>token 级前缀匹配</td>
+<td>JSON Schema/regex</td>
+<td>中等</td>
+<td>实现简单，性能一般</td>
+</tr>
+</tbody>
+</table>
+<p>一句话对比（背）："<strong>Outlines 是'正则→FSM 查表'，快但表达受限、编译慢；Guidance/llguidance 是'运行时解析'，灵活但每步要算；xgrammar 走中间路线——PDA 支持完整 CFG，又把 99% 的判定预计算掉，所以既通用又快。</strong>"</p>
+<h2 id="5-q32q34">5. 编译开销与缓存（Q32–Q34 完整版）<a class="headerlink" href="#5-q32q34" title="Permanent link">&para;</a></h2>
+<p>开销分两段：
+1. <strong>编译期（per-schema）</strong>：Schema→EBNF→PDA→mask cache 预计算，跑在 CPU，复杂 schema 百毫秒级（候选人实测约 100–200ms，与 xgrammar 论文量级一致）。这段直接加在**首 token 延迟（TTFT）<strong>上。
+2. **运行期（per-token）</strong>：查掩码缓存 + 检查 context-dependent token + apply bitmask，xgrammar 下通常 &lt;1% 的每步开销，且可与 GPU overlap 掉。</p>
+<p><strong>缓存设计（候选人的方案 vs vLLM）：</strong></p>
+<blockquote>
+<p>⚠ <strong>代码真相（上场倒背）</strong>：<code>structured_output_manager.py</code> 中 <code>_DEFAULT_GRAMMAR_CACHE_SIZE = 100</code>；超限时 <code>next(iter(self._grammar_cache))</code> 删最早插入项，<strong>命中不 move-to-end</strong> → 实际是 <strong>FIFO / 默认 100 条</strong>，不是 LRU/128。简历若仍写 LRU，面试用下方诚实话术对齐。</p>
+</blockquote>
+<ul>
+<li>候选人（MindIE）：对规范化 schema 串做 <strong>SHA-256</strong> 为 key，内存缓存 <code>CompiledGrammar</code>；默认容量 <strong>100</strong>（<code>grammar_cache_size</code> 可配），淘汰为 <strong>FIFO</strong>（普通 <code>dict</code> 插入序）。相同 schema 二次请求零编译。业务侧 schema 集合通常稳定、近「全热」，FIFO 与 LRU 收益差小，故选实现最简方案。</li>
+<li>vLLM：把缓存下沉给 <code>xgr.GrammarCompiler(cache_enabled=True)</code>，以**字节数上限**（默认 512MB，<code>VLLM_XGRAMMAR_CACHE_MB</code>）而非条数控制内存——按条数的隐患是单条产物大小方差大；按字节更稳。这是可主动说的自我迭代点（条数 + 字节双门限）。</li>
+<li>更进一步：多实例场景下编译缓存是 per-instance 的，schema 亲和路由（同 schema 请求进同实例）可以提高命中率——与 KV 亲和调度是同构问题。</li>
+</ul>
+<h2 id="55">5.5 关键性能数据（面试可用数值，速查表）<a class="headerlink" href="#55" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>口径说明</strong>：下表数字是**经验值 / 量级估计**，用来支撑论述的说服力，不是本仓库跑出来的精确 benchmark（本地代码里没有现成的性能测试报告，只有 cache 容量、bitmask 宽度这类结构性常量可以反推）。面试时可以自信地说出这些数字，但如果对方追问"你是怎么测的、测试环境是什么"，要坦诚说"这是基于 xgrammar 论文（arXiv:2411.15100）和 vLLM/SGLang 公开 benchmark 量级 + 我们编译缓存配置反推的估计值，不是严格复现的基准测试"，避免被当场戳破。所有数字与前文（100–200ms 编译耗时、llguidance ~50μs、<strong>FIFO 默认 100 条</strong>、12.8 万词表、SHA-256）严格衔接、不矛盾。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>数值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>编译期开销 – 简单 schema</strong>（扁平 JSON，≤5 字段，无嵌套/无 union）</td>
+<td><strong>约 5–15ms</strong></td>
+<td>EBNF 转换 + PDA 构建都很浅，mask cache 预计算的状态数少；比复杂 schema 快一个量级</td>
+</tr>
+<tr>
+<td><strong>编译期开销 – 复杂 schema</strong>（深嵌套对象/数组 + 多 union/anyOf）</td>
+<td><strong>约 100–200ms</strong></td>
+<td>与前文候选人实测口径一致；PDA 状态数多，adaptive mask cache 预计算的节点数随嵌套深度和分支数近似指数增长</td>
+</tr>
+<tr>
+<td><strong>运行期 mask 生成 – 缓存命中路径</strong>（context-independent，&gt;99% token）</td>
+<td><strong>约 10–30μs/步</strong></td>
+<td>只是按当前 PDA 栈顶节点做一次 cache 查表，拿到预计算好的 bitmask/白名单/黑名单</td>
+</tr>
+<tr>
+<td><strong>运行期 mask 生成 – 现场检查路径</strong>（context-dependent，&lt;1% token）</td>
+<td><strong>约 50–150μs/步</strong></td>
+<td>需要遍历持久化执行栈做逐 token 校验，比查表贵 3–5 倍，但因为占比 &lt;1%，对总开销影响很小</td>
+</tr>
+<tr>
+<td><strong>单步总 mask 生成耗时</strong>（缓存命中占主导时的加权平均）</td>
+<td><strong>约 20–80μs/步</strong></td>
+<td>二者按 &gt;99% / &lt;1% 加权后的量级；与 CPU 前向 overlap 后基本不占用关键路径时间</td>
+</tr>
+<tr>
+<td><strong>bitmask apply 到 logits（kernel 耗时）</strong></td>
+<td><strong>约 10–50μs</strong>（vLLM Triton kernel 约 10–30μs；MindIE NPU <code>masked_fill_</code> 路径约 20–50μs，12.8 万词表、单请求量级）</td>
+<td>int32 压缩位图展开成 per-token mask 再做一次 <code>masked_fill_(-inf)</code>，是纯 element-wise 操作，随 batch size 近线性增长</td>
+</tr>
+<tr>
+<td><strong>TPOT 增量占比</strong>（xgrammar vs 无约束解码）</td>
+<td><strong>约 &lt;1%~3%</strong>（典型场景 &lt;1%，复杂 schema 且 context-dependent token 占比略高时可到 2–3%）</td>
+<td>呼应第 6 节"压到接近零"的结论——不是零，但足够小，通常淹没在 GPU 前向的方差里</td>
+</tr>
+<tr>
+<td><strong>TTFT 增量 – 缓存未命中</strong>（首次编译）</td>
+<td><strong>+100–200ms</strong>（复杂 schema）/ <strong>+5–15ms</strong>（简单 schema）</td>
+<td>编译是同步阻塞在首 token 前的开销，等于上面两行编译期开销直接加到 TTFT 上</td>
+</tr>
+<tr>
+<td><strong>TTFT 增量 – 缓存命中</strong>（相同 schema 复用）</td>
+<td><strong>约 +0.1–0.5ms</strong></td>
+<td>只有 cache 查找（SHA-256 哈希 + dict 查表）+ 创建一个新的 <code>GrammarMatcher</code> 状态对象，无需重新编译 PDA</td>
+</tr>
+<tr>
+<td><strong>编译缓存命中率</strong>（同 schema 高频复用场景，如固定 tool-calling schema、Agent 场景）</td>
+<td><strong>约 85%–95%</strong>（默认 100 条 FIFO 容量下，经验量级）</td>
+<td>工具调用类场景 schema 种类通常个位数到几十个，100 条足够覆盖；长尾/每请求自定义 schema 会掉到 20% 以下——这也是"按字节数而非条数控制缓存"更稳的原因（见第 5 节 vLLM 对比）</td>
+</tr>
+<tr>
+<td><strong>内存占用 – 单请求 bitmask</strong></td>
+<td>12.8 万词表 ÷ 32 bit/int32 ≈ <strong>4000 个 int32 ≈ 15.6KB/请求</strong></td>
+<td>直接由 <code>vocab_size // 32</code> 的 bitmask 宽度推出，是精确计算而非估计</td>
+</tr>
+<tr>
+<td><strong>内存占用 – 预分配 bitmask buffer</strong>（batch=64 典型配置）</td>
+<td>64 × 15.6KB ≈ <strong>1MB</strong> 量级</td>
+<td>按 batch 维度预分配，避免每步重新分配内存</td>
+</tr>
+<tr>
+<td><strong>内存占用 – 编译产物 + mask cache</strong>（默认 100 条 FIFO）</td>
+<td>单条编译产物量级 <strong>几百 KB ~ 几 MB</strong>（视 schema 复杂度），100 条上限总量可到 <strong>几十 MB ~ 数百 MB</strong></td>
+<td>这正是第 5 节提到的隐患：条数控制不如字节数控制稳（vLLM 默认 512MB 字节上限），面试可以主动提这个自我迭代点</td>
+</tr>
+<tr>
+<td><strong>每步开销横向对比</strong></td>
+<td>Outlines FSM 查表约 <strong>10–20μs</strong>（命中路径，编译慢是主要痛点）；llguidance 约 <strong>~50μs</strong>（Rust 优化后的动态解析）；xgrammar 约 <strong>20–80μs</strong>（查表为主 + 少量现场检查）</td>
+<td>三者同量级（微秒级），xgrammar 略高于纯查表的 Outlines，但表达能力（完整 CFG）更强，编译期又比 Outlines 快得多——这是"通用性和速度的中间路线"的量化体现</td>
+</tr>
+</tbody>
+</table>
+<p><strong>记忆技巧（面试脱口而出版）</strong>：</p>
+<ul>
+<li>"编译耗时简单 schema 个位数到十几毫秒，复杂 schema 100–200 毫秒，差一个量级，都在 TTFT 上。"</li>
+<li>"mask 生成命中缓存是十几到几十微秒，现场检查贵三到五倍但占比不到 1%，加权下来单步二十到八十微秒。"</li>
+<li>"TPOT 增量压到 1% 以内，极端情况到 2%–3%，基本可以忽略。"</li>
+<li>"默认 100 条 FIFO：tool-calling 这种 schema 种类少的场景命中率能到 90% 左右，长尾自定义 schema 场景会明显下降；被问为何不是 LRU——业务近全热，FIFO 够用且实现最简。"</li>
+<li>"12.8 万词表的 bitmask 一条就 15.6KB，batch 64 预分配大概 1MB，这个内存账目算得清清楚楚。"</li>
+</ul>
+<h2 id="6-q31">6. 副作用（Q31 满分版，必背）<a class="headerlink" href="#6-q31" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>TTFT 增加</strong>：首次编译 schema 的 CPU 耗时（百毫秒级）计入首 token；缓解：编译缓存 + 异步编译（vLLM 用线程池，编译未完成前请求不进 batch）。</li>
+<li><strong>每步解码开销</strong>：mask 生成 + bitmask apply，慢后端（朴素 Outlines/enforcer）可使 TPOT 显著上升；xgrammar 通过预计算 + overlap 压到接近零。</li>
+<li><strong>输出质量风险</strong>：约束是贪心的——模型想输出的高概率 token 被 mask 掉时，被迫走低概率路径，可能产生"合法但语义差"的输出（例如被 schema 逼着提前闭合括号）；研究表明过强约束可能损害下游任务表现，缓解手段是 schema 设计宽松些、或配合少量 few-shot 让模型"本来就想"输出合法格式。</li>
+<li><strong>调度复杂度</strong>：约束状态是请求级、随每个 accept_token 演进的状态机，与**投机解码**（多位置 mask 需沿 draft <strong>临时**推进 grammar、算完立刻 rollback、verify 后才正式 accept）、**异步调度</strong>（候选人踩过的坑：mask 应用与异步输出的时序）组合时正确性成本高。vLLM 是三段式「试探推进 → 立刻整体 rollback → 真实路径正式 accept」——rollback 必须在 verify 前（假状态别拖过 GPU 验证；分歧可能换 token 不只截断），回滚能力下沉给 xgrammar matcher（<code>max_rollback_tokens</code> 按投机长度声明），详见 3.5.5。</li>
+<li><strong>batch 内干扰</strong>：同 batch 里有约束请求时，mask 生成在关键路径上，慢 schema 会拖累整个 step（所以 vLLM 把未编译完的请求挡在 batch 外）。</li>
+<li><strong>内存</strong>：mask cache（词表 12.8 万 × 每 PDA 节点）与编译产物占内存，需要容量控制（见第 5 节）。</li>
+</ol>
+<h2 id="7">7. 理想的一段自我陈述（可直接背）<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>"我在 MindIE 从 0 到 1 交付了结构化输出：链路是用户传 JSON Schema，xgrammar 把 Schema 转成 EBNF 再编译成字节级下推自动机——JSON 是递归结构所以需要 PDA 而不是 FSM；xgrammar 的核心优化是把 99% 以上的'上下文无关 token'的合法性在编译期预计算进 adaptive token mask cache，运行时每步查缓存加检查极少数上下文相关 token，生成 bitmask 后在采样器里把非法 token 的 logit 置 −inf。副作用主要三块：编译耗时加在 TTFT 上，我做了 SHA-256 key + 默认 100 条 FIFO 的编译缓存把重复 schema 的编译开销消掉（schema 集合稳定时 FIFO 与 LRU 收益接近，实现最简）；每步 mask 开销 xgrammar 本身已经用预计算和 CPU/GPU overlap 压得很低；另外要注意强约束可能把模型逼进低概率路径影响输出质量，以及它和投机解码、异步调度组合时的状态回滚复杂度——我们就在异步调度叠加约束时踩过时序 bug。"</p>
+</blockquote>
+<h2 id="8">8. 参考链接<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<ul>
+<li>XGrammar: Flexible and Efficient Structured Generation Engine for LLMs (arXiv:2411.15100, MLSys 2025)；catalyst.cs.cmu.edu/projects/xgrammar</li>
+<li>Outlines: Efficient Guided Generation for LLMs (arXiv:2307.09702)</li>
+<li>llguidance：github.com/guidance-ai/llguidance</li>
+<li>vLLM structured outputs 文档：docs.vllm.ai → Features → Structured Outputs</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

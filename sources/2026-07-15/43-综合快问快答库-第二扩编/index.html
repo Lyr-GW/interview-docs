@@ -1,0 +1,2012 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/2026-07-15/43-%E7%BB%BC%E5%90%88%E5%BF%AB%E9%97%AE%E5%BF%AB%E7%AD%94%E5%BA%93-%E7%AC%AC%E4%BA%8C%E6%89%A9%E7%BC%96/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>43 · 综合快问快答库（第二扩编） - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#43" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              43 · 综合快问快答库（第二扩编）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#j-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        J. 假命中与驱逐感知（6）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#k-herding-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        K. Herding 与负载门控（6）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l-zmq-kv-events6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L. ZMQ KV Events（6）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#m-prefixcache-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M. 引擎 PrefixCache 内核（6）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#n-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        N. 竞品一句对标（6）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#o-server-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O. Server 重构边界（5）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P. 高压话术交叉（5）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        红线 30 秒复念（盖住右列）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-min" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        刷题建议（12 min）
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="43">43 · 综合快问快答库（第二扩编）<a class="headerlink" href="#43" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>本夜续批</strong>（2026-07-15 · 03:33）<br />
+<strong>用途</strong>：在 <a href="../05-%E7%BB%BC%E5%90%88%E5%BF%AB%E9%97%AE%E5%BF%AB%E7%AD%94%E5%BA%93-%E6%89%A9%E7%BC%96/"><code>05</code></a>（~108 题）之外，再补 <strong>约 40 题**三列表——专刷本夜新卡主题。<br />
+**不替代深文</strong>：30s 开场够用；第三层跟锚点回卡。<br />
+<strong>口径</strong>：与 <a href="../03-%E5%8F%A3%E5%BE%84%E7%BA%A2%E7%BA%BF%E9%80%9F%E6%9F%A5%E5%8D%A1/"><code>03</code></a> 冲突时以 03 为准——编译缓存 <strong>FIFO/100</strong>；TTFT−70%=<strong>代表性测算</strong>。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>角色</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../05-%E7%BB%BC%E5%90%88%E5%BF%AB%E9%97%AE%E5%BF%AB%E7%AD%94%E5%BA%93-%E6%89%A9%E7%BC%96/"><code>05</code></a></td>
+<td>第一扩编主库</td>
+</tr>
+<tr>
+<td><a href="../42-45%E5%88%86%E9%92%9F%E6%A8%A1%E6%8B%9F%E9%9D%A2%E8%AF%95%E4%B8%B2%E8%81%94%E5%89%A7%E6%9C%AC/"><code>42</code></a></td>
+<td>45′ 串联剧本（可夹本题当加刀）</td>
+</tr>
+<tr>
+<td><a href="../03-%E5%8F%A3%E5%BE%84%E7%BA%A2%E7%BA%BF%E9%80%9F%E6%9F%A5%E5%8D%A1/"><code>03</code></a></td>
+<td>红线倒背</td>
+</tr>
+<tr>
+<td><a href="../20-%E6%98%8E%E6%97%A9%E4%B8%8A%E5%9C%BA%E4%BD%9C%E6%88%98%E6%89%8B%E5%86%8C/"><code>20</code></a></td>
+<td>上场导航</td>
+</tr>
+</tbody>
+</table>
+<p>锚点：<code>12</code>/<code>17</code>/<code>25</code>/<code>26</code>/<code>27</code>/<code>35</code>/<code>39</code> 等为本目录卡号；<code>ir/NN</code>=<code>docs/interview-review/NN</code>。</p>
+<table>
+<thead>
+<tr>
+<th>板块</th>
+<th>题量</th>
+<th>主题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>J 假命中与驱逐</td>
+<td>6</td>
+<td>假阳/假阴、Motor vs 近似树</td>
+</tr>
+<tr>
+<td>K Herding / 负载门控</td>
+<td>6</td>
+<td>三版演进、unified/load_gated</td>
+</tr>
+<tr>
+<td>L ZMQ KV Events</td>
+<td>6</td>
+<td>Stored/Removed、PUB/replay、per-DP</td>
+</tr>
+<tr>
+<td>M PrefixCache 内核</td>
+<td>6</td>
+<td>哈希链/APC/ref_cnt；与亲和正交</td>
+</tr>
+<tr>
+<td>N 竞品一句</td>
+<td>6</td>
+<td>Motor/Router/SGLang/Dynamo/llm-d/AIBrix</td>
+</tr>
+<tr>
+<td>O Server 边界</td>
+<td>5</td>
+<td>Handler/Interface、LOC 诚实</td>
+</tr>
+<tr>
+<td>P 高压话术交叉</td>
+<td>5</td>
+<td>红线×应急模板</td>
+</tr>
+<tr>
+<td><strong>合计</strong></td>
+<td><strong>~40</strong></td>
+<td>另：红线 30s 复念</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="j-6">J. 假命中与驱逐感知（6）<a class="headerlink" href="#j-6" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问</th>
+<th>30 秒答点</th>
+<th>深挖锚点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>什么叫 KV 亲和「假命中」？</td>
+<td>路由以为有前缀 KV，落地无块/已驱逐→仍付 Prefill 或失败；比假阴更伤 TTFT</td>
+<td><code>12</code>；<code>ir/12</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>假阳 vs 假阴你偏哪边？</td>
+<td>Motor 偏**安全假阴**（查真索引+事件）；近似树易假阳省中心</td>
+<td><code>12</code>；<code>26</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>字符级树为何易假命中？</td>
+<td>tools/template 改写字符前缀≠token 前缀；与引擎哈希不同构</td>
+<td><code>12</code>；<code>18</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>驱逐感知靠什么？</td>
+<td>Conductor + kv-events <strong>Removed</strong>；无本地「以为还在」</td>
+<td><code>12</code>；<code>25</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Motor 有没有本地 radix 当真源？</td>
+<td><strong>无</strong>；权威在 Conductor；本地不靠猜缓存</td>
+<td><code>12</code>；<code>ir/12</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>和 TTFT−70% 怎么挂钩？</td>
+<td>命中少 Prefill→测算降幅；**测算**非客户 raw log；假命中会吃掉收益</td>
+<td><code>38</code>；<code>03</code> #7</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="k-herding-6">K. Herding 与负载门控（6）<a class="headerlink" href="#k-herding-6" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问</th>
+<th>30 秒答点</th>
+<th>深挖锚点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Herding 是什么？</td>
+<td>多请求同时打同一「最热」前缀实例→局部过载、尾延迟爆</td>
+<td><code>17</code>；<code>ir/12</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>防 Herding 三版？</td>
+<td>overlay 打散 → top-k 随机/选优 → <strong>unified 全局重排</strong></td>
+<td><code>17</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>unified vs load_gated？</td>
+<td>unified：亲和+负载统一打分；load_gated：负载门控后再亲和</td>
+<td><code>17</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>五参数记什么级？</td>
+<td>能说「亲和权重 / 负载权重 / 门控阈值 / top-k / 超时回退」量级角色即可，勿背假生产值</td>
+<td><code>17</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>和 LoadBalance 回退？</td>
+<td>Conductor 超时/不可用→负载均衡回退，保可用牺牲命中</td>
+<td><code>17</code>；<code>12</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>面试官逼「最优公式」？</td>
+<td>讲演进动机与失败模式；不编未公开系数；反问延迟还是均衡</td>
+<td><code>17</code>；<code>39</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="l-zmq-kv-events6">L. ZMQ KV Events（6）<a class="headerlink" href="#l-zmq-kv-events6" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问</th>
+<th>30 秒答点</th>
+<th>深挖锚点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>KV Events 解决什么？</td>
+<td>索引与引擎块生命周期同步；**通知面**不是传 KV 数据面</td>
+<td><code>25</code>；<code>13</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Stored / Removed？</td>
+<td>Stored：块可复用上报；Removed：驱逐/释放→索引删，防假命中</td>
+<td><code>25</code>；<code>12</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>传输形态？</td>
+<td>ZMQ <strong>PUB</strong> + 必要时 <strong>replay</strong>；订阅方补洞</td>
+<td><code>25</code>；<code>ir/12</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>为何 per-DP？</td>
+<td>DP-rank 粒度发布/注册，索引对齐并行副本</td>
+<td><code>25</code>；<code>ir/12</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>和 TE/Store 别混？</td>
+<td>Events=元数据通知；Store 存、TE 传；三层正交</td>
+<td><code>25</code>；<code>13</code>；<code>36</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>PUB 丢了怎么办？</td>
+<td>replay/超时回退；错向偏重建或假阴，不硬猜仍命中</td>
+<td><code>25</code>；<code>12</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="m-prefixcache-6">M. 引擎 PrefixCache 内核（6）<a class="headerlink" href="#m-prefixcache-6" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问</th>
+<th>30 秒答点</th>
+<th>深挖锚点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>PrefixCache 一句话？</td>
+<td>引擎内按前缀哈希链复用 KV 块（APC 等）；单实例/进程内</td>
+<td><code>27</code>；<code>ir/05</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>与 Motor 亲和差在哪？</td>
+<td>PrefixCache=<strong>引擎内</strong>；Motor=<strong>跨实例查 Conductor</strong>——两层正交</td>
+<td><code>27</code>；<code>12</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>哈希链要点？</td>
+<td>块哈希依赖前缀链；中段变则后续失效</td>
+<td><code>27</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>ref_cnt 干什么？</td>
+<td>引用计数防用中被驱逐；与调度 pin 相关</td>
+<td><code>27</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>开 prefix caching 就等于 Motor？</td>
+<td><strong>不等于</strong>；无全局索引仍可能跨实例假命中</td>
+<td><code>27</code>；<code>09</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>和 FIFO/100 混谈？</td>
+<td>FIFO/100=**结构化编译缓存**条数策略；≠ KV PrefixCache</td>
+<td><code>03</code> #1；<code>27</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="n-6">N. 竞品一句对标（6）<a class="headerlink" href="#n-6" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问</th>
+<th>30 秒答点</th>
+<th>深挖锚点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>vs vLLM Router？</td>
+<td>Router 常见字符级近似树=<strong>猜</strong>；Motor=tokenize+Conductor <strong>查</strong></td>
+<td><code>26</code>；<code>ir/15</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>vs SGLang router？</td>
+<td>本地 radix/LPM 强在引擎协同；缺中心驱逐真源时假阳风险</td>
+<td><code>26</code>；<code>12</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>vs Dynamo / KVBM？</td>
+<td>Dynamo 全栈 cost/KVBM；Motor=K8s 旁挂精确查找——一句：precise lookup vs 平台绑定</td>
+<td><code>26</code>；<code>01</code> A</td>
+</tr>
+<tr>
+<td>4</td>
+<td>vs llm-d？</td>
+<td>生态调度+Mooncake/NIXL 路径多；我侧主场仍 Motor 决策边界</td>
+<td><code>26</code>；<code>ir/19</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>vs AIBrix？</td>
+<td>自研分层/打分多；Mooncake 非其中心路径——**猜 vs 查**框架仍可用</td>
+<td><code>26</code>；<code>ir/19</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>没部署过的名字？</td>
+<td>不编 API；迁移「猜缓存 vs 查索引」；反问精确命中还是省中心</td>
+<td><code>26</code>；<code>39</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="o-server-5">O. Server 重构边界（5）<a class="headerlink" href="#o-server-5" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问</th>
+<th>30 秒答点</th>
+<th>深挖锚点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>重构拆什么？</td>
+<td><strong>Handler</strong>（引擎/PD）vs <strong>Interface</strong>（协议/流式）；合并复制粘贴链路</td>
+<td><code>35</code>；<code>14</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>虚函数 vs 热路径？</td>
+<td>边界用接口清晰；热路径避免虚调用乱飞——讲取舍不装测过 ns</td>
+<td><code>35</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>「删了一万行」？</td>
+<td><strong>LOC 待补</strong>；只讲模块与路径；禁拍脑袋 before/after</td>
+<td><code>14</code>；<code>15</code> E4；<code>03</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>和 5000+ 关系？</td>
+<td>5000+ 钉 <strong>结构化交付</strong>；勿与 Tool/Server 行数混算</td>
+<td><code>02</code>；<code>14</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>golden / 回归？</td>
+<td>协议与流式行为用 golden/用例钉；重构验收=行为不变+可维护</td>
+<td><code>35</code>；<code>07-10/04</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="p-5">P. 高压话术交叉（5）<a class="headerlink" href="#p-5" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问</th>
+<th>30 秒答点</th>
+<th>深挖锚点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>「70% 是客户日志？」</td>
+<td><strong>代表性测算</strong>；可白板假设；无 raw log；要数走复测</td>
+<td><code>39</code>；<code>38</code>；<code>03</code> #7</td>
+</tr>
+<tr>
+<td>2</td>
+<td>「缓存不是 LRU128？」</td>
+<td>现行 <strong>FIFO/100</strong>；旧口径过时；命中不调序</td>
+<td><code>39</code>；<code>03</code> #1；<code>40</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>「这个你没测过？」</td>
+<td>承认无 A/B；讲测法；标**待补**；不报假 P99/加速比</td>
+<td><code>39</code>；<code>15</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>「DSpark 加速多少？」</td>
+<td>未生产压测不报%；讲 draft-verify+接受率失效</td>
+<td><code>39</code>；<code>01</code> B；<code>32</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>「一年就跳是不是不行？」</td>
+<td>拉力&gt;推力；势能换赛道；先认跟踪缺口再切 SO+亲和</td>
+<td><code>39</code>；<code>08</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="30">红线 30 秒复念（盖住右列）<a class="headerlink" href="#30" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>触发</th>
+<th>必须出口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>编译缓存</td>
+<td><strong>FIFO / 100</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>TTFT−70%</td>
+<td><strong>代表性测算</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td>PrefixCache vs 亲和</td>
+<td><strong>两层正交</strong></td>
+</tr>
+<tr>
+<td>4</td>
+<td>ZMQ</td>
+<td><strong>通知面</strong>；Removed 防假命中</td>
+</tr>
+<tr>
+<td>5</td>
+<td>D 实例</td>
+<td><strong>不注册</strong> Conductor</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Server 行数</td>
+<td><strong>待补</strong>，不编</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="12-min">刷题建议（12 min）<a class="headerlink" href="#12-min" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>分钟</th>
+<th>动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0–2</td>
+<td>复念上表 6 条 + <code>03</code> 八条</td>
+</tr>
+<tr>
+<td>2–8</td>
+<td>J–N 每区抽 2 题：盖答点口述 30s</td>
+</tr>
+<tr>
+<td>8–11</td>
+<td>O+P 全刷（Server 诚实 + 高压改口）</td>
+</tr>
+<tr>
+<td>11–12</td>
+<td>串一句：假命中←Removed；亲和≠PrefixCache；70%=测算</td>
+</tr>
+</tbody>
+</table>
+<p><strong>与 05 分工</strong>：05=广谱护城河；43=本夜新卡刀口。全场串联用 <a href="../42-45%E5%88%86%E9%92%9F%E6%A8%A1%E6%8B%9F%E9%9D%A2%E8%AF%95%E4%B8%B2%E8%81%94%E5%89%A7%E6%9C%AC/"><code>42</code></a>。</p>
+<p><strong>数字习惯</strong>：机制 / 经验量级 / 待补——答不出量级就讲机制，不编百分点。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

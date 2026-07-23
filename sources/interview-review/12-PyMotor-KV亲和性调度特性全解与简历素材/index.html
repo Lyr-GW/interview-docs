@@ -1,0 +1,3174 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/interview-review/12-PyMotor-KV%E4%BA%B2%E5%92%8C%E6%80%A7%E8%B0%83%E5%BA%A6%E7%89%B9%E6%80%A7%E5%85%A8%E8%A7%A3%E4%B8%8E%E7%AE%80%E5%8E%86%E7%B4%A0%E6%9D%90/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>专题 12：PyMotor KV 亲和性调度特性全解（源码 + PR 演进 + 简历素材） - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#12pymotor-kv-pr" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              专题 12：PyMotor KV 亲和性调度特性全解（源码 + PR 演进 + 简历素材）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0. 一句话与一张图
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 需求分析与竞品对标
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. 需求分析与竞品对标">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 需求分析：为什么要做这个特性
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-vllm-sglang" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 竞品对标：vLLM 与 SGLang 生态的同类方案
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 全链路机制逐层拆解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 全链路机制逐层拆解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-tokenize-token-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Tokenize 前置：调度层拿到与引擎一致的 token ids
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#211-vllm-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.1 对照：vLLM 最新 Render 方案（必补知识点）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1.1 对照：vLLM 最新 Render 方案（必补知识点）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Render 是什么：把"预处理"从推理引擎里拆出来
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-kv-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. 为什么 KV 亲和路由必须依赖 Render（或等价物）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-llm-d-precise-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. llm-d Precise 路径：Render 的标准用法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-motor-tokenizermanager-vs-vllm-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Motor 的 TokenizerManager vs vLLM Render：同构、异实现
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-token-in-token-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E. Token-in / Token-out 的收益与坑
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#f" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F. 可背的演进叙事（简历/口述）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#212-vllm-render-motor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.2 vLLM Render 当前方案：实现细节、进度、应用和 Motor 差距
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1.2 vLLM Render 当前方案：实现细节、进度、应用和 Motor 差距">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-tokenize-api-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. 当前方案不是“一个 tokenize API”，而是完整的三段式 Serving
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Render 阶段具体做了什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-cpu-only-render-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. CPU-only Render Server 的实现与边界
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-apie2e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. 当前功能完成度：有明确 API、E2E 测试，但不要夸大为所有部署的成熟默认路径
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E. 当前应用情况
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#f-motor-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F. Motor 当前实现与 vLLM 最新方案的真实差距
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#g-motor-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        G. 若要让 Motor 补齐 vLLM 同等能力：建议路线
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#h" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        H. 面试时可用的“差距认知”回答
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-conductor-dp-rank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Conductor 注册与查询：DP rank 粒度的前缀索引
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-kv-eventsvllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 kv-events：索引的数据从哪来（vLLM 侧机制）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-unified-load_gatedpr-210" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 两种调度算法：unified 与 load_gated（PR #210）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-worker-scheduler-herdingpr-210-134-304" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Worker 提案 + Scheduler 权威仲裁：并发下防 herding（PR #210 → #134 → #304 演进）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.5 Worker 提案 + Scheduler 权威仲裁：并发下防 herding（PR #210 → #134 → #304 演进）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#251" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.1 实现难点复盘：为什么“最长前缀”最终演化成两级仲裁
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 负载账本与量纲统一
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.6 负载账本与量纲统一">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#261" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6.1 公式逐项推导：负载均衡究竟在比较什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27-pr-bugfix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 防御性工程（多个 PR 的 bugfix 沉淀）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 配置面与部署形态
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 配置面与部署形态">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-ab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 性能收益：代表性测算、正确 A/B 与证据边界
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 性能收益：代表性测算、正确 A/B 与证据边界">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#70" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        “约 70%”数字的透明测算来源
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A/B 对照应该怎样定义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么这个结果在该场景合理
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-pr-tobkinggitcode-ascendmindie-pymotor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. PR 演进时间线（tobking，Gitcode Ascend/MindIE-PyMotor）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 面试高频追问 Q&amp;A
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 简历项目素材
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 简历项目素材">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 项目描述（可直接粘贴）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-star" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 STAR 展开（面试口述版）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-jd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 关键词（JD 匹配用）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 追问防线（每条素材背后的代码依据）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 参考
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="12pymotor-kv-pr">专题 12：PyMotor KV 亲和性调度特性全解（源码 + PR 演进 + 简历素材）<a class="headerlink" href="#12pymotor-kv-pr" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>与前序专题的关系：04 讲"为什么需要 KV 亲和调度、Mooncake 三大组件是什么"；10 深挖 Mooncake 的传输与存储管理；11 对比 vLLM/SGLang 的 Mooncake 集成。<strong>本篇聚焦你自己的工作</strong>——MindIE-PyMotor（Motor）里 KV 亲和性调度特性的完整实现、你提交的 PR 演进脉络、以及可直接写进简历/在面试中展开的素材。</p>
+<p>所有代码结论均在工作区 <code>MindIE-PyMotor/</code> 源码中核实；PR 信息来自 Gitcode <code>Ascend/MindIE-PyMotor</code> 仓（作者 tobking）的 23 个 PR（13 merged）。</p>
+</blockquote>
+<hr />
+<h2 id="0">0. 一句话与一张图<a class="headerlink" href="#0" title="Permanent link">&para;</a></h2>
+<p><strong>一句话</strong>：在多实例（含 PD 分离/PD 混部）部署下，Coordinator 层把请求 tokenize 成与引擎完全一致的 token ids，查询 Mooncake Conductor 的全局 KV 前缀索引，得到每个实例每个 DP rank 的缓存命中长度，再用"亲和收益 × 实时负载"的融合打分选择 prefill 落点，并由中心 Scheduler 按权威负载账本做最终仲裁；在长输入、短输出、高前缀复用的代表性模型中可测算出约七成以上 TTFT 降幅，但当前没有完整 A/B 原始数据，不能写成客户实测结论。</p>
+<pre class="mermaid"><code>graph TB
+    Client["客户端请求&lt;br/&gt;(messages/tools 或 prompt)"] --&gt; Router["Coordinator Router/Worker 进程"]
+
+    subgraph "Worker 侧：亲和打分（提案）"
+        Router --&gt; TM["TokenizerManager&lt;br/&gt;apply_chat_template(+tools) → token ids"]
+        TM --&gt; Policy["KvCacheAffinityPolicy&lt;br/&gt;unified / load_gated 两种打分"]
+        Policy --&gt;|"POST /query(token_ids)"| Conductor["Mooncake Conductor&lt;br/&gt;PrefixCacheTable 全局前缀索引"]
+        Conductor --&gt;|"每实例每 DP 的 matched_tokens"| Policy
+    end
+
+    subgraph "Scheduler 侧：权威仲裁（决策）"
+        Policy --&gt;|"候选集 + prefill_cost"| Sched["AsyncSchedulerServer&lt;br/&gt;按新鲜负载账本全局重排"]
+    end
+
+    Sched --&gt;|"最终落点 (instance, endpoint=DP rank)"| P1["vLLM P 实例 1"]
+    Sched -.-&gt; P2["vLLM P 实例 2 ..."]
+    P1 --&gt;|"kv-events (ZMQ 发布&lt;br/&gt;block 存入/驱逐事件)"| Conductor
+    P2 -.-&gt;|kv-events| Conductor</code></pre>
+<p>三个角色分工：<strong>Conductor 回答"缓存在哪"</strong>（订阅各实例 kv-events 维护前缀表），<strong>Worker 回答"综合打分谁最优"</strong>（亲和 + 本地负载视图），<strong>Scheduler 回答"最终去哪"</strong>（权威新鲜负载，防并发 herding）。</p>
+<hr />
+<h2 id="1">1. 需求分析与竞品对标<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<h3 id="11">1.1 需求分析：为什么要做这个特性<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<p><strong>业务场景</strong>：企业客户的典型流量是多轮对话、RAG、Agent/Function Call——每个请求携带很长的公共前缀（system prompt、tools schema、历史轮次），4K 上下文里前缀重复率极高。同时部署形态是多实例水平扩展（含 PD 分离、PD 混部、vLLM DP）。</p>
+<p><strong>痛点量化</strong>：vLLM 单实例的 automatic prefix caching 只在实例内部生效。N 个实例做 round-robin 时，同前缀请求落到"上次算过它的那个实例"的概率只有 1/N——<strong>集群前缀命中率随实例数线性稀释</strong>；而 prefill 恰是 TTFT 的主项，长前缀反复重算直接把 TTFT 打爆。</p>
+<p><strong>需求拆解</strong>（当时的设计约束，面试可以按这个顺序讲）：</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>需求</th>
+<th>落地对应</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>功能</td>
+<td>F1 请求路由感知"谁缓存了我的最长前缀"</td>
+<td>Conductor 全局索引 + /query</td>
+</tr>
+<tr>
+<td>功能</td>
+<td>F2 亲和收益与负载均衡可控权衡（不能造热点）</td>
+<td>unified / load_gated 双算法</td>
+</tr>
+<tr>
+<td>功能</td>
+<td>F3 覆盖 PD 分离与 PD 混部两种形态</td>
+<td><code>_KVA_SELECT_ROLES = {P, U}</code></td>
+</tr>
+<tr>
+<td>功能</td>
+<td>F4 精确到 DP rank（每个 DP 有独立 KV 池）</td>
+<td>per-endpoint 注册与打分</td>
+</tr>
+<tr>
+<td>非功能</td>
+<td>N1 命中估计必须与引擎真实命中一致（含 tools/chat template）</td>
+<td>tokenize 前置 + token 级 block 哈希</td>
+</tr>
+<tr>
+<td>非功能</td>
+<td>N2 亲和是优化不是依赖：组件故障不影响服务可用性</td>
+<td>0.2s 超时 + 逐级回退 LoadBalance</td>
+</tr>
+<tr>
+<td>非功能</td>
+<td>N3 调度延迟预算毫秒级</td>
+<td>sub-block fast path、SHM 负载、热路径优化</td>
+</tr>
+<tr>
+<td>非功能</td>
+<td>N4 效果可观测</td>
+<td>cached_tokens 透传、权威分配日志</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键选型</strong>：前缀索引放哪？两条路线——① 调度层自建**本地近似 radix tree**（SGLang router 的做法）：零外部依赖、无网络往返，但它只能"猜"（按自己路由过什么推测缓存了什么），不知道引擎真实的存入/驱逐，且字符级匹配在 tools/chat template 场景误差大；② <strong>中心化真实索引</strong>：订阅引擎 kv-events 维护全局前缀表，准确、含驱逐感知，代价是每请求一跳 HTTP 和一个新组件的可用性风险。Motor 选 ②（Mooncake Conductor），用 0.2s 超时快速回退把可用性风险兜住——本质判断是：<strong>我们的目标客户场景前缀很长，命中估计错一个 block 就是几百上千 token 的重复 prefill，精度比省一跳 HTTP 值钱</strong>。</p>
+<h3 id="12-vllm-sglang">1.2 竞品对标：vLLM 与 SGLang 生态的同类方案<a class="headerlink" href="#12-vllm-sglang" title="Permanent link">&para;</a></h3>
+<p>（细节佐证见专题 04 §3、专题 11；<code>router/</code>、<code>sglang/</code> 仓源码已核实）</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>SGLang sgl-router / model-gateway（Rust）</th>
+<th>vLLM production-stack router（Python）</th>
+<th>vLLM 官方示例 Proxy</th>
+<th><strong>Motor（本特性）</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>策略名</td>
+<td><code>cache_aware</code>（PD 场景 <code>PDSelectionPolicy::CacheAware</code>）</td>
+<td><code>session</code>（粘性）/ <code>prefix-aware</code> / <code>kvaware</code></td>
+<td>无（<code>itertools.cycle</code> 轮询）</td>
+<td><code>kv_cache_affinity</code></td>
+</tr>
+<tr>
+<td>索引来源</td>
+<td><strong>本地近似 radix tree</strong>：路由器按"我路由过什么"自建树，无引擎反馈</td>
+<td><code>kvaware</code> 查 LMCache controller 的**真实 KV 元数据**；<code>prefix-aware</code> 为本地 trie</td>
+<td>—</td>
+<td><strong>Conductor 中心索引</strong>，订阅引擎 kv-events（真实存入+驱逐）</td>
+</tr>
+<tr>
+<td>匹配粒度</td>
+<td><strong>字符级</strong>（<code>tree.rs</code>: <code>DashMap&lt;char, NodeRef&gt;</code>，文档明示为省 tokenize 的取舍）</td>
+<td>kvaware 为 token/block 级</td>
+<td>—</td>
+<td><strong>token 级、block 对齐</strong>（与引擎哈希同构）</td>
+</tr>
+<tr>
+<td>驱逐感知</td>
+<td>无（本地树自己 LRU，与引擎实际驱逐无关，会假阳性）</td>
+<td>kvaware 有（查真实元数据）</td>
+<td>—</td>
+<td>有（BlockRemoved 事件实时更新）</td>
+</tr>
+<tr>
+<td>负载权衡</td>
+<td>树命中率超 <code>cache_threshold</code> 走亲和，负载失衡（<code>balance_abs/rel_threshold</code>）切回最短队列——<strong>二选一开关式</strong></td>
+<td>kvaware 低于阈值（默认 2000 token）回退 QPS 路由</td>
+<td>—</td>
+<td><strong>融合打分（unified）或硬门控（load_gated），连续可调</strong></td>
+</tr>
+<tr>
+<td>决策粒度</td>
+<td>worker 级</td>
+<td>实例级</td>
+<td>实例级</td>
+<td><strong>DP rank 级</strong></td>
+</tr>
+<tr>
+<td>多调度进程一致性</td>
+<td>单路由器进程，不涉及</td>
+<td>不涉及</td>
+<td>不涉及</td>
+<td><strong>worker 提案 + scheduler 权威账本全局重排</strong></td>
+</tr>
+<tr>
+<td>tokenize 成本</td>
+<td>零（字符匹配的卖点）</td>
+<td>kvaware 需要</td>
+<td>—</td>
+<td>毫秒级，且一次 tokenize 三处复用（查询/打分/记账/长度预校验）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>对标结论（面试话术）</strong>：</p>
+<blockquote>
+<p>"业界同类方案分两派：'猜缓存'派（SGLang router 的字符级本地树——便宜但不准、无驱逐感知）和'查缓存'派（production-stack 的 kvaware 查 LMCache 元数据）。Motor 和 kvaware 同属'查'派哲学，但走得更完整：索引是事件驱动的中心索引（含驱逐）、粒度到 DP rank、命中长度按引擎同构的 token block 哈希算；并且在'亲和与负载怎么叠加'上比两家都细——SGLang 是超阈值二选一切换，我们是 token 统一量纲的连续融合分（或可选硬门控），外加多调度进程下的中心权威仲裁，这两点是竞品都没有的。"</p>
+</blockquote>
+<p>差异的根源在架构假设：SGLang router 假设"路由器是唯一入口、单进程"，所以本地树够用；Motor 的 Coordinator 是多 worker 进程 + 中心 Scheduler 的架构，天然需要（也有条件做）权威仲裁这一层。</p>
+<p><strong>补充参照：NVIDIA Dynamo。</strong> Dynamo 也走真实 KV event 索引，但其成本模型比 Motor 更细：以 KV block 为单位显式分开 active/incoming Prefill 与 active/incoming Decode，再把 device/host/disk/shared 命中折成 Prefill credit；此外有短 TTL 预测 side-index 填补“路由已决定、KV event 尚未到达”的 burst 空窗。Motor 的统一 token 分更轻量、可解释性更强；Dynamo 更接近分层缓存和长输出场景下的完整资源成本。详见 <a href="../../kv%20knowledge/03-NVIDIA-Dynamo/"><code>kv knowledge/03-NVIDIA-Dynamo.md</code></a>。</p>
+<hr />
+<h2 id="2">2. 全链路机制逐层拆解<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<h3 id="21-tokenize-token-ids">2.1 Tokenize 前置：调度层拿到与引擎一致的 token ids<a class="headerlink" href="#21-tokenize-token-ids" title="Permanent link">&para;</a></h3>
+<p>源码：<code>motor/coordinator/scheduler/policy/kv_cache_affinity.py</code> 的 <code>TokenizerManager</code>（单例）。</p>
+<ul>
+<li>用 HuggingFace <code>AutoTokenizer</code> 加载与下层引擎**同一份模型权重目录**的 tokenizer（<code>prefill_kv_event_config.model_path</code>），对 chat 请求走 <code>apply_chat_template(conversation, tools, add_generation_prompt=True, tokenize=True)</code>——产出的 token 序列与 vLLM/SGLang prefill 实际收到的**逐字节一致**，Conductor 返回的 <code>longest_matched</code> 才真实反映集群 KV 分布。</li>
+<li><strong>tools 必须透传</strong>：函数调用请求的 tools 会被 chat template 注入 prompt，漏传会导致 token 序列分叉、命中长度虚高（这是修过的真实 bug，<code>apply_chat_template</code> 的 docstring 里特意写了 "dropping it silently was the bug fixed in this revision"）。</li>
+<li><strong>fail-closed 兜底</strong>：主路径和 tools-aware fallback 都失败时返回 <code>[]</code>，让调度整体回退 LoadBalance——宁可放弃亲和，也不能拿"漏了 tools 的半对 token 序列"去误导 Conductor（<code>_safe_fallback_encode</code> 注释原话）。</li>
+<li>tokenize 结果缓存在 <code>req_info.token_ids</code>，一次 tokenize 三处复用：① Conductor 前缀查询；② <code>isl</code>（输入长度）参与亲和打分；③ <code>calculate_demand_workload</code> 用真实 token 数记账（见 2.6）。</li>
+</ul>
+<p><strong>对比面</strong>（详见专题 04 §3）：SGLang router / production-stack 的 <code>cache_aware</code> 用字符级近似 radix tree，省 tokenize 但对不齐 block 边界；Motor 用 token 级真实索引，代价是调度层毫秒级 CPU 和 tokenizer 一致性维护。</p>
+<h3 id="211-vllm-render">2.1.1 对照：vLLM 最新 Render 方案（必补知识点）<a class="headerlink" href="#211-vllm-render" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>文档里 PR #349「长度预校验与 vLLM 最新 render 方案对齐」、周边 PR #235「render 前置到 coordinator」说的就是这一套。面试若被问"你们 tokenize 前置和业界最新做法什么关系"，按本节答。</p>
+</blockquote>
+<h4 id="a-render">A. Render 是什么：把"预处理"从推理引擎里拆出来<a class="headerlink" href="#a-render" title="Permanent link">&para;</a></h4>
+<p>vLLM 把请求处理拆成两段：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>做什么</th>
+<th>是否需要 GPU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Render（预处理）</strong></td>
+<td>chat template / Harmony 变换、tools 注入、多模态预处理、tokenize、长度与参数校验</td>
+<td>否，纯 CPU</td>
+</tr>
+<tr>
+<td><strong>Engine（推理）</strong></td>
+<td>调度、prefill/decode、采样</td>
+<td>是</td>
+</tr>
+</tbody>
+</table>
+<p>官方动机（<code>vllm/docs/serving/online_serving/renderer.md</code>）：</p>
+<ol>
+<li><strong>无 GPU 的前端</strong>：预处理与后处理（detokenize、tool/reasoning 解析）可独立部署；</li>
+<li><strong>解耦 tokenize</strong>：llm-d、Dynamo、自定义网关可复用 <strong>vLLM 自己的</strong> 预处理逻辑，而不必再猜 chat template；</li>
+<li><strong>Token-in / Token-out 引擎</strong>：引擎只收 <code>prompt_token_ids</code>、只出 token，协议更干净。</li>
+</ol>
+<p>对应 HTTP API：</p>
+<ul>
+<li><code>POST /v1/chat/completions/render</code></li>
+<li><code>POST /v1/completions/render</code></li>
+<li>配套还有 derender：<code>/v1/chat/completions/derender</code>、<code>/v1/completions/derender</code>（token → 文本/结构化字段，服务后处理分离）</li>
+</ul>
+<p>独立进程启动：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>vllm<span class="w"> </span>launch<span class="w"> </span>render<span class="w"> </span>&lt;model&gt;<span class="w"> </span>--port<span class="w"> </span><span class="m">8100</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># GPU-less；复用 serve 的模型/模板/tokenizer 配置面</span>
+</code></pre></div>
+<p>引擎内路径：<code>OnlineRenderer.render_chat()</code> / <code>render_completion()</code>（<code>vllm/renderers/online_renderer.py</code>）被 ServingChat 与 Render endpoint <strong>共用</strong>——保证"render 出来的 token"与"真正进引擎生成时的 token"<strong>同一条代码路径</strong>。</p>
+<p>对 GPT-OSS 等模型，render 会同时做 chat template <strong>和</strong> OpenAI Harmony 变换（不是只套 Jinja），这是为了与真实生成路径字节级一致。</p>
+<h4 id="b-kv-render">B. 为什么 KV 亲和路由必须依赖 Render（或等价物）<a class="headerlink" href="#b-kv-render" title="Permanent link">&para;</a></h4>
+<p>精确前缀亲和的硬条件是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>调度层看到的 token ids  ≡ 引擎 prefix cache / kv-events 里哈希的 token ids
+</code></pre></div>
+<p>任一不一致 → block hash 全 miss → 精确亲和静默退化成负载均衡。</p>
+<p>分叉来源（Motor 也踩过）：</p>
+<ul>
+<li>chat template / <code>add_generation_prompt</code></li>
+<li><code>tools</code> 注入</li>
+<li>reasoning/thinking 模板、自定义 <code>--chat-template</code></li>
+<li>Harmony、Mistral tool 序列化等引擎特有变换</li>
+<li>多模态占位符展开</li>
+</ul>
+<p>所以业界精确亲和路线收敛到同一哲学：<strong>不要在路由层"自己猜"怎么 tokenize，要用引擎同源的 render 逻辑。</strong></p>
+<h4 id="c-llm-d-precise-render">C. llm-d Precise 路径：Render 的标准用法<a class="headerlink" href="#c-llm-d-precise-render" title="Permanent link">&para;</a></h4>
+<p>llm-d 的 <code>precise-prefix-cache-routing</code>（见 <code>docs/kv knowledge/02-llm-d.md</code>）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>请求 → EPP token-producer
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>     → 调 vLLM /v1/*/render（常为 EPP 旁路的 vllm launch render sidecar，或共享 Render Service）
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>     → 得到精确 token IDs
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>     → Indexer（订阅各 MS 的 ZMQ BlockStored/Removed）做最长连续前缀链匹配
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>     → prefix-cache-scorer 加权打分选 Pod
+</code></pre></div>
+<p>对比 Approximate：本地字符/滚动哈希猜测，无引擎驱逐反馈；Precise 依赖 render + ZMQ，精度 100% token 级。</p>
+<p>旧方案 gRPC-over-UDS 独立 tokenizer 已 deprecated，官方推荐直接调 <strong>vLLM render HTTP</strong>——因为只有引擎自己的 OnlineRenderer 才能覆盖 Harmony/tools/MM 等全部边角。</p>
+<h4 id="d-motor-tokenizermanager-vs-vllm-render">D. Motor 的 TokenizerManager vs vLLM Render：同构、异实现<a class="headerlink" href="#d-motor-tokenizermanager-vs-vllm-render" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Motor（本特性）</th>
+<th>vLLM Render / llm-d Precise</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>目标</td>
+<td>调度层拿到与引擎一致的 token ids</td>
+<td>同左</td>
+</tr>
+<tr>
+<td>实现</td>
+<td>Coordinator 内 <code>TokenizerManager</code>：同源 <code>model_path</code> + <code>apply_chat_template(..., tools=...)</code></td>
+<td>调用引擎/独立 render server 的 <code>/v1/*/render</code>，走 <code>OnlineRenderer</code></td>
+</tr>
+<tr>
+<td>一致性保证</td>
+<td><strong>部署约定</strong>（同 model_path、同默认 template）；无 revision/hash 握手</td>
+<td><strong>代码路径同源</strong>（Serving 与 Render 共用 OnlineRenderer）；独立 <code>vllm launch render</code> 时仍需配置与引擎对齐</td>
+</tr>
+<tr>
+<td>校验</td>
+<td>PR #349：入口按真实 token 数拒超长请求</td>
+<td>render 阶段即做模型长度/参数校验，非法请求不进 GPU 队列</td>
+</tr>
+<tr>
+<td>结果复用</td>
+<td>token ids → Conductor 查询 + 亲和打分 + 负载记账</td>
+<td>token ids → Indexer 打分；可把 <code>prompt_token_ids</code> 直接下发，引擎跳过二次 tokenize</td>
+</tr>
+<tr>
+<td>演进</td>
+<td>PR #235「render 前置到 coordinator」：把 render 能力沉到调度入口，与引擎侧 <code>OpenAIServingRender</code> API 演进对齐（见 <code>motor/engine_server/core/vllm/vllm_openai_compat.py</code>）</td>
+<td>官方主线：<code>vllm serve</code> 内嵌 Renderer + 可选 <code>vllm launch render</code> 解耦</td>
+</tr>
+</tbody>
+</table>
+<p><strong>面试一句话</strong>：</p>
+<blockquote>
+<p>"vLLM Render 把'chat template + tokenize + 校验'正式产品化成可独立部署的 CPU 服务；llm-d Precise 用它拿精确 token 再查 ZMQ 索引。Motor 更早用 Coordinator 内 TokenizerManager 做了同一件事——哲学相同（调度必须看引擎真实 token），实现上我们是进程内同源加载，他们是 HTTP 调官方 OnlineRenderer。我们 PR #349 的长度预校验、#235 的 render 前置，就是在向这条官方主线收敛。"</p>
+</blockquote>
+<h4 id="e-token-in-token-out">E. Token-in / Token-out 的收益与坑<a class="headerlink" href="#e-token-in-token-out" title="Permanent link">&para;</a></h4>
+<p><strong>收益</strong>：</p>
+<ol>
+<li>路由与引擎各 tokenize 一次 → 可变成路由 render 一次、引擎直接吃 <code>input_ids</code>/<code>prompt_token_ids</code>（SGLang router 实验路径、llm-d precise 同理）；</li>
+<li>GPU 实例不再被超长/非法请求占用排队；</li>
+<li>多模态重预处理可集中在 render 池横向扩展，不绑 GPU。</li>
+</ol>
+<p><strong>坑（必须主动说）</strong>：</p>
+<ol>
+<li><strong>配置漂移</strong>：render 与 engine 的 <code>--chat-template</code>、tokenizer revision、Harmony/tool parser 不一致 → 亲和全 0；</li>
+<li><strong>Render 成为新瓶颈</strong>：高 QPS 下 CPU tokenize/template 会打满，需要 <code>renderer-num-workers</code>、独立 render 池扩容（Motor 同问题，见规模化推演）；</li>
+<li><strong>安全面</strong>：render/tokenizer_info 暴露模板与实现细节，生产要鉴权（vLLM security 文档已提示）；</li>
+<li><strong><code>input_ids</code> 不等于跳过 prefill</strong>：只省 CPU tokenize；KV 命中仍靠引擎 prefix cache / 亲和路由。</li>
+</ol>
+<h4 id="f">F. 可背的演进叙事（简历/口述）<a class="headerlink" href="#f" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>字符级本地树（便宜、不准）
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  → 调度层自建 tokenize（Motor TokenizerManager / 早期自定义 tokenizer）
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  → 引擎同源 Render API（vLLM /v1/*/render + vllm launch render）
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  → 精确亲和 = Render tokens + KV-Events 真实索引（Motor Conductor / llm-d Precise）
+</code></pre></div>
+<p>你的差异化仍在后半段：双算法融合打分、worker+scheduler 两级防 herding、DP rank 粒度、fail-closed 回退——这些是 Render 本身不提供、调度系统要补的。</p>
+<h3 id="212-vllm-render-motor">2.1.2 vLLM Render 当前方案：实现细节、进度、应用和 Motor 差距<a class="headerlink" href="#212-vllm-render-motor" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>核实基线</strong>：本地 vLLM 提交 <code>8df14cfc</code>（2026-07-12）。以下“当前”均指该代码版本，而不是泛称某个历史 vLLM 版本。一个重要修正：当前实现位于 <code>vllm/entrypoints/scale_out/</code>，不是旧资料里常见的 <code>entrypoints/serve/render/</code>。</p>
+</blockquote>
+<h4 id="a-tokenize-api-serving">A. 当前方案不是“一个 tokenize API”，而是完整的三段式 Serving<a class="headerlink" href="#a-tokenize-api-serving" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>OpenAI Chat/Completion 请求
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>        │
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        ▼
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>/v1/*/render  ── CPU-only 或与 Serving 同进程
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  模型校验、模板/工具/Harmony、多模态、tokenize、采样参数解析
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        │ GenerateRequest
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        │  (token_ids + sampling_params + MM features + cache_salt ...)
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        ▼
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>/inference/v1/generate ── GPU/NPU Engine
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>  token-in、token-out 推理；无需再由文本重建 prompt
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        │ GenerateResponse / token stream
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>        ▼
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>/v1/*/derender ── CPU-only
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>  detokenize、tool-call/reasoning 解析、还原 OpenAI 响应
+</code></pre></div>
+<p>这三段都已在本地源码存在：</p>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>当前组件/接口</th>
+<th>关键职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Render</td>
+<td><code>scale_out/render/serving.py::ServingRender</code>；<code>/v1/chat/completions/render</code>、<code>/v1/completions/render</code></td>
+<td>把 OpenAI 请求变为可直接送引擎的 <code>GenerateRequest</code></td>
+</tr>
+<tr>
+<td>Token-in 推理</td>
+<td><code>scale_out/token_in_token_out/serving.py::ServingTokens</code>；<code>/inference/v1/generate</code></td>
+<td>直接消费 <code>token_ids</code>，返回 token 级结果</td>
+</tr>
+<tr>
+<td>Derender</td>
+<td><code>scale_out/derender/serving.py</code>；<code>/v1/*/derender</code></td>
+<td>将结果还原为 Completion/Chat Completion 响应</td>
+</tr>
+<tr>
+<td>组装</td>
+<td><code>scale_out/factories.py</code></td>
+<td>同时注册 render、derender；有 generate task 时再注册 token-in/token-out API</td>
+</tr>
+</tbody>
+</table>
+<p>所以 vLLM 的最新目标已经从“让外部路由器拿一次 token IDs”扩展到 <strong>Disaggregated Everything / Token-in Token-out Serving</strong>：前端、引擎、后处理可独立扩缩容，且前后端的模型语义由统一 Renderer 负责。</p>
+<h4 id="b-render">B. Render 阶段具体做了什么<a class="headerlink" href="#b-render" title="Permanent link">&para;</a></h4>
+<p><code>ServingRender.render_chat_request()</code> 的顺序是：</p>
+<ol>
+<li>模型注册与请求参数校验；不支持 beam search 时直接拒绝；</li>
+<li>调用 <code>OnlineRenderer.render_chat()</code>，它复用正常 OpenAI Serving 的预处理逻辑；</li>
+<li>处理 chat template、tools、tool choice、reasoning parser、Mistral 特殊序列化、GPT-OSS Harmony 等模型专属语义；</li>
+<li>多模态输入时执行占位符扩展、processor 处理，并提取可跨服务传输的多模态特征；</li>
+<li>取出最终 <code>token_ids</code>，按真实 prompt 长度计算 <code>max_tokens</code> 并构造完整采样参数；</li>
+<li>返回 <code>GenerateRequest</code>，而不是仅返回 token 数组。</li>
+</ol>
+<p><code>GenerateRequest</code> 当前包含：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>request_id
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>token_ids
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>sampling_params
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>model / stream / stream_options
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>cache_salt / priority
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>token_offsets（可选）
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>assistant_tokens_mask（可选）
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>features：多模态 hash、placeholder 位置、序列化后的 MM tensor 元数据
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>kv_transfer_params / ec_transfer_params（可选）
+</code></pre></div>
+<p>因此 Render 的价值不只是“把字符串转成 id”：它是 <strong>请求语义编译器</strong>。如果只复刻 <code>AutoTokenizer.apply_chat_template</code>，在文本 Chat 的常规路径上通常够用，但还没有覆盖 Harmony、模型专属工具格式、多模态占位符、采样参数默认值等完整契约。</p>
+<h4 id="c-cpu-only-render-server">C. CPU-only Render Server 的实现与边界<a class="headerlink" href="#c-cpu-only-render-server" title="Permanent link">&para;</a></h4>
+<p><code>vllm launch render &lt;model&gt;</code> 走 <code>init_render_app_state()</code>：</p>
+<ul>
+<li>构造 <code>VllmConfig</code>、Model Registry、<code>renderer_from_config()</code>、<code>OnlineRenderer</code> 和 <code>OnlineDerenderer</code>；</li>
+<li><strong>不创建 <code>EngineClient</code></strong>，<code>state.engine_client = None</code>；</li>
+<li>显式清除量化配置、将 CPU KV Cache 空间设为 0；没有权重推理、没有 GPU/NPU Kernel、没有 KV Cache 分配；</li>
+<li>仍复用标准服务的模型、tokenizer、chat template、tool/reasoning parser 与多模态配置；</li>
+<li>endpoint plugin 若未排除 <code>render</code> task，会在没有 EngineClient 的情况下初始化，插件必须处理 <code>engine_client=None</code>。</li>
+</ul>
+<p>这说明它不是“轻量 tokenizer binary”，而是完整 vLLM 前端依赖的 CPU 服务。优点是语义一致；成本是仍要加载 tokenizer、模板、processor 和相关 Python/Rust 运行时，规模化时要作为独立 CPU 服务做容量管理。</p>
+<h4 id="d-apie2e">D. 当前功能完成度：有明确 API、E2E 测试，但不要夸大为所有部署的成熟默认路径<a class="headerlink" href="#d-apie2e" title="Permanent link">&para;</a></h4>
+<p>本地代码可确认的已实现能力：</p>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>状态</th>
+<th>证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chat / Completion Render</td>
+<td>已实现</td>
+<td><code>scale_out/render/api_router.py</code></td>
+</tr>
+<tr>
+<td>GPU-less Render Server</td>
+<td>已实现</td>
+<td><code>vllm launch render</code>、<code>init_render_app_state()</code></td>
+</tr>
+<tr>
+<td>Token-in 推理 API</td>
+<td>已实现</td>
+<td><code>/inference/v1/generate</code></td>
+</tr>
+<tr>
+<td>非流式 Derender</td>
+<td>已实现</td>
+<td><code>/v1/chat\|completions/derender</code></td>
+</tr>
+<tr>
+<td>多 prompt、multi-turn、stream 参数透传</td>
+<td>已有 E2E 测试</td>
+<td><code>tests/entrypoints/scale_out/render/test_render*.py</code></td>
+</tr>
+<tr>
+<td>token offsets</td>
+<td>已实现</td>
+<td><code>return_token_offsets</code></td>
+</tr>
+<tr>
+<td>assistant token mask</td>
+<td>已实现，但依赖模板 <code>{% generation %}</code> 标签</td>
+<td><code>assistant_tokens_mask</code></td>
+</tr>
+<tr>
+<td>多模态 token / feature 传递</td>
+<td>已实现，含 hash、placeholder、序列化元数据</td>
+<td><code>test_render_multimodal.py</code></td>
+</tr>
+<tr>
+<td>工具/Reasoning 后处理</td>
+<td>Render/Derender 架构已承载；流式 derender 仍需单独设计</td>
+<td>协议注释明确说明 streaming derender 尚未提供等价 endpoint</td>
+</tr>
+<tr>
+<td>精确 KV 亲和应用</td>
+<td>已被 llm-d Precise 采用</td>
+<td>Render token IDs + vLLM ZMQ KVEvents + 全局 Index</td>
+</tr>
+</tbody>
+</table>
+<p>需要谨慎的边界：</p>
+<ol>
+<li><code>/render</code> 本身是同步 JSON 响应，即使原请求 <code>stream=true</code>，Render 不会流式生成，只是把 stream 选项带入 <code>GenerateRequest</code>；</li>
+<li><code>derender</code> 当前协议重点是**非流式**响应；流式版需要增量 detokenize、<code>parse_delta()</code> 和新的 endpoint 设计；</li>
+<li>CPU-only Render 与 GPU Engine 必须共享模型 revision、tokenizer、chat-template、parser、MM processor 和相关开关。共享代码降低漂移概率，但独立部署**不是运行时自动证明一致**；</li>
+<li>Render 省的是前端 CPU 预处理，不会自动跳过 prefill；只有下游实例命中 prefix KV 才会省模型计算。</li>
+</ol>
+<h4 id="e">E. 当前应用情况<a class="headerlink" href="#e" title="Permanent link">&para;</a></h4>
+<p><strong>1. vLLM 自己的 Serving</strong><br />
+普通 <code>vllm serve</code> 也会初始化 Renderer，Chat/Completion Serving 复用同一套 <code>OnlineRenderer</code>。因此 Render 不是另一套“旁路 tokenization”，而是被抽出的公共预处理层。</p>
+<p><strong>2. 独立 Render 服务</strong><br />
+<code>vllm launch render</code> 已有端到端测试：Chat、Completion、多 prompt、多轮对话、无效模型、性能烟雾测试、<code>/health</code>、<code>/v1/models</code>。它面向不想启动 GPU Engine、但需严格复刻 vLLM 输入语义的网关/Router。</p>
+<p><strong>3. llm-d Precise Prefix Cache Routing</strong><br />
+这是最直接的生产架构应用：EPP 的 token-producer 调 Render 获取精确 token IDs，Indexer 订阅 vLLM ZMQ <code>BlockStored/BlockRemoved</code>，再按最长连续 block 前缀对候选 Pod 打分。它取代了旧的独立 tokenizer/gRPC-UDS 路径，核心收益是将 tools、模板、多模态等复杂语义的 token 一致性责任交回 vLLM。</p>
+<p><strong>4. 自定义网关与分离式 Serving</strong><br />
+Token-in / token-out API 为 Dynamo、llm-d、K8s Gateway 或自定义 Router 提供标准边界：路由器做 render、选后端、把 <code>GenerateRequest</code> 直接转发；后处理可以留前端或交给 Derender 服务。</p>
+<h4 id="f-motor-vllm">F. Motor 当前实现与 vLLM 最新方案的真实差距<a class="headerlink" href="#f-motor-vllm" title="Permanent link">&para;</a></h4>
+<p>先区分两层：</p>
+<ul>
+<li><strong>Motor 的强项</strong>：精确 KV 索引、DP rank 粒度、unified/load-gated 负载权衡、worker + Scheduler 权威仲裁、PD 和故障回退；</li>
+<li><strong>vLLM Render 的强项</strong>：将请求语义从 OpenAI 请求到 token-in/token-out 协议完整产品化。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>vLLM 当前方案</th>
+<th>Motor 当前状态（本仓核实）</th>
+<th>差距/风险</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Token 来源</td>
+<td><code>OnlineRenderer</code> 作为权威预处理路径</td>
+<td><code>TokenizerManager</code>：本地同源模型目录 + HF <code>apply_chat_template</code></td>
+<td>文本场景可对齐，但没有完整引擎语义覆盖</td>
+</tr>
+<tr>
+<td>Chat / tools</td>
+<td>模型专属 parser、工具格式、Harmony、请求模板参数一起处理</td>
+<td>已明确处理 <code>tools</code>，这是重要正确性修复</td>
+<td>未证明覆盖 Harmony、Mistral 专属格式、全部 tool/parser 行为</td>
+</tr>
+<tr>
+<td>多模态</td>
+<td>输出 token IDs + MM hash/placeholder/MM tensor 元数据</td>
+<td>当前 KVA tokenizer 路径以文本 Chat/Prompt 为主</td>
+<td>多模态前缀亲和不能安全宣称精确</td>
+</tr>
+<tr>
+<td>参数校验</td>
+<td>模型校验、真实 input length、max tokens、sampling params</td>
+<td>已有 max_model_len 预校验</td>
+<td>还未将完整 OpenAI 参数解析收敛为统一契约</td>
+</tr>
+<tr>
+<td>输出契约</td>
+<td><code>GenerateRequest</code> 可直接转发至 <code>/inference/v1/generate</code></td>
+<td>只在 Coordinator 内保存 <code>req_info.token_ids</code> 用于查 Conductor/打分/记账</td>
+<td>没有 token-in 请求协议与转发链路，Engine 仍可二次 tokenize</td>
+</tr>
+<tr>
+<td>前后处理分离</td>
+<td>Render + Generate + Derender</td>
+<td>正常 OpenAI Serving 包装</td>
+<td>无独立 Derender，Tool/Reasoning 后处理未服务化</td>
+</tr>
+<tr>
+<td>CPU-only 横向扩展</td>
+<td><code>vllm launch render</code> 可独立部署</td>
+<td>Coordinator 内嵌 tokenizer 单例、同步路径</td>
+<td>高 QPS 下会成为 Coordinator CPU 瓶颈</td>
+</tr>
+<tr>
+<td>当前 vLLM API 兼容</td>
+<td><code>scale_out/render/ServingRender</code></td>
+<td><code>vllm_openai_compat.py</code> 尝试导入旧路径 <code>vllm.entrypoints.serve.render.serving.OpenAIServingRender</code></td>
+<td><strong>本地 vLLM 已无此路径</strong>；当前创建失败会被 endpoint 捕获后仅 warning 并继续，说明适配并未跟上最新接口</td>
+</tr>
+<tr>
+<td>精确 KV 路由</td>
+<td>Render + KVEvents 是 llm-d 的标准组合</td>
+<td>Conductor + kv-events 已有</td>
+<td>查询/索引与打分很强，但 token producer 不是 vLLM 官方 Render</td>
+</tr>
+</tbody>
+</table>
+<p>特别注意最后一行：Motor 不是“没有 Render”，而是**没有接入当前 vLLM 的独立 Render/Token-in/Derender 架构**。当前的 <code>OpenAIServingRender</code> 兼容代码更像是为了让 Motor 内嵌的 OpenAI Chat Serving 适配某段 vLLM API 演进；它既不暴露 <code>/v1/*/render</code>，也不启动 CPU-only render server，更没有把 Render 结果作为跨服务协议下发。</p>
+<h4 id="g-motor-vllm">G. 若要让 Motor 补齐 vLLM 同等能力：建议路线<a class="headerlink" href="#g-motor-vllm" title="Permanent link">&para;</a></h4>
+<p>按正确性优先、再性能和平台化推进。</p>
+<p><strong>P0：令 token 等价性成为可验证契约</strong></p>
+<ol>
+<li>将 <code>TokenizerManager</code> 抽象为 <code>TokenProducer</code> 接口；</li>
+<li>实现两种后端：现有本地 HF 后端、远端 vLLM Render 后端；</li>
+<li>Render 后端消费 <code>/v1/chat/completions/render</code> 与 <code>/v1/completions/render</code> 返回的 token IDs；</li>
+<li>在注册/健康检查阶段验证 model id、tokenizer revision、chat template hash、prefix-cache hash algorithm、block size；无法验证或请求语义不支持时 fail-closed，回退由 Engine 自行 tokenize 且禁用精确亲和；</li>
+<li>将 tools、thinking、Harmony、LoRA/cache salt、多模态等影响 prefix hash 的 extra keys 显式纳入 KVA key。</li>
+</ol>
+<p><strong>P1：打通 token-in 以消除二次预处理</strong></p>
+<ol>
+<li>给 Motor 的上游/引擎 adapter 定义内部 <code>RenderedRequest</code>：<code>token_ids</code>、sampling params、MM features、cache salt、priority、request id；</li>
+<li>若目标 vLLM 支持 <code>/inference/v1/generate</code>，将 Render 结果原样转发；若不支持则保留 OpenAI 文本路径；</li>
+<li>保持 Router 选择、负载记账和 Engine 实际输入使用**同一份** token IDs，避免“用于路由的一套、进入引擎的另一套”；  </li>
+<li>以 request id 串联 Render、Conductor、Scheduler、Engine trace，并记录 route token hash、engine token hash、命中长度和二次 tokenize 次数。</li>
+</ol>
+<p><strong>P2：补全多模态与前后处理分离</strong></p>
+<ol>
+<li>传递 vLLM <code>MultiModalFeatures</code> 等价物，而不是只传 image URL/text；  </li>
+<li>明确多模态 processor 版本与缓存 hash 的一致性；  </li>
+<li>对需要 OpenAI 协议输出的场景，接入/实现 Derender：非流式先落地，再设计流式 delta、tool/reasoning parser 的状态传递；  </li>
+<li>Render 池按 CPU/内存/processor 吞吐横向扩缩，避免将 tokenize 与调度绑死在 Coordinator。</li>
+</ol>
+<p><strong>P3：将 Render 接入现有 KVA 优势</strong></p>
+<ol>
+<li>Render 完成即做长度预校验、block hash 计算、Conductor 查询；  </li>
+<li>在排队窗口触发慢层 KV prefetch；  </li>
+<li>保留 Motor 的 unified/load-gated + Scheduler 权威仲裁，不要退化成 Render 只做 token producer；  </li>
+<li>统一 KVEvents 的 block size、hash algorithm、cache salt、LoRA/MM extra keys 与 Render 元数据，建立端到端一致性测试矩阵。</li>
+</ol>
+<h4 id="h">H. 面试时可用的“差距认知”回答<a class="headerlink" href="#h" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>“我们做 KV 亲和时已经把最关键的原则落地了：调度必须用引擎等价的 token，而不是字符前缀；所以有同源 tokenizer、tools 透传和长度预校验。但 vLLM 最新 Render 已经把这件事升级为完整的 token-in/token-out 协议：Render 不只返回 token，还封装采样参数、多模态特征、cache salt，后面可直连 Generate 和 Derender。对比之下，Motor 当前强在缓存索引、负载融合和多进程仲裁，弱在请求预处理的标准化与跨服务传递。下一步我会先把 TokenProducer 抽象出来接 vLLM Render，再让 Scheduler 与 Engine 共享同一份 RenderedRequest，最后补多模态和 Derender。这样既能获得官方语义一致性，又保留 Motor 在集群亲和调度上的优势。”</p>
+</blockquote>
+<h3 id="22-conductor-dp-rank">2.2 Conductor 注册与查询：DP rank 粒度的前缀索引<a class="headerlink" href="#22-conductor-dp-rank" title="Permanent link">&para;</a></h3>
+<p>源码：<code>motor/coordinator/api_client/conductor_api_client.py</code>。</p>
+<ul>
+<li><strong>注册</strong>（实例上线时）：对每个 KVA 角色实例（<code>ROLE_P</code> 和混部 <code>ROLE_U</code>）的每个 endpoint（= DP rank）调 <code>POST /register</code>，上报该 DP 的 kv-events ZMQ 端点（<code>基础端口 + endpoint.id</code>）、<code>block_size</code>、<code>instance_id</code>（<code>vllm-prefill-{id}</code> / <code>vllm-union-{id}</code>）、<code>dp_rank</code>。Conductor 据此订阅各 DP 的 KV block 存入/驱逐事件流。</li>
+<li><strong>查询</strong>（每个请求）：<code>POST /query</code> 带 <code>token_ids</code> 和 <code>block_size</code>，返回 <code>{tenant: {instance_id: {"DP": {dp_rank: matched_tokens}}}}</code>——<strong>亲和粒度精确到 DP rank</strong>，不是实例级。这与 vLLM DP 部署下"每个 DP rank 有独立 KV cache 池"的事实对齐。</li>
+<li><strong>超时即回退</strong>：查询超时设 0.2s（注册 2s），Conductor 慢/挂时快速失败，调度回退 LoadBalance，不阻塞请求主路径。</li>
+<li><strong>对账重注册</strong>：<code>re_register_kv_instances</code> 拉取 Conductor 的 <code>/services</code> 列表与本地期望比对，缺失即补注册——覆盖 Conductor 重启丢状态的场景。</li>
+</ul>
+<h3 id="23-kv-eventsvllm">2.3 kv-events：索引的数据从哪来（vLLM 侧机制）<a class="headerlink" href="#23-kv-eventsvllm" title="Permanent link">&para;</a></h3>
+<p>Conductor 之所以"知道谁缓存了什么"，靠的是 vLLM 的 <strong>KV cache events</strong> 机制（源码：<code>vllm/vllm/distributed/kv_events.py</code>；开启方式即部署配置里的 <code>kv-events-config</code>）。</p>
+<p><strong>事件是什么</strong>：vLLM V1 的 prefix cache 以 block（默认 16 token）为单位、用链式哈希标识（<code>block_hash = hash(parent_hash, token_ids)</code>）。引擎每次缓存状态变化时发布三类事件：</p>
+<table>
+<thead>
+<tr>
+<th>事件</th>
+<th>触发时机</th>
+<th>关键字段</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BlockStored</code></td>
+<td>新 block 写入 prefix cache</td>
+<td><code>block_hashes</code>（本批 block 的哈希链）、<code>parent_block_hash</code>、<code>token_ids</code>、<code>block_size</code>、<code>lora_name</code>（LoRA 隔离命名空间）、<code>medium</code></td>
+</tr>
+<tr>
+<td><code>BlockRemoved</code></td>
+<td>block 被 LRU 驱逐</td>
+<td><code>block_hashes</code>、<code>medium</code></td>
+</tr>
+<tr>
+<td><code>AllBlocksCleared</code></td>
+<td>缓存整体清空（如 reset）</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>事件按调度步聚合成 <code>KVEventBatch</code>（带时间戳和单调递增序列号）批量发布。</p>
+<p><strong>怎么发布</strong>：<code>ZmqEventPublisher</code>——ZMQ <strong>PUB</strong> socket 推送事件流（部署配置里的 <code>endpoint: tcp://*:5557</code>），外加一个 <strong>ROUTER</strong> socket 做重放服务（<code>replay_endpoint: tcp://*:6667</code>）：发布端在内存里保留最近 N 个 batch（<code>buffer_steps</code>），订阅者发现序列号跳变（丢包/晚加入/自己重启）时，发一个起始序列号过去即可**增量补拉**，不用全量重建。这正是 Conductor 重启后能快速恢复索引、以及 Motor 注册时要同时上报 <code>replay_endpoint</code> 的原因。</p>
+<p><strong>DP 拓扑对齐</strong>：DP 部署下**每个 DP rank 起独立的 publisher**（<code>EventPublisher</code> 的设计注释明确：避免重复事件、保证事件归属），端口按 rank 偏移——这与 Motor 侧"每个 endpoint 按 <code>基础端口 + endpoint.id</code> 单独注册"严格对齐，是 DP rank 粒度亲和成立的物理基础。TP 多 worker 场景另有 <code>KVEventAggregator</code> 做去重：只有所有 TP worker 都上报的事件才算数（KV 在 TP 组内是分片的同一份逻辑缓存）。</p>
+<p><strong>Conductor 消费侧</strong>：订阅各 DP 的事件流，把 <code>BlockStored/BlockRemoved</code> 应用到 PrefixCacheTable（哈希链 → 持有者集合）。<code>/query</code> 时把请求 token_ids 按同样的 block 哈希算法切块，逐块沿哈希链查表，返回每个 (instance, DP) 的最长连续命中 token 数。<strong>索引是事件驱动的真实状态</strong>（含驱逐），这就是它比路由器本地"猜测树"准的根本原因。</p>
+<p>一句话串起来：<strong>引擎每存/驱逐一个 block 就发事件 → Conductor 增量维护全局前缀表 → Motor 查表拿到与引擎真实缓存一致的命中长度</strong>。</p>
+<h3 id="24-unified-load_gatedpr-210">2.4 两种调度算法：unified 与 load_gated（PR #210）<a class="headerlink" href="#24-unified-load_gatedpr-210" title="Permanent link">&para;</a></h3>
+<p>源码：<code>kv_cache_affinity.py</code> 的 <code>_select_with_load</code> / <code>_select_load_gated</code>；配置常量在 <code>motor/config/coordinator.py</code>。</p>
+<p><strong>unified（默认）——单一融合分数，全局最小者胜：</strong></p>
+<div class="arithmatex">\[
+score = prefill\_load\_scale \times \max(0,\ isl - overlap\_credit \times matched) + load\_weight \times workload
+\]</div>
+<ul>
+<li>所有量纲统一为 <strong>token 数</strong>：第一项是"扣掉缓存命中后还要真算的 prefill 工作量"，第二项是该 endpoint 的实时负载分。</li>
+<li><code>overlap_credit</code> 控制"命中 1 个 token 折抵多少 prefill 工作"（默认 1.0）；<code>load_weight=0</code> 时退化为纯亲和（最长前缀胜）。</li>
+<li>关键性质：<strong>没有缓存命中的空闲 endpoint 也可能赢</strong>——避免同前缀请求全部灌进一个热点实例。</li>
+</ul>
+<p><strong>load_gated——两阶段"负载优先、亲和次之"：</strong></p>
+<ol>
+<li>先按负载筛出 Top-N 最低负载 endpoint（<code>kv_affinity_load_gate_topn</code>，默认 2）；</li>
+<li>只在这 N 个里面按最长前缀命中排序（平局取更低负载）。</li>
+</ol>
+<p>给了一个**硬负载上界**：亲和永远不能把请求拉到"最闲集合"之外——适合负载敏感、宁可牺牲部分命中率也不能出现长尾的场景。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>unified</th>
+<th>load_gated</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>决策形式</td>
+<td>软权衡（加权和）</td>
+<td>硬约束（先筛后选）</td>
+</tr>
+<tr>
+<td>亲和能否压过负载</td>
+<td>能（取决于权重）</td>
+<td>不能（只在最闲 Top-N 内比）</td>
+</tr>
+<tr>
+<td>调参</td>
+<td><code>load_weight</code>/<code>overlap_credit</code>/<code>prefill_load_scale</code></td>
+<td><code>load_gate_topn</code></td>
+</tr>
+<tr>
+<td>适用</td>
+<td>前缀重复率高、想最大化命中收益</td>
+<td>严控负载长尾、防止热点</td>
+</tr>
+</tbody>
+</table>
+<p><strong>fast path</strong>：prompt 短于一个 KV block（indexer 只对整块哈希）不可能命中，直接跳过 Conductor HTTP 往返，按全零命中排序——省一次网络调用，行为完全等价。</p>
+<h3 id="25-worker-scheduler-herdingpr-210-134-304">2.5 Worker 提案 + Scheduler 权威仲裁：并发下防 herding（PR #210 → #134 → #304 演进）<a class="headerlink" href="#25-worker-scheduler-herdingpr-210-134-304" title="Permanent link">&para;</a></h3>
+<p>这是整个特性最"分布式系统"的部分，也是面试最容易被追问的点。</p>
+<p><strong>问题</strong>：多个 Coordinator worker 进程并发调度时，每个 worker 的本地负载视图有滞后。一波同前缀 burst 进来，所有 worker 都会算出同一个"最优" endpoint → 全部灌过去 → 打爆（herding/羊群效应）。</p>
+<p><strong>演进三步</strong>（对应你的 commit 记录）：</p>
+<ol>
+<li><strong>最初方案（后被移除）</strong>：worker 本地 in-flight overlay——本地记"我刚发过去还没确认的请求"临时加负载。问题：只能缓解单 worker burst，TTL 难调，跨 worker 无效。</li>
+<li><strong>PR #210：top-k 候选 + scheduler 重选</strong>。worker 亲和打分后上报 top-k（k=3）候选（best-first），Scheduler 在慢路径按**权威新鲜账本**在候选集内重选最低负载者——既权威又跨 worker，且候选集本身就是亲和 top-k，不破坏亲和。</li>
+<li><strong>PR #304：unified 模式升级为全局重排</strong>。固定 top-k 仍可能"最优解不在候选集里"。改为 worker 把**每个 endpoint** 的亲和折扣 prefill_cost 全量上报（<code>kv_affinity_debug</code> → <code>candidate_endpoints</code> 带 <code>prefill_cost</code> 字段），Scheduler 端用自己的新鲜负载重算完整 unified 分数：</li>
+</ol>
+<p>```743:747:MindIE-PyMotor/motor/coordinator/scheduler/runtime/scheduler_server.py
+            combined = pscale * prefill_cost + lweight * load
+            if best is None:
+                best = (instance, endpoint, combined, prefill_cost)
+            elif combined &lt; best[2] or (combined == best[2] and prefill_cost &lt; best[3]):
+                best = (instance, endpoint, combined, prefill_cost)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>分工的精髓：**亲和的数学 worker 已经算完（prefill_cost 不随时间变），负载的新鲜值由 Scheduler 补上**——Scheduler 不需要 prompt、不需要再查 Conductor，一次全局 min 即可。平局时偏向更低 prefill_cost（更好亲和）。load_gated 模式则**保持固定 top-k 提案**——它的硬负载界不能被 Scheduler 的软分数&quot;松绑&quot;。
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>```mermaid
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>sequenceDiagram
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    participant W as Worker (视图可能滞后)
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    participant C as Conductor
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    participant S as Scheduler (权威账本)
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    W-&gt;&gt;W: tokenize → token ids
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    W-&gt;&gt;C: /query(token_ids)
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    C--&gt;&gt;W: 每 endpoint matched_tokens
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    W-&gt;&gt;W: unified 打分（亲和 + 本地负载）
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    W-&gt;&gt;S: ALLOCATE：全量候选 + 各自 prefill_cost + 两个权重标量
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    S-&gt;&gt;S: combined = scale*prefill_cost + weight*fresh_load，全局取 min
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    S--&gt;&gt;W: 最终 (instance, endpoint)，repicked 标记
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>    Note over S: burst 被新鲜负载自然摊开，亲和不丢
+</code></pre></div></p>
+<h4 id="251">2.5.1 实现难点复盘：为什么“最长前缀”最终演化成两级仲裁<a class="headerlink" href="#251" title="Permanent link">&para;</a></h4>
+<p>这个特性的核心难点不是前缀匹配本身，而是把一个**单请求看似正确**的选择，变成在多 worker、突发流量下仍然正确的**集群决策**。</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>当时的直觉</th>
+<th>暴露的问题</th>
+<th>最终处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V1：本地 overlay</td>
+<td>在 worker 本地把刚提交的请求临时计入目标 endpoint 负载</td>
+<td>状态只对本进程可见；其他 worker 仍会选同一 endpoint。TTL 短则覆盖不了排队/执行，TTL 长则过度惩罚；提交、完成、异常回退还会带来双写与重复扣减风险</td>
+<td>整体移除，不把分布式一致性问题伪装成“调一个 TTL”问题</td>
+</tr>
+<tr>
+<td>V2：top-k + 仲裁</td>
+<td>worker 保留亲和最好的 <code>k=3</code> 个候选，交给 Scheduler 依据新鲜负载重选</td>
+<td>跨 worker 的热点被打散，但候选截断会丢掉全局最优：某 endpoint 在 worker 的旧负载下排第 4，在 Scheduler 的新负载下却可能应当第一</td>
+<td>作为 <code>load_gated</code> 的终态，因为该模式本来就需要保持硬候选边界</td>
+</tr>
+<tr>
+<td>V3：unified 全量重排</td>
+<td>将可复用的亲和成本和易变的实时负载拆开</td>
+<td>需要明确哪些量可跨进程传递，哪些量必须由权威端重算</td>
+<td>worker 上报每个 endpoint 的 <code>prefill_cost</code>；Scheduler 用权威负载做全局最小化</td>
+</tr>
+</tbody>
+</table>
+<p>V3 的关键是把统一评分拆成静态项与动态项：</p>
+<div class="arithmatex">\[
+\operatorname{score}(e)=
+\underbrace{p\_{scale}\cdot \operatorname{prefill\_cost}(e)}_{\text{worker 已知、短时间不变}}
++\underbrace{l\_{weight}\cdot \operatorname{load}_{fresh}(e)}_{\text{Scheduler 权威且实时}}
+\]</div>
+<p>其中 <code>prefill_cost(e) = max(0, isl - overlap_credit × matched(e))</code>。同一请求的 <code>isl</code>、<code>matched(e)</code>、权重在一次调度决策中不变；真正会因并发迅速失真的只有 <code>load(e)</code>。因此 worker 不需要把 prompt 或 Conductor 查询搬到 Scheduler，只需传递足以重算的成本向量；Scheduler 也不再受 top-k 截断约束。</p>
+<p>这是一条清晰的职责边界：<strong>worker 负责理解请求和计算亲和，Scheduler 负责用全局事实作最终资源仲裁</strong>。平分时选择 <code>prefill_cost</code> 更小者，避免在负载相同的情况下白白损失 KV 复用。</p>
+<p><code>load_gated</code> 则刻意不采用 V3 的软重排。它的语义是“先按负载筛出最闲 Top-N，再仅在该集合内比较亲和”；若让 Scheduler 按 unified 加权和扫描全体 endpoint，硬门槛会被命中收益绕过，模式语义就被破坏。因此它保留 V2 的受限候选仲裁，而不是“少做了一步”。</p>
+<p>验证时不能只看某一次命中率或平均延迟：同一请求流要分别走有/无 KV 亲和的路由，并保证两侧 Prefix Cache 均开启；同时记录 P50/P95/P99、KV 命中/复用长度、endpoint 负载离散度、Scheduler <code>repicked</code> 次数、Conductor 超时与 LoadBalance fallback。现有材料中的翻盘阈值与收益百分比是公式测算例，<strong>不应表述为已留存的端到端压测结论</strong>；没有原始压测记录时，应如实报告机制、参数与待验证指标。</p>
+<h3 id="26">2.6 负载账本与量纲统一<a class="headerlink" href="#26" title="Permanent link">&para;</a></h3>
+<p>源码：<code>motor/coordinator/domain/workload_calculator.py</code>。</p>
+<ul>
+<li>KV 亲和路径下 <code>req_info.token_ids</code> 已存在，prefill 负载记账直接用 <code>len(token_ids)</code>（真实 token 数）；否则回退历史的字节长度线性拟合（<code>length/4*0.0345+120</code>）。</li>
+<li>这一步让 unified 分数的两项**共享 token 量纲**——<code>load_weight=1.0</code> 的物理含义是"1 token 排队负载 = 1 token 待算 prefill"，调参有原则可循，而不是两个不可比的数硬加。</li>
+<li>负载分发/同步走共享内存（SHM）+ ZMQ：worker 每次调度前 <code>_refresh_cache_from_workload_reader()</code> 从 SHM 补新鲜负载，心跳过期或实例版本变化才拉全量列表。</li>
+</ul>
+<h4 id="261">2.6.1 公式逐项推导：负载均衡究竟在比较什么<a class="headerlink" href="#261" title="Permanent link">&para;</a></h4>
+<p>对每个候选 endpoint（粒度为 DP rank）<code>e</code>，令：</p>
+<ul>
+<li><code>isl</code>：当前请求的输入 token 数；</li>
+<li><code>matched_e</code>：Conductor 返回的最长连续命中 token 数；</li>
+<li><code>m_e = min(matched_e, isl)</code>：钳制后的有效命中；</li>
+<li><code>A_e = active_tokens</code>：该 endpoint 正在执行或排队的 token 工作量；</li>
+<li><code>K_e = active_kv_cache</code>：活跃 KV cache 占用对应的 token 等价压力。</li>
+</ul>
+<p>当前 <code>unified</code> 路径可写为：</p>
+<div class="arithmatex">\[
+\begin{aligned}
+prefill\_cost_e &amp;= \max(0,\ isl - overlap\_credit \times m_e) \\
+load\_cost_e &amp;= A_e + 0.3 \times K_e \\
+score_e &amp;= prefill\_load\_scale \times prefill\_cost_e
+          + load\_weight \times load\_cost_e
+\end{aligned}
+\]</div>
+<p>取 <code>score_e</code> **最小**的 endpoint。第一项不是抽象的"命中奖励"，而是路由到该 endpoint 后仍须计算的 Prefill 工作量；第二项是已经在该 endpoint 前面排队的工作量。因此它近似在最小化“等待 + 剩余 Prefill”的 token 工作总量。若各 endpoint 的 prefill 吞吐近似一致，除以共同吞吐即可对应为延迟比较；Motor 当前直接在 token 域比较，避免为每次调度再估一个不稳定的毫秒模型。</p>
+<p><code>0.3</code> 是 <strong>KV 内存/调度压力的启发式折算系数</strong>，不是第一性定律：<code>active_tokens</code> 是主导的计算和排队信号，<code>active_kv_cache</code> 反映 KV 占用、可用块减少及潜在抢占风险，需纳入但通常不应与前者完全等权。文档和代码口径应明确把它视为可调经验值，而不是某个模型或硬件上普适的比例。</p>
+<p>默认 <code>overlap_credit = prefill_load_scale = load_weight = 1.0</code> 是可解释的中性基线：命中 1 token 暂折抵 1 token Prefill，排队 1 token 暂视为与待算 1 token 等价。它隐含“缓存复用/传输的额外成本可忽略或已被系统吸收”的简化；当前 Motor 打分**没有**显式加入跨节点 KV 传输时间、网络拥塞或不同 endpoint 吞吐差异。</p>
+<p><strong>翻盘临界值。</strong> 若 A 命中 <code>m</code> token、B 零命中，且其余系数相同，则 B（更空闲但无命中）获胜的条件是：</p>
+<div class="arithmatex">\[
+load_A-load_B &gt;
+\frac{prefill\_load\_scale \times overlap\_credit \times m}{load\_weight}
+\]</div>
+<p>例如 <code>isl=8192</code>、<code>m=6000</code>、三个系数均为 1 时，A 的分数为 <code>2192 + load_A</code>，B 的分数为 <code>8192 + load_B</code>；只有 A 比 B 多积压超过 6000 token 工作量，B 才应获胜。这就是 unified 能防止热门前缀持续制造热点、同时又不轻易丢弃长前缀收益的原因。</p>
+<p><strong>纯 LoadBalance 与实例压力。</strong> 亲和失效或不适用时，Motor 并非 round-robin，而是摊平所有 endpoint，按最小工作负载选择。该路径还使用复合 endpoint 分：</p>
+<div class="arithmatex">\[
+endpoint\_score_e + endpoint\_instance\_score\_weight
+\times \frac{instance\_score_{parent(e)}}{endpoint\_count_{parent(e)}}
+\]</div>
+<p>其中 <code>endpoint_instance_score_weight</code> 默认 <code>0.05</code>。前项保留 DP rank 的局部视角；后项以小权重感知同实例其他 DP 已满的整机压力；除以 endpoint 数避免 DP 更多的实例被系统性惩罚。它与 unified 的负载项共享同一套 token 记账口径，可理解为“去掉亲和 Prefill 项后的连续回退”，但纯 LB 额外保留了实例层压力修正和同分旋转。</p>
+<p><strong><code>load_gated</code> 不用上述加权和作最终选择。</strong> 它先按 <code>load_cost</code> 升序取 Top-N，再在候选内按 <code>matched</code> 降序、负载升序打破平局。N=1 近似纯负载均衡；运行时默认 N=2（配置值 0 是默认值哨兵）。这是“负载绝不出最闲集合”的字典序硬约束，不能靠无限增大 <code>load_weight</code> 模拟：有限权重下足够长的命中总能翻盘，权重趋于无穷又会退化成纯 LB。</p>
+<p><strong>参数怎样确定。</strong> 初值可采用默认三项 1.0、<code>load_gated</code> 的 N=2；真正上线应在“两组均开启 Prefix Cache、只切 <code>load_balance</code> / <code>kv_cache_affinity</code>”的相同流量回放中网格搜索或分阶段灰度。至少联合观察 TTFT P50/P95/P99、token 吞吐、<code>cached_tokens</code>/命中率、endpoint 负载倾斜、回退率与 Conductor 查询延迟：若 P99 或负载倾斜先恶化，应增大 <code>load_weight</code>、降低 <code>overlap_credit</code> 或切 <code>load_gated</code>；若负载稳定而命中收益不足，再提高亲和侧相对权重。对特定模型/硬件，更严格的下一步是拟合</p>
+<div class="arithmatex">\[
+\hat T_e = \hat T_{queue}(L_e) + \hat T_{prefill}(isl-m_e) + \hat T_{transfer}(m_e)
+\]</div>
+<p>再以预测 TTFT 最小化替换 token 等价近似；这属于演进方案，并非当前 Motor 的实现事实。</p>
+<h3 id="27-pr-bugfix">2.7 防御性工程（多个 PR 的 bugfix 沉淀）<a class="headerlink" href="#27-pr-bugfix" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>上下文长度预校验（PR #349）</strong>：tokenize 前置的副产品——调度层已知真实 token 数，直接在入口拒绝超过 <code>max_model_len</code> 的请求（与 vLLM 最新 render 方案的校验行为对齐），不用等请求穿透到引擎才报错。</li>
+<li><strong>多进程负载强一致（PR #134）</strong>：全局 endpoint 打分 + scheduler 仲裁、DP 负载最小堆、修复 encode 负载异常、KVA 负载上报补齐。</li>
+<li><strong>P 负载及时释放（PR #368/#393）</strong>：PD 分离下 prefill 完成即释放 P 实例负载（不等整个请求结束），并修复请求结束时负载更新被 cancel 的问题——直接改善后续请求的 TTFT；CPCD 场景改为 prefill 后再选 D 实例，D 的选择基于更新鲜的负载。</li>
+<li><strong>热路径优化（PR #394）</strong>：UPDATE_WORKLOAD 幂等去重集改有界 FIFO 防无界增长；ALLOCATE 的 workload 用两个裸 float 传输省去 pydantic 序列化；request_id 用"一次性 uuid 前缀 + 进程内自增"替代每请求 uuid4；修复"增量当绝对负载写 SHM"的账本污染 bug。</li>
+<li><strong>错误码透传（PR #304/#450）</strong>：引擎侧错误码直通客户端，P 阶段 <code>usage.prompt_tokens_details.cached_tokens</code>（命中的缓存 token 数）透传合并到最终响应——客户能直接观测亲和命中效果。</li>
+<li><strong>日志分层</strong>：worker 的选择日志压到 DEBUG（只是提案），Scheduler 提交的最终分配打 INFO（含 matched/load/score/repicked）——负载分析只信权威日志。</li>
+</ul>
+<hr />
+<h2 id="3">3. 配置面与部署形态<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<p>源码：<code>motor/config/coordinator.py</code>（<code>SchedulerConfig</code>）；部署文档 <code>docs/zh/user_guide/features/KV_cache_affinity.md</code>。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">&quot;motor_coordinator_config&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">&quot;scheduler_config&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">&quot;scheduler_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;kv_cache_affinity&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="nt">&quot;kv_affinity_mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;unified&quot;</span><span class="p">,</span><span class="w">        </span><span class="c1">// 或 &quot;load_gated&quot;</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="nt">&quot;kv_affinity_load_weight&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w">        </span><span class="c1">// 0 = 纯亲和</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="nt">&quot;kv_affinity_overlap_credit&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w">     </span><span class="c1">// 命中 token 的 prefill 折扣</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="nt">&quot;kv_affinity_prefill_load_scale&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="nt">&quot;kv_affinity_load_gate_topn&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w">        </span><span class="c1">// load_gated 专用，0 → 默认 2</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="p">}</span>
+</code></pre></div>
+<p>引擎侧三件套：P 实例（或混部 union 实例）开 <code>enable-prefix-caching</code> + <code>kv-events-config</code>（ZMQ 发布 block 事件，含 <code>replay_endpoint</code> 供 Conductor 重放补状态）+ <code>kv_transfer_config</code>（<code>MultiConnector</code> 组合 <code>MooncakeLayerwiseConnector</code> PD 传输层与 <code>AscendStoreConnector</code> KV 池后端）。Conductor 独立部署（Go 实现，<code>kv_conductor_config.http_server_port</code> 默认 13333）。</p>
+<p><strong>两种形态都支持</strong>：PD 分离（亲和作用于 P 实例选择）与 PD 混部（<code>ROLE_U</code>，<code>vllm-union-{id}</code> 注册，<code>_KVA_SELECT_ROLES = {P, U}</code>；测试见 <code>tests/coordinator/scheduler/test_kv_cache_affinity.py::test_select_endpoint_union_conductor_id</code>）。非 KVA 角色（D/E）走 LoadBalance。</p>
+<h3 id="31-ab">3.1 性能收益：代表性测算、正确 A/B 与证据边界<a class="headerlink" href="#31-ab" title="Permanent link">&para;</a></h3>
+<p>这部分必须把“代码证明”“历史口述”“代表性测算”和“标准化性能报告”分开。当前可核实内容如下：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>当前可核实口径</th>
+<th>证据强度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>历史口述</td>
+<td>曾在面试中描述“客户约 4K、高重复前缀、TTFT 约降 70%”</td>
+<td>只有转写文本，无测试报告，无法独立核验</td>
+</tr>
+<tr>
+<td>量化数字</td>
+<td>Qwen3-32B、8K 输入假设下，模型测算 TTFT 约 1.19s → 0.35s（−70.5%），E2E 约 1.71s → 0.88s（−48.9%）</td>
+<td>明确标注为代表性测算，非实测</td>
+</tr>
+<tr>
+<td>收益机制</td>
+<td>亲和把请求送往已有最长前缀的 P/U endpoint，减少重复 prefill</td>
+<td>源码、Conductor 查询和调度日志可验证</td>
+</tr>
+<tr>
+<td>命中观测</td>
+<td>响应透传 <code>usage.prompt_tokens_details.cached_tokens</code>；Scheduler 日志记录最终 endpoint 与亲和分</td>
+<td>源码与 UT 可验证</td>
+</tr>
+<tr>
+<td>部署覆盖</td>
+<td>PD 分离支持 P 角色，混部支持 U 角色</td>
+<td>配置文档、角色判断和 UT 可验证</td>
+</tr>
+<tr>
+<td>实测覆盖</td>
+<td>没有找到 KVA ON/OFF 的原始结果、请求回放文件或性能日志；无法证明任一拓扑获得 70%</td>
+<td>必须保留边界</td>
+</tr>
+</tbody>
+</table>
+<p>当前没有留存或未找到：实测使用的模型、NPU 型号、P/D/U 实例数、TP/DP、并发或 QPS、请求总数、输出长度、预热轮次、共享前缀 token 数、TTFT P50/P95/P99，以及 KVA ON/OFF 的原始毫秒值。面试时不要把部署文档中的 Qwen3-8B、800I A2/A3 或 1P1D 示例当成实测配置，它们只能证明特性可部署。</p>
+<h4 id="70">“约 70%”数字的透明测算来源<a class="headerlink" href="#70" title="Permanent link">&para;</a></h4>
+<p>下面把原有 8B 测算替换为更接近大模型 Serving 的 <strong>Qwen3-32B Dense</strong> 理论场景。Qwen3-32B 总参数量约 32.8B（非 Embedding 参数约 31.2B），64 层，GQA 为 64 个 Q head / 8 个 KV head，原生上下文长度 32K。选 32B Dense 而不是超大 MoE，是因为它既能显著放大重复 Prefill 成本，又不会把 EP All-to-All、专家负载不均等变量混入 KV 亲和收益。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>假设值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模型</td>
+<td>Qwen3-32B Dense，32.8B 参数，BF16</td>
+</tr>
+<tr>
+<td>模型结构</td>
+<td>64 层，64 Q heads / 8 KV heads，head_dim=128，原生 32K context</td>
+</tr>
+<tr>
+<td>PD 拓扑</td>
+<td>4 个 P 实例 + 4 个 D 实例；每实例 TP4×DP1；每实例 4 张 Atlas 800I A3 NPU</td>
+</tr>
+<tr>
+<td>权重占用</td>
+<td>BF16 理论约 65.6GB；TP4 后约 16.4GB/卡，未计运行时与临时张量</td>
+</tr>
+<tr>
+<td>KV 占用</td>
+<td>约 256KiB/token（全集群逻辑 KV）；8K 上下文约 2GiB/请求，TP4 后约 512MiB/卡</td>
+</tr>
+<tr>
+<td>请求形态</td>
+<td>ISL=8192、OSL=16；约 6.5K 为共享 system/tools/文档前缀，约 1.7K 为请求特有后缀</td>
+</tr>
+<tr>
+<td>压测流量</td>
+<td>预热 200 请求，正式回放 10,000 请求；开放环 1/2 req/s 两档；并发上限 32</td>
+</tr>
+<tr>
+<td>Prefill 速率</td>
+<td>假设单 P 实例有效约 6.5k token/s；8K 全量 Prefill 约 1.23s</td>
+</tr>
+<tr>
+<td>固定开销 <span class="arithmatex">\(c_0\)</span></td>
+<td>假设 80ms（调度、Conductor 查询、P→D KV 传输、首步 Decode）</td>
+</tr>
+<tr>
+<td>有效命中率 <span class="arithmatex">\(h\)</span></td>
+<td>Baseline 0.10；Affinity 0.78（不超过约 6.5K/8K 的可复用前缀上限）</td>
+</tr>
+<tr>
+<td>Decode</td>
+<td>假设 TPOT 约 35ms，15 个后续 token 共约 525ms</td>
+</tr>
+</tbody>
+</table>
+<div class="arithmatex">\[
+TTFT = c_0 + T_{prefill}^{full}(1-h)
+\]</div>
+<p>代入后（所有数值均为用于解释收益量级的理论假设）：</p>
+<ul>
+<li>Baseline：<span class="arithmatex">\(80 + 1230 \times 0.90 = 1187ms\)</span></li>
+<li>Affinity：<span class="arithmatex">\(80 + 1230 \times 0.22 = 351ms\)</span></li>
+<li>TTFT 降幅：<span class="arithmatex">\((1187-351)/1187 = 70.5\%\)</span></li>
+<li>加上约 525ms Decode 后，E2E 从 1712ms 降至 876ms，降幅 48.9%</li>
+</ul>
+<p>这个模型只能说明“32B 大模型、8K 长输入、短输出、高复用时出现七成量级 TTFT 收益是合理的”，不能替代真实压测；Prefill 速率、固定开销、TPOT 和命中率都是理论估计。真正复测时应以实际 <code>cached_tokens</code> 反算有效命中率，以引擎指标替换 1.23s Prefill 和 80ms 固定开销。</p>
+<p>关键指标的预期方向：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th style="text-align: right;">Baseline 预期</th>
+<th style="text-align: right;">Affinity 预期</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cached_ratio</code></td>
+<td style="text-align: right;">约 10%</td>
+<td style="text-align: right;">约 78%</td>
+<td>从响应 <code>cached_tokens/prompt_tokens</code> 聚合</td>
+</tr>
+<tr>
+<td>TTFT P50</td>
+<td style="text-align: right;">约 1.2s</td>
+<td style="text-align: right;">约 0.3–0.4s</td>
+<td>主要来自少算约 5.7K Prefill token</td>
+</tr>
+<tr>
+<td>TTFT P99</td>
+<td style="text-align: right;">取决于排队</td>
+<td style="text-align: right;">应显著下降但不保证等比例</td>
+<td>热点和 Scheduler 重排决定尾延迟</td>
+</tr>
+<tr>
+<td>TPOT</td>
+<td style="text-align: right;">约 35ms</td>
+<td style="text-align: right;">理论上基本不变</td>
+<td>亲和主要优化 Prefill，不直接优化 Decode</td>
+</tr>
+<tr>
+<td>E2E</td>
+<td style="text-align: right;">约 1.7s</td>
+<td style="text-align: right;">约 0.88s</td>
+<td>短输出时 TTFT 占比较高</td>
+</tr>
+<tr>
+<td>Conductor 查询</td>
+<td style="text-align: right;">无</td>
+<td style="text-align: right;">目标 P50 &lt; 5ms，P99 &lt; 20ms</td>
+<td>应远小于节省的 Prefill 时间</td>
+</tr>
+<tr>
+<td>回退率</td>
+<td style="text-align: right;">无</td>
+<td style="text-align: right;">目标 &lt; 0.1%</td>
+<td>超时/无索引时回退 LoadBalance</td>
+</tr>
+<tr>
+<td>endpoint 流量偏斜</td>
+<td style="text-align: right;">较低</td>
+<td style="text-align: right;">需要控制 P99/P50 &lt; 1.5</td>
+<td>防止高命中实例形成热点</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ab">A/B 对照应该怎样定义<a class="headerlink" href="#ab" title="Permanent link">&para;</a></h4>
+<p>要隔离“亲和路由”本身的收益，两组必须保持模型、硬件、拓扑、请求序列、到达速率和引擎参数一致：</p>
+<table>
+<thead>
+<tr>
+<th>对照组</th>
+<th><code>scheduler_type</code></th>
+<th>引擎 Prefix Cache</th>
+<th>目的</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Baseline</td>
+<td><code>load_balance</code></td>
+<td><strong>开启</strong></td>
+<td>有单实例缓存，但路由不知道缓存在哪</td>
+</tr>
+<tr>
+<td>Experiment</td>
+<td><code>kv_cache_affinity</code></td>
+<td><strong>开启</strong></td>
+<td>在相同缓存能力上增加全局感知路由</td>
+</tr>
+</tbody>
+</table>
+<p>不能用“Baseline 关闭 Prefix Cache、Experiment 同时开启 Prefix Cache 和亲和”来宣称亲和收益，否则测到的是“引擎前缀缓存 + 路由亲和”的叠加效果。冷启动请求也应单独剔除或分桶：第一轮负责建缓存，稳定轮次才衡量亲和是否把后续请求送回正确 endpoint。</p>
+<p>建议固定同一批请求做回放，并至少记录：</p>
+<ol>
+<li>输入总长度、公共前缀长度和 <code>prefix_ratio = shared_prefix_tokens / prompt_tokens</code>；</li>
+<li>请求数、并发/QPS、输出长度及预热轮次；</li>
+<li>TTFT P50/P95/P99，而不只报平均值；</li>
+<li><code>cached_ratio = Σcached_tokens / Σprompt_tokens</code>，并分别统计冷请求和热请求；</li>
+<li>各 endpoint 的请求数、负载和 <code>repicked</code> 次数，排除为了命中缓存造成热点；</li>
+<li>Conductor 查询耗时及超时回退比例，确认调度开销没有吞掉 prefill 收益。</li>
+</ol>
+<p>TTFT 降幅统一按下式计算：</p>
+<div class="arithmatex">\[
+improvement = \frac{TTFT_{baseline} - TTFT_{affinity}}{TTFT_{baseline}} \times 100\%
+\]</div>
+<p>如果未来实测得到“约降 70%”，等价于亲和组 TTFT 约为基线的 30%；必须同时给出原始毫秒值、分位数和样本量，不能只报百分比。</p>
+<h4 id="_1">为什么这个结果在该场景合理<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<p>长输入里若大部分 token 属于稳定公共前缀，Baseline 即使开启实例内 Prefix Cache，也可能因多实例负载均衡把请求发到没有该前缀的 endpoint；亲和命中后只需计算未缓存后缀，因此主要缩短的是 prefill 执行时间，并进一步减少 P 队列积压。收益不会普遍保持七成：前缀越短、重复率越低、亲和 endpoint 排队越长，收益越小；混部还会受到 Prefill/Decode 争用和 KV 驱逐影响，而 PD 分离通常有更稳定的 P 侧缓存空间，但需承担 KV 传输成本。</p>
+<p><strong>面试可信话术</strong>：</p>
+<blockquote>
+<p>“代码和可观测链路可以证明亲和机制成立，但我没有留存一组可复核的端到端 A/B 原始数据，所以不把 70% 说成客户实测。以 32.8B 的 Qwen3-32B、TP4、8K 输入和 6.5K 共享前缀为例，如果有效命中率从 10% 提升到 78%，按单 P 约 6.5k token/s 和 80ms 固定开销估算，TTFT 可从约 1.19s 降到 0.35s，约降 70.5%。若重新验证，我会保持两组 Prefix Cache 都开启，只切换 load_balance 与 kv_cache_affinity，并报告 TTFT P50/P95/P99、cached ratio、负载倾斜和回退率。”  </p>
+</blockquote>
+<hr />
+<h2 id="4-pr-tobkinggitcode-ascendmindie-pymotor">4. PR 演进时间线（tobking，Gitcode Ascend/MindIE-PyMotor）<a class="headerlink" href="#4-pr-tobkinggitcode-ascendmindie-pymotor" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>PR</th>
+<th>内容</th>
+<th>状态</th>
+<th>规模</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5月</td>
+<td>#134</td>
+<td>多进程负载强一致 + KVA 负载上报修复；全局 endpoint 打分、scheduler 仲裁、DP 负载最小堆、高 QPS 优化</td>
+<td>merged</td>
+<td>+1503/-174</td>
+</tr>
+<tr>
+<td>6月初</td>
+<td>#210</td>
+<td><strong>两种算法落地</strong>：unified 加权融合 + load_gated Top-2 最低负载选其一；top-k 候选 + scheduler 权威重选，移除 in-flight overlay；sub-block fast path</td>
+<td>merged</td>
+<td>+1092/-126</td>
+</tr>
+<tr>
+<td>6月中</td>
+<td>#304</td>
+<td><strong>unified 升级全局重排</strong>：并发时 scheduler 看全局 DP 负载而非固定 TopK；错误码透传、cached_tokens 透传</td>
+<td>merged</td>
+<td>+3995/-1219</td>
+</tr>
+<tr>
+<td>6月下</td>
+<td>#349</td>
+<td>KVA 请求长度预校验，超模型上下文直接拒绝</td>
+<td>open</td>
+<td>+557/-4</td>
+</tr>
+<tr>
+<td>6月底</td>
+<td>#368</td>
+<td>TTFT 恶化修复：prefill 完成即释放 P 负载 + 负载更新防 cancel；proxy 透传模式</td>
+<td>open</td>
+<td>+3074/-323</td>
+</tr>
+<tr>
+<td>7月初</td>
+<td>#393</td>
+<td>PD 分离负载释放流程 + CPCD 时 prefill 后再选 D</td>
+<td>merged</td>
+<td>+1579/-83</td>
+</tr>
+<tr>
+<td>7月初</td>
+<td>#394</td>
+<td>scheduler workload 账本热路径优化（有界 FIFO 去重、裸 float 传输、SHM 绝对值修复）；ROLE_U 调度状态补全</td>
+<td>open</td>
+<td>+1877/-758</td>
+</tr>
+</tbody>
+</table>
+<p>配套周边（同作者）：#194 断链后释放引擎堆积请求、#83 CPCD D 故障转混部、#235 render 前置到 coordinator、#450 错误码与引擎侧对齐。<strong>全部 23 个 PR、13 个已合入，围绕"KV 亲和 + 负载均衡 + PD 分离可靠性"一条主线。</strong></p>
+<hr />
+<h2 id="5-qa">5. 面试高频追问 Q&amp;A<a class="headerlink" href="#5-qa" title="Permanent link">&para;</a></h2>
+<p><strong>Q1：为什么把 tokenize 放在调度层？开销不大吗？</strong></p>
+<blockquote>
+<p>因为亲和判断必须用与引擎一致的 token 序列——chat template、tools 注入都会让字符前缀与 token 前缀分叉，字符级近似（SGLang router 的做法）对不齐引擎 16-token block 边界。开销是毫秒级 CPU，且一次 tokenize 三处复用：查 Conductor、算亲和分、按真实 token 数记负载账，第三点还顺手解锁了入口长度预校验（超上下文直接拒绝）。</p>
+</blockquote>
+<p><strong>Q2：亲和和负载均衡怎么"叠加"？</strong></p>
+<blockquote>
+<p>两种模式。unified 是软融合：<code>prefill_load_scale*max(0, isl-overlap_credit*matched) + load_weight*load</code>，全部 token 量纲，取最小；<code>load_weight=0</code> 退化纯亲和。load_gated 是硬约束：先筛 Top-N 最低负载，再在里面比最长前缀——亲和永远出不了最闲集合。前者最大化命中收益，后者严控负载长尾，按业务 SLO 选。</p>
+</blockquote>
+<p><strong>Q3：多个调度进程并发时，同前缀请求会不会都打到同一个实例？</strong></p>
+<blockquote>
+<p>会，这正是我们迭代了三版的问题。一句话版：本地 overlay → top-k 候选 + 权威重选 → 全量上报 + 全局重排。三个版本的细节：</p>
+</blockquote>
+<p><strong>V1：worker 本地 in-flight overlay（已废弃）</strong></p>
+<ul>
+<li>做法：每个 worker 进程本地记一张"我刚派出去、还没在负载账本里体现"的 in-flight 表，打分时把这部分虚拟负载叠加到目标 endpoint 上，防止自己连续把请求灌向同一处。</li>
+<li>为什么不行（三条都要能说）：① <strong>作用域错了</strong>——overlay 只对本 worker 可见，8 个 worker 各自的"最优"仍是同一个 endpoint，跨 worker 的 herding 一点没解；② <strong>TTL 无解</strong>——overlay 条目何时过期？过期太快等于没有，太慢会让该 endpoint 被长期高估负载、命中好的实例反而接不到请求（人为制造亲和损失）；③ <strong>与真实账本双写</strong>——请求真正落账后 overlay 还没清，同一份负载被算两次。</li>
+<li>结论：局部视图上打补丁修不好全局一致性问题，方向本身错了，所以 PR #210 里整体移除而不是继续调参。</li>
+</ul>
+<p><strong>V2（PR #210）：top-k 候选提案 + scheduler 权威重选</strong></p>
+<ul>
+<li>做法：worker 完成亲和打分后不再只报 top-1，而是上报 <strong>best-first 的 top-k（k=3）候选列表</strong>；Scheduler 收到后在慢路径（检测到 worker 负载视图版本落后时）用自己的**权威新鲜账本**在这 k 个候选里重选最低负载者。快路径（视图一致）仍直接用 worker top-1，不加开销。</li>
+<li>解决了什么：仲裁点从"每个 worker 自己"收敛到"唯一的 Scheduler"，跨 worker 的 burst 会被权威账本摊到 top-3 里负载最低的那个——<strong>权威、跨进程、且候选集本身就是亲和排序的前 k 名，重选不破坏亲和</strong>。</li>
+<li>残留问题：k 是拍的。k=3 时，如果 top-3 恰好都被这波 burst 打热，而第 4 名（命中略差但完全空闲）才是真正的全局最优——它根本不在候选集里，Scheduler 无从选起。k 调大又增加消息体积和仲裁成本，本质是"截断集合"与"全局最优"的矛盾。</li>
+</ul>
+<p><strong>V3（PR #304）：全量候选 + scheduler 全局重排（unified 模式最终形态）</strong></p>
+<ul>
+<li>做法：利用 unified 分数可分解的性质——<code>score = scale × prefill_cost + weight × load</code>，其中 <strong>prefill_cost（亲和折扣后的待算量）不随时间变化，load 才是易腐数据</strong>。于是 worker 把**每一个** endpoint 的 prefill_cost 连同两个权重标量一起上报，Scheduler 用自己账本里的新鲜 load 对全部 endpoint 重算完整分数、取全局 min（平局偏向更低 prefill_cost，即更好亲和）。</li>
+<li>妙处：Scheduler 不需要 prompt、不需要 tokenizer、不需要再查 Conductor——贵的亲和计算 worker 已做完，Scheduler 只做一次 O(endpoints) 的线性扫描加权求和。没有截断，"第 4 名才是最优"的场景自然覆盖。</li>
+<li>边界：<strong>load_gated 模式刻意不升级到 V3</strong>，仍走 V2 的固定 top-k——因为它的语义是"硬负载上界"（选择永远不出最闲 Top-N 集合），如果让 Scheduler 拿软分数全局重排，等于把硬约束松绑成软权衡，模式的存在意义就没了。</li>
+</ul>
+<p><strong>Q4：Conductor 挂了/慢了怎么办？</strong></p>
+<blockquote>
+<p>查询超时 0.2s 快速失败，整条亲和路径返回 None，调度回退 LoadBalance——亲和是优化不是依赖，可用性不受影响。Conductor 重启后有 <code>/services</code> 对账重注册补状态，kv-events 有 replay_endpoint 重放机制。tokenize 失败同理 fail-closed 回退。</p>
+</blockquote>
+<p><strong>这里的 LoadBalance 是什么</strong>（<code>motor/coordinator/scheduler/policy/load_balance.py</code>，也是 D/E 等非 KVA 角色的默认策略）：</p>
+<ul>
+<li><strong>不是轮询</strong>，是全局最小负载选择：把所有实例的所有 endpoint（DP rank）摊平打分，用 <code>heapq.nsmallest</code> 取负载分最低者。负载分来自 <code>Workload.calculate_workload_score</code>（active_tokens/active_kv_cache 记账，见 2.6），与 KV 亲和 unified 分数的第二项是**同一个数**——所以"回退"只是把亲和项去掉，负载视角完全连续。</li>
+<li><strong>复合打分保留实例压力感知</strong>：<code>endpoint_score + weight × (instance_score / endpoint_count)</code>（<code>calculate_endpoint_score</code>）。纯 endpoint 最小值会漏掉"这个 DP 本身不忙、但同实例其他 DP 已经很满"的整机压力信号；instance 分除以 endpoint 数是为了不惩罚 DP 多的大实例。<code>endpoint_instance_score_weight</code> 默认 0.05，可配。</li>
+<li><strong>平局旋转</strong>：<code>start_index</code> 按 worker 编号旋转遍历起点，只影响同分时的选择顺序——多 worker 在冷启动/全空闲时不会齐刷刷选中同一个 endpoint（herding 的低配版防护）。</li>
+<li><strong>同样受 Scheduler 仲裁</strong>：LoadBalance 的候选也走"worker 提案 + scheduler 权威重选"通道（<code>_select_endpoint_candidates_by_load_balance</code> → scheduler 全局扫描），与亲和路径共享一套仲裁基础设施。</li>
+<li>完整回退链：<code>kv_cache_affinity</code>（Conductor 无数据/超时/tokenize 失败）→ <code>load_balance</code>（异常）→ <code>round_robin</code> 兜底。</li>
+</ul>
+<p><strong>Q5：亲和粒度是实例级还是更细？</strong></p>
+<blockquote>
+<p>DP rank 级。vLLM DP 部署下每个 DP rank 有独立 KV 池，注册时每个 endpoint（DP rank）单独上报 kv-events 端口（基础端口+rank），Conductor 返回 <code>{instance: {"DP": {rank: matched}}}</code>，打分和最终落点都精确到 (instance, endpoint)。</p>
+</blockquote>
+<p><strong>Q6：怎么验证特性有效？</strong></p>
+<blockquote>
+<p>三层：① 引擎返回的 <code>usage.prompt_tokens_details.cached_tokens</code> 透传到客户端响应，命中直接可观测；② Scheduler 权威分配日志带 matched/load/score/repicked，可验证是否因亲和造成负载倾斜；③ 在两组 Prefix Cache 都开启、只切换调度策略的 A/B 中比较 TTFT 分位数。当前七成量级只有透明测算，没有完整实测报告，因此面试时重点讲验证方案，不能称为客户实测。</p>
+</blockquote>
+<p><strong>Q7：和 Mooncake 是什么关系？</strong>（引专题 04/10）</p>
+<blockquote>
+<p>我们用 Mooncake 的 Conductor 组件做全局 KV 前缀索引（订阅 kv-events、维护 PrefixCacheTable、HTTP register/query API），KV 传输与池化用 Transfer Engine/Store 系（昇腾场景 <code>ascend_transport</code> + <code>AscendStoreConnector</code>）。调度决策本身（打分算法、仲裁架构）是 Motor 自研。</p>
+</blockquote>
+<p><strong>Q8：和 vLLM 最新 Render 方案是什么关系？</strong>（见 §2.1.1）</p>
+<blockquote>
+<p>同一哲学、不同落地。vLLM 把 chat template + tokenize + 校验拆成 <code>/v1/*/render</code> 与可选的 <code>vllm launch render</code>（无 GPU），llm-d Precise 用它拿精确 token 再查 ZMQ 索引。Motor 在 Coordinator 用 TokenizerManager 同源 <code>apply_chat_template(+tools)</code> 做等价的事，并做成亲和查询/打分/记账/长度预校验的复用点；PR #235/#349 是在向官方 Render 主线对齐。Render 解决"token 从哪来要一致"，亲和系统还要解决"查谁、怎么和负载叠加、多进程如何不 herding"。</p>
+</blockquote>
+<hr />
+<h2 id="6">6. 简历项目素材<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<h3 id="61">6.1 项目描述（可直接粘贴）<a class="headerlink" href="#61" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>大规模 LLM 推理服务 KV Cache 亲和性调度（MindIE-PyMotor，开源）</strong>
+面向多实例/PD 分离部署下前缀缓存碎片化导致的重复 prefill 问题，设计并落地 KV 亲和性调度特性：调度层前置与引擎一致的 tokenization（含 chat template/tools），基于 Mooncake Conductor 全局前缀索引获取 DP rank 粒度缓存命中，提出 unified（亲和-负载加权融合，token 统一量纲）与 load_gated（负载硬约束内选最长前缀）两种可配置算法；针对多调度进程并发 herding 问题，设计"worker 亲和提案 + 中心 scheduler 权威负载全局重排"的两级决策架构。配套完成负载账本强一致、prefill 完成即时释放负载、调度热路径优化（SHM/有界去重/序列化精简）等工程化改进，并通过 <code>cached_tokens</code> 与权威调度日志补齐命中可观测性；累计向开源仓提交 20+ PR。</p>
+</blockquote>
+<h3 id="62-star">6.2 STAR 展开（面试口述版）<a class="headerlink" href="#62-star" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>S</strong>：多实例部署下 round-robin/负载均衡把同前缀请求打散，每实例重复 prefill 相同前缀，缓存命中率随实例数下降，TTFT 恶化。</li>
+<li><strong>T</strong>：让请求路由"知道"集群里谁缓存了它的最长前缀，并且在命中收益与负载均衡之间可控权衡；同时不能引入可用性风险和明显调度延迟。</li>
+<li><strong>A</strong>：四个关键设计——① token 级精确索引（对比字符级 radix tree 的精度取舍）；② 双算法可配置（软融合 vs 硬门控）；③ 两级决策防 herding（亲和数学 worker 算、负载新鲜值 scheduler 补、全局 min）；④ 全链路 fail-closed 回退（Conductor 超时 0.2s/tokenize 失败均回退 LoadBalance）。</li>
+<li><strong>R</strong>：<code>cached_tokens</code> 透传和权威调度日志让命中与最终落点可验证；代码、部署文档和 UT 覆盖 PD 分离与混部；相关 PR 合入开源主干。长输入、短输出、高复用模型中可测算出七成量级 TTFT 收益，但端到端 A/B 实测数据待补。</li>
+</ul>
+<h3 id="63-jd">6.3 关键词（JD 匹配用）<a class="headerlink" href="#63-jd" title="Permanent link">&para;</a></h3>
+<p>LLM 推理服务、KV Cache / Prefix Caching、PD 分离（Prefill-Decode Disaggregation）、Mooncake（Conductor / Transfer Engine）、vLLM kv-events、分布式调度、负载均衡、一致性（权威账本仲裁）、昇腾 NPU、Kubernetes 云原生部署、ZMQ / 共享内存、高并发热路径优化。</p>
+<h3 id="64">6.4 追问防线（每条素材背后的代码依据）<a class="headerlink" href="#64" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>简历表述</th>
+<th>被追问时的展开点</th>
+<th>代码/PR 依据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"token 统一量纲的融合打分"</td>
+<td>公式逐项解释 + 为什么真实 token 数记账</td>
+<td><code>kv_cache_affinity.py</code> <code>_select_with_load</code>；<code>workload_calculator.py</code> <code>_prefill_load_score</code></td>
+</tr>
+<tr>
+<td>"两级决策防 herding"</td>
+<td>in-flight overlay → top-k → 全局重排三版演进</td>
+<td>PR #210/#304；<code>scheduler_server.py</code> <code>_extract_affinity_candidates</code> + combined 重算</td>
+</tr>
+<tr>
+<td>"DP rank 粒度亲和"</td>
+<td>kv-events 端口 = 基址+rank；/query 返回 DP map</td>
+<td><code>conductor_api_client.py</code> <code>register_post</code>/<code>query_conductor</code></td>
+</tr>
+<tr>
+<td>"fail-closed 可用性"</td>
+<td>0.2s 超时、tokenize 兜底、对账重注册</td>
+<td><code>query_conductor</code> timeout；<code>_safe_fallback_encode</code>；<code>re_register_kv_instances</code></td>
+</tr>
+<tr>
+<td>"七成量级 TTFT 收益"</td>
+<td>明确说是 Qwen3-32B、TP4、8K 输入、6.5K 共享前缀下的代表性测算；展开 1.19s→0.35s 的公式；实测应保持两组 Prefix Cache 均开启、只切调度策略</td>
+<td>基于 <code>~/wiki/repos/mindie-pymotor/kv-affinity.md</code> 方法重算；机制证据为 <code>cached_tokens</code> 与 Scheduler 日志；不能标成客户实测</td>
+</tr>
+<tr>
+<td>"热路径优化"</td>
+<td>有界 FIFO 去重、裸 float 传输、SHM 绝对值 bug</td>
+<td>PR #394 commit 记录</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7">7. 参考<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<ul>
+<li>专题 04（问题背景与 Mooncake 三组件）、专题 10（Transfer Engine/Store 深挖）、专题 11（vLLM vs SGLang 集成对比）</li>
+<li>源码：<code>MindIE-PyMotor/motor/coordinator/scheduler/policy/kv_cache_affinity.py</code>、<code>policy/load_balance.py</code>、<code>runtime/scheduler_client.py</code>、<code>runtime/scheduler_server.py</code>、<code>api_client/conductor_api_client.py</code>、<code>domain/workload_calculator.py</code>、<code>config/coordinator.py</code>；<code>motor/engine_server/core/vllm/vllm_openai_compat.py</code>（<code>OpenAIServingRender</code> 兼容）；<code>vllm/vllm/distributed/kv_events.py</code>（kv-events）；<code>vllm/vllm/renderers/online_renderer.py</code>、<code>vllm/docs/serving/online_serving/renderer.md</code>、<code>vllm/docs/cli/launch/render.md</code></li>
+<li>部署文档：<code>MindIE-PyMotor/docs/zh/user_guide/features/KV_cache_affinity.md</code></li>
+<li>PR 列表：gitcode.com/Ascend/MindIE-PyMotor（作者 tobking，23 PR / 13 merged）</li>
+<li>Conductor API 设计：Mooncake 仓 <code>docs/source/design/conductor/indexer-api-design.md</code>（dev/kv-indexer 分支）</li>
+<li>llm-d Precise：<code>docs/kv knowledge/02-llm-d.md</code>；上游 prefix-cache-aware-routing 文档</li>
+<li>收益测算：<code>~/wiki/repos/mindie-pymotor/kv-affinity.md</code> §“性能收益与典型场景”（明确为代表性测算，非实测）</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

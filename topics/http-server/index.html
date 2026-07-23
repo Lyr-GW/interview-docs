@@ -1,0 +1,2757 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/topics/http-server/">
+      
+      
+        <link rel="prev" href="../prefix-cache/">
+      
+      
+        <link rel="next" href="../deepseek-models/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>HTTP 服务层 - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#http" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              HTTP 服务层
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 一句话总结
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 核心原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 核心原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 问题背景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 方案概述
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 实现细节
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 实现细节">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 外观与生命周期管理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 外观与生命周期管理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#httpwrapper-facade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HttpWrapper — 单例 Facade
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#httpserver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HttpServer — 服务初始化器
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 三平面端口策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 路由注册与协议分发
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 请求生命周期
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-tlsssl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 TLS/SSL 安全设计
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.5 TLS/SSL 安全设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        证书分类体系
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 可观测性三层
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.6 可观测性三层">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#httpmetrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HttpMetrics 核心实现
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-dmi-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 DMI 分布式推理（PD 分离）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.7 DMI 分布式推理（PD 分离）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        角色协商状态机
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#38" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.8 设计模式应用
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 框架对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 框架对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-c-vs-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 C++ vs Python 迁移设计
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.1 C++ vs Python 迁移设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        技术选型对照
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        并发模型对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模块迁移映射（核心路径）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 面试要点
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 面试要点">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 常见追问
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1 常见追问">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q-businessmanagementmetrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 为什么要设计 Business/Management/Metrics 三个平面？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-dispatchinfer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: DispatchInfer 为什么用模板而不是虚函数？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-http-in-flight" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: HTTP 接入层如何保证不丢失 in-flight 请求？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-ttfttbt-o1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: TTFT/TBT 滑动窗口的 O(1) 算法具体实现？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 口述话术
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 延伸阅读
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 延伸阅读">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 相关主题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 源文件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 一句话总结
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 核心原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 核心原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 问题背景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 方案概述
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 实现细节
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 实现细节">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 外观与生命周期管理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 外观与生命周期管理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#httpwrapper-facade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HttpWrapper — 单例 Facade
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#httpserver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HttpServer — 服务初始化器
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 三平面端口策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 路由注册与协议分发
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 请求生命周期
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-tlsssl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 TLS/SSL 安全设计
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.5 TLS/SSL 安全设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        证书分类体系
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 可观测性三层
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.6 可观测性三层">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#httpmetrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HttpMetrics 核心实现
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-dmi-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 DMI 分布式推理（PD 分离）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.7 DMI 分布式推理（PD 分离）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        角色协商状态机
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#38" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.8 设计模式应用
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 框架对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 框架对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-c-vs-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 C++ vs Python 迁移设计
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.1 C++ vs Python 迁移设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        技术选型对照
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        并发模型对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模块迁移映射（核心路径）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 面试要点
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 面试要点">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 常见追问
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1 常见追问">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q-businessmanagementmetrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 为什么要设计 Business/Management/Metrics 三个平面？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-dispatchinfer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: DispatchInfer 为什么用模板而不是虚函数？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-http-in-flight" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: HTTP 接入层如何保证不丢失 in-flight 请求？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-ttfttbt-o1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: TTFT/TBT 滑动窗口的 O(1) 算法具体实现？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 口述话术
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 延伸阅读
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 延伸阅读">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 相关主题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 源文件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="http">HTTP 服务层架构<a class="headerlink" href="#http" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>覆盖 22 个知识点 | 来源 4 个文件 | 更新于 2026-07-11</p>
+</blockquote>
+<h2 id="1">1. 一句话总结<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>HTTP 接入层是 MindIE-LLM 推理服务器的网络协议网关，采用"外观-编排-路由"三层架构，通过三平面分离（业务/管理/指标）端口策略实现独立部署隔离，内部使用 Strategy 模式在编译期派发推理协议（OpenAI/TGI/Triton 等），对外暴露 RESTful 接口，并内置 TLS 双向认证、滑动窗口延迟统计、Prometheus 可观测性和 DMI 分布式推理链路管理。</p>
+<div class="admonition abstract">
+<p class="admonition-title">30 秒速览</p>
+<ul>
+<li><strong>核心原理</strong></li>
+<li><strong>实现细节</strong></li>
+<li><strong>框架对比</strong></li>
+<li><strong>面试要点</strong></li>
+<li>问题背景</li>
+<li>方案概述</li>
+</ul>
+</div>
+<hr />
+<h2 id="2">2. 核心原理<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<h3 id="21">2.1 问题背景<a class="headerlink" href="#21" title="Permanent link">&para;</a></h3>
+<p>大型语言模型推理服务器需要对外提供稳定的 HTTP(S) 接口，同时满足三大痛点：</p>
+<ol>
+<li><strong>多协议接入</strong>：调用方可能使用 OpenAI API、TGI、Triton、内部自研协议等不同规范，要求一套接入层统一路由与适配</li>
+<li><strong>运维隔离</strong>：推理流量、管理命令、监控指标需要不同安全级别和独立端口，避免相互干扰</li>
+<li><strong>分布式推理</strong>：**PD 分离**架构下，P 节点（Prefill）和 D 节点（Decode）需通过 HTTP 完成角色协商与链路管理</li>
+</ol>
+<h3 id="22">2.2 方案概述<a class="headerlink" href="#22" title="Permanent link">&para;</a></h3>
+<p>采用分层解耦的 HTTP 接入架构，从外到内依次为：</p>
+<p><pre class="mermaid"><code>flowchart TB
+    Client[外部 HTTP/S 客户端]
+    EP[EndPoint 层 endpoint.cpp]
+    HW[HttpWrapper 外观层 单例入口]
+
+    subgraph INNER[HTTP 接入层内部]
+        HS[HttpServer 编排器 多平面创建、端口策略]
+        HH[HttpHandler 路由注册器 Business/Management/Metrics 三平面]
+        Sec[TLS 安全层 HttpSsl / HttpSslSecret]
+        Obs[可观测性层 HttpMetrics / PrometheusMetrics]
+        DMI[DMI 分布式层 DmiRole / FlexP%Processor]
+    end
+
+    Infra[推理引擎 / ConfigManager]
+
+    Client --&gt; EP --&gt; HW --&gt; INNER
+    HS --&gt; HH --&gt; Sec
+    HH --&gt; Obs
+    HH --&gt; DMI
+    INNER --&gt; Infra</code></pre>
+核心思路：<strong>外观模式对外隐藏复杂度，编排器依据端口配置创建 1~3 个 HTTP 服务实例，路由注册器按三平面分类注入业务逻辑，协议适配层在编译期绑定具体推理协议</strong>。</p>
+<hr />
+<h2 id="3">3. 实现细节<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<h3 id="31">3.1 外观与生命周期管理<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<h4 id="httpwrapper-facade">HttpWrapper — 单例 Facade<a class="headerlink" href="#httpwrapper-facade" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>模式</strong>：Meyer's Singleton + Facade</li>
+<li><strong>职责</strong>：对 <code>EndPoint</code> 层仅暴露 <code>Start()</code> / <code>Stop()</code>，隐藏所有 HTTP 栈细节</li>
+<li><strong>幂等保护</strong>：<code>mStarted</code> + <code>mMutex</code> 防止重复启动</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// http_wrapper.h</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">HttpWrapper</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">public</span><span class="o">:</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">HttpWrapper</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Instance</span><span class="p">();</span><span class="w">  </span><span class="c1">// Meyer&#39;s Singleton</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">Start</span><span class="p">();</span><span class="w">                     </span><span class="c1">// → HttpServer::HttpServerInit()</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">Stop</span><span class="p">();</span><span class="w">                      </span><span class="c1">// → HttpServer::HttpServerDeInit()</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">private</span><span class="o">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="w"> </span><span class="n">mMutex</span><span class="p">;</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">mStarted</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">};</span>
+</code></pre></div>
+<h4 id="httpserver">HttpServer — 服务初始化器<a class="headerlink" href="#httpserver" title="Permanent link">&para;</a></h4>
+<ul>
+<li>静态类，核心方法：<code>HttpServerInit()</code> / <code>HttpServerDeInit()</code></li>
+<li>IP/端口合法性校验（<code>CheckIp</code>、<code>IsPortUsed</code>）</li>
+<li>配置 <code>ThreadPoolMonitor</code>：工作线程数 = <code>maxLinkNum</code>，队列长度 = 2×并发数</li>
+<li>注册 pre_routing / post_routing / exception_handler 钩子</li>
+<li>Payload 限制：512 MB</li>
+</ul>
+<h3 id="32">3.2 三平面端口策略<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
+<p>根据 <code>port</code>（业务）、<code>managementPort</code>（管理）、<code>metricsPort</code>（指标）三者的关系自动选择策略：</p>
+<p><pre class="mermaid"><code>flowchart TB
+    A[HttpServerInit] --&gt; B{三端口完全相同?}
+    B -- Yes --&gt; C[ALL_SAME 单实例挂载全部路由]
+    B -- No --&gt; D{port == mgmtPort
+        但 != metricsPort?}
+    D -- Yes --&gt; E[BM_SAME 业务+管理共用 Metrics 独立]
+    D -- No --&gt; F{mgmtPort == metricsPort
+        但 != port?}
+    F -- Yes --&gt; G[MM_SAME 管理+Metrics 共用 业务独立]
+    F -- No --&gt; H[ALL_DIFF 三实例完全独立]</code></pre>
+| ServerGroupType | 实例数 | 实例1 路由 | 实例2 路由 | 实例3 路由 |
+|----------------|--------|-----------|-----------|-----------|
+| ALL_SAME | 1 | Business + Management + Metrics | — | — |
+| BUSINESS_MANAGEMENT_SAME | 2 | Business + Management | Metrics | — |
+| MANAGEMENT_METRICS_SAME | 2 | Business | Management + Metrics | — |
+| ALL_DIFFERENT | 3 | Business | Management | Metrics |</p>
+<h3 id="33">3.3 路由注册与协议分发<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<p><code>HttpHandler</code> 为纯静态工具类，按三平面分组注册路由：</p>
+<table>
+<thead>
+<tr>
+<th>平面</th>
+<th>初始化方法</th>
+<th>典型路由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Business</td>
+<td><code>BusinessInitialize</code></td>
+<td><code>POST /generate</code>, <code>POST /v1/chat/completions</code>（OpenAI 兼容）, <code>POST /generate_stream</code></td>
+</tr>
+<tr>
+<td>Management</td>
+<td><code>ManagementInitialize</code></td>
+<td><code>GET /health</code>, <code>GET /status</code>, <code>POST /stopService</code>, <code>POST /cmd</code></td>
+</tr>
+<tr>
+<td>Metrics</td>
+<td><code>InitializeMetricsResource</code></td>
+<td><code>GET /metrics</code> (Prometheus)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Strategy 模式的协议适配</strong>：
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// DispatchInfer 通过模板参数在编译期绑定推理协议</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">BuildInterfaceFn</span><span class="o">&gt;</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kt">void</span><span class="w"> </span><span class="n">DispatchInfer</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ReqCtxPtr</span><span class="w"> </span><span class="o">&amp;</span><span class="n">reqCtx</span><span class="p">,</span><span class="w"> </span><span class="n">BuildInterfaceFn</span><span class="w"> </span><span class="n">buildFn</span><span class="p">);</span>
+</code></pre></div>
+调用方注册路由时传入不同 lambda 构造 <code>OpenAIInferInterface</code>、<code>TGIInferInterface</code> 等，无需运行时虚函数分发。</p>
+<h3 id="34">3.4 请求生命周期<a class="headerlink" href="#34" title="Permanent link">&para;</a></h3>
+<p><pre class="mermaid"><code>flowchart LR
+    Client[HTTP 客户端] --&gt; HL[httplib HttpsServerHelper]
+    HL --&gt; Pre[pre_routing_handler 生成 UUID + startTime]
+    Pre --&gt; HH[HttpHandler::HandlePostGenerate]
+    HH --&gt; DI[DispatchInfer buildFn → InferInterface]
+    DI --&gt; SRI[SingleReqInferInterface 推理引擎调用]
+    SRI --&gt; HDR[HandleDResult res.set_content json]
+    HDR --&gt; Post[post_routing_handler AddTracerData + RemoveMonitorRequest]
+    Post --&gt; Client2[HTTP 200 + JSON]</code></pre>
+<strong>流式响应差异</strong>：<code>res.set_chunked_content_provider</code> 设置；<code>post_routing</code> 跳过 <code>RemoveMonitorRequest</code>；由 <code>DResultKeepAlive</code> 负责清理。</p>
+<h3 id="35-tlsssl">3.5 TLS/SSL 安全设计<a class="headerlink" href="#35-tlsssl" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>TLS 版本</strong>：TLS 1.3，指定 cipher suites</li>
+<li><strong>三证书分离</strong>：Business / Management / Metrics 各持独立 <code>HttpSsl</code> 实例</li>
+<li><strong>CRL 校验</strong>：支持证书吊销列表</li>
+<li><strong>双向 TLS</strong>：<code>CaVerifyCallback</code> 实现客户端证书校验</li>
+<li><strong>HttpSslSecret</strong>：后台线程周期性检查密钥过期（框架搭好，循环体为占位逻辑）</li>
+</ul>
+<h4 id="_1">证书分类体系<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<p>SSLCertCategory
+├── BUSINESS_CERT  → g_businessHttpSsl
+├── MANAGEMENT_CERT → g_managementHttpSsl
+└── METRICS_CERT    → g_metricsHttpSsl</p>
+<h3 id="36">3.6 可观测性三层<a class="headerlink" href="#36" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>能力</th>
+<th>实现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>层1</td>
+<td>分布式追踪</td>
+<td>W3C TraceContext + Zipkin B3，在 post_routing 中执行</td>
+</tr>
+<tr>
+<td>层2</td>
+<td>延迟指标</td>
+<td><code>HttpMetrics</code>：TTFT/TBT 滑动窗口（窗口大小 1000，O(1) 查询）</td>
+</tr>
+<tr>
+<td>层3</td>
+<td>Prometheus 指标</td>
+<td>Counter/Gauge/Histogram，<code>GET /metrics</code> 导出，<code>MIES_SERVICE_MONITOR_MODE</code> 控制激活</td>
+</tr>
+</tbody>
+</table>
+<h4 id="httpmetrics">HttpMetrics 核心实现<a class="headerlink" href="#httpmetrics" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">HttpMetrics</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">public</span><span class="o">:</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">HttpMetrics</span><span class="w"> </span><span class="o">&amp;</span><span class="n">GetInstance</span><span class="p">();</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">TTFTAdd</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SingleReqInferInterfaceBase</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">req</span><span class="p">);</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">TBTAdd</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SingleReqInferInterfaceBase</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">req</span><span class="p">);</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="nf">DynamicAverageTTFT</span><span class="p">();</span><span class="w">  </span><span class="c1">// 滑动窗口均值 O(1)</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="nf">DynamicAverageTBT</span><span class="p">();</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="k">private</span><span class="o">:</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">TTFTQueue_</span><span class="p">,</span><span class="w"> </span><span class="n">TBTQueue_</span><span class="p">;</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">ttftSum_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">tbtSum_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">dynamicAverageWindowSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="w"> </span><span class="n">TTFTMutex</span><span class="p">,</span><span class="w"> </span><span class="n">TBTMutex</span><span class="p">;</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="p">};</span>
+</code></pre></div>
+<h3 id="37-dmi-pd">3.7 DMI 分布式推理（PD 分离）<a class="headerlink" href="#37-dmi-pd" title="Permanent link">&para;</a></h3>
+<p>DMI（Distributed Memory Inference）即 Prefill/Decode 分离架构。</p>
+<h4 id="_2">角色协商状态机<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h4>
+<p><pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Unlinked
+    Unlinked --&gt; Linking: HandlePDRole V1/V2
+    Linking --&gt; Failed: AssignDmiRole 失败
+    Linking --&gt; Linked: AssignDmiRole 成功
+    Failed --&gt; Linking: 重试
+    Linked --&gt; [*]</code></pre>
+- **V1/V2 协议**分别处理不同版本的角色协商
+- <code>taskThread_</code> 执行建链操作（可能阻塞），<code>queryThread_</code> 周期轮询链路健康度（10s）
+- DMI 业务请求需通过完整头部校验链：<code>IsAllDMIHeadersExist → IsReqIdValid → IsReqTypeValid → IsDTargetValid → IsRecomputeParamValid</code></p>
+<h3 id="38">3.8 设计模式应用<a class="headerlink" href="#38" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>实现位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Singleton</td>
+<td><code>HttpWrapper</code> (Meyer's)、<code>HttpMetrics</code>、<code>FlexPPercentageProcessor</code>、<code>PrometheusMetrics</code> (shared_ptr)、<code>DmiRole</code> (shared_ptr)</td>
+</tr>
+<tr>
+<td>Facade</td>
+<td><code>HttpWrapper</code> 对 <code>EndPoint</code> 屏蔽所有细节</td>
+</tr>
+<tr>
+<td>Factory Method</td>
+<td><code>CreateHttpServerPoint(SSLCertCategory, ServerGroupType)</code></td>
+</tr>
+<tr>
+<td>Strategy</td>
+<td><code>DispatchInfer</code> 模板，编译期绑定推理协议适配器</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4">4. 框架对比<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="41-c-vs-python">4.1 C++ vs Python 迁移设计<a class="headerlink" href="#41-c-vs-python" title="Permanent link">&para;</a></h3>
+<p>当需要将 C++ 实现的 HTTP 接入层迁移为 Python 实现时，存在以下技术匹配：</p>
+<h4 id="_3">技术选型对照<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>C++</th>
+<th>Python 等价</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Web 框架</td>
+<td>httplib (HttpsServerHelper)</td>
+<td>FastAPI</td>
+</tr>
+<tr>
+<td>ASGI 服务器</td>
+<td>内建监听线程</td>
+<td>uvicorn</td>
+</tr>
+<tr>
+<td>配置校验</td>
+<td>手动校验函数</td>
+<td>pydantic v2</td>
+</tr>
+<tr>
+<td>指标采集</td>
+<td>prometheus-cpp</td>
+<td>prometheus_client</td>
+</tr>
+<tr>
+<td>TLS</td>
+<td>OpenSSL 原生</td>
+<td>uvicorn ssl 参数</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_4">并发模型对比<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>C++</th>
+<th>Python</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>请求并发</td>
+<td>ThreadPoolMonitor (固定工作线程)</td>
+<td>asyncio 协程</td>
+</tr>
+<tr>
+<td>推理调用</td>
+<td>同步阻塞线程</td>
+<td><code>run_in_executor</code> 或 async 后端</td>
+</tr>
+<tr>
+<td>指标采集</td>
+<td><code>std::thread</code> (1s 周期)</td>
+<td><code>asyncio.create_task</code> (1s)</td>
+</tr>
+<tr>
+<td>DMI 链路</td>
+<td><code>taskThread_</code> + <code>queryThread_</code></td>
+<td><code>asyncio.Task</code></td>
+</tr>
+<tr>
+<td>全局停服标志</td>
+<td><code>atomic&lt;bool&gt;</code></td>
+<td><code>asyncio.Event</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="_5">模块迁移映射（核心路径）<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>C++ 文件</th>
+<th>Python 文件</th>
+<th>优先级</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>http_wrapper.cpp</code></td>
+<td><code>endpoint/app.py</code></td>
+<td>P0</td>
+</tr>
+<tr>
+<td><code>http_server.cpp</code></td>
+<td><code>endpoint/server.py</code></td>
+<td>P0</td>
+</tr>
+<tr>
+<td><code>http_handler.cpp</code> (OpenAI)</td>
+<td><code>routers/infer/openai.py</code> + <code>adapters/openai_adapter.py</code></td>
+<td>P0</td>
+</tr>
+<tr>
+<td><code>http_handler.cpp</code> (pre/post routing)</td>
+<td><code>middleware/request_id.py</code>, <code>error_handler.py</code></td>
+<td>P0</td>
+</tr>
+<tr>
+<td><code>prometheus_metrics.cpp</code></td>
+<td><code>observability/prometheus_metrics.py</code></td>
+<td>P1</td>
+</tr>
+<tr>
+<td><code>dmi_role.cpp</code></td>
+<td><code>dmi/dmi_role.py</code></td>
+<td>P2</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5">5. 面试要点<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<h3 id="51">5.1 常见追问<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
+<h4 id="q-businessmanagementmetrics">Q: 为什么要设计 Business/Management/Metrics 三个平面？<a class="headerlink" href="#q-businessmanagementmetrics" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>运维安全隔离</strong>：Management 平面可能暴露停服等敏感操作，需要独立端口和不同证书与外部网络隔离</li>
+<li><strong>流量隔离</strong>：推理请求量大但延迟敏感，管理操作低频率但需要保证可达，指标采集周期性强，分开后可独立限流和监控</li>
+<li><strong>部署灵活性</strong>：通过 <code>ALL_SAME</code> / <code>BM_SAME</code> / <code>MM_SAME</code> / <code>ALL_DIFFERENT</code> 四种策略适配单机、集群、容器化等不同部署场景</li>
+</ul>
+<h4 id="q-dispatchinfer">Q: DispatchInfer 为什么用模板而不是虚函数？<a class="headerlink" href="#q-dispatchinfer" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>编译期多态</strong>：模板在编译期确定调用路径，防止运行时虚函数跳转开销（推理请求延迟敏感）</li>
+<li><strong>类型安全</strong>：Compile-time 类型检查自动保证适配器接口匹配</li>
+<li><strong>去除虚表开销</strong>：不需要基类指针和 vtable；访问具体类型时可内联优化</li>
+</ul>
+<h4 id="q-http-in-flight">Q: HTTP 接入层如何保证不丢失 in-flight 请求？<a class="headerlink" href="#q-http-in-flight" title="Permanent link">&para;</a></h4>
+<ul>
+<li>每个请求在 <code>pre_routing</code> 中注入 UUID 并注册到 <code>ThreadPoolMonitor</code></li>
+<li><code>post_routing</code> 中移除监控（流式请求在 chunked 传输完毕后由 <code>DResultKeepAlive</code> 清理）</li>
+<li><code>exception_handler</code> 兜底移除，防止泄漏</li>
+<li>停服时 <code>JudgeRestProcess</code> 轮询等待 in-flight 请求清空后才 kill 进程</li>
+</ul>
+<h4 id="q-ttfttbt-o1">Q: TTFT/TBT 滑动窗口的 O(1) 算法具体实现？<a class="headerlink" href="#q-ttfttbt-o1" title="Permanent link">&para;</a></h4>
+<ul>
+<li>维护一个固定容量（默认 1000）的 Queue 和当前累加和 <code>sum</code></li>
+<li><code>Add</code> 操作：推入新值，<code>sum += newValue</code>；若队列已满，先弹出旧值 <code>sum -= oldValue</code></li>
+<li><code>Query</code> 操作：直接返回 <code>sum / queue.size()</code></li>
+<li>TTFT 和 TBT 各自独立锁，避免互相竞争</li>
+</ul>
+<h3 id="52">5.2 口述话术<a class="headerlink" href="#52" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>"这个 HTTP 服务层采用分层架构，最外层是 <code>HttpWrapper</code> 单例兼外观，对上层只暴露 Start/Stop；中间是 <code>HttpServer</code> 编排器，它的核心逻辑是根据业务端口、管理端口、指标端口是否相同来决定启动 1 到 3 个 HTTP 服务实例；内层是 <code>HttpHandler</code> 路由注册器，按 Business/Management/Metrics 三个平面分类注册路由。请求进来后，pre_routing 先注入 UUID，然后经过 DispatchInfer 模板在编译期绑定 OpenAI 或 TGI 等协议适配器，推理完成后 post_routing 做分布式追踪注入和监控清理。安全层面每个平面可有独立的 TLS 证书，还支持客户端证书校验。可观测性有三层：W3C 分布式追踪、滑动窗口统计 TTFT/TBT、Prometheus 指标。DMI 模式下额外多一套 PD 角色协商链路，通过独立后台线程异步建立和管理跨节点链路，不阻塞正常的推理请求处理线程。"</p>
+</blockquote>
+<hr />
+<h2 id="6">6. 延伸阅读<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<h3 id="61">6.1 相关主题<a class="headerlink" href="#61" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Function Call 深度分析</li>
+<li><strong>Prefix Cache</strong> 分析</li>
+<li>Scheduler 深度分析</li>
+<li>HTTP Server 迁移设计（C++ → Python）</li>
+</ul>
+<h3 id="62">6.2 源文件<a class="headerlink" href="#62" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>文件路径</th>
+<th>标题</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wiki/repos/mindie-pyserver/http-wrapper.md</code></td>
+<td>HTTP Wrapper 架构分析</td>
+<td>架构分析</td>
+</tr>
+<tr>
+<td><code>wiki/repos/mindie-pyserver/http-migration.md</code></td>
+<td>HTTP Server 迁移设计方案</td>
+<td>迁移设计</td>
+</tr>
+<tr>
+<td><code>wiki/raw/articles/pyserver/http_wrapper_architecture.md</code></td>
+<td>HTTP Wrapper 架构</td>
+<td>详细分析</td>
+</tr>
+<tr>
+<td><code>wiki/raw/articles/pyserver/http_server_migration_design.md</code></td>
+<td>HTTP Server 迁移设计</td>
+<td>详细设计</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

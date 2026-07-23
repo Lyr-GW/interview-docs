@@ -1,0 +1,2418 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/suanzi/00-%E6%8E%A8%E7%90%86%E7%AE%97%E5%AD%90%E5%AD%A6%E4%B9%A0%E7%B4%A2%E5%BC%95%E4%B8%8E%E8%A6%86%E7%9B%96%E6%B8%85%E5%8D%95/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>推理算子学习索引与覆盖清单 - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              推理算子学习索引与覆盖清单
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 阅读顺序（由浅入深）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. 阅读顺序（由浅入深）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        冲刺一页纸（可打印）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-decode-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Decode Step 算子地图（把零散知识钉在时间线上）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 覆盖清单（自检：推理优化常见问题是否答得上）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 覆盖清单（自检：推理优化常见问题是否答得上）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-roofline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. 硬件与 Roofline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. 图与下发
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-linear-ffn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Linear / FFN / 融合
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-moe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E. MoE / 并行 / 通信
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#f" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F. 量化与显存
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#g" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        G. 工程与排查
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#h" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        H. 调度交界（系统题）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#j" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        J. 清晰度与数值直觉（本轮补强）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#i" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I. 可后续加深（非阻塞面试防守）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 与简历的挂钩策略（贯穿全套文档）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 完成定义（本轮迭代验收）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 二次确认记录（迭代自检）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 三次确认记录（清晰度 / 完整性补强）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 四次确认记录（简历结合专项）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-3h" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 五次确认记录（交界补强 · 持续 3h 批次）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-3h-tick14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 六次确认记录（3h 窗口 tick1–4 收口）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-tick58" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 七次确认记录（模考闭环 · tick5–8）
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="_1">推理算子学习索引与覆盖清单<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>本目录是「没写过算子的推理框架开发者」补齐算子层盲区的学习包。
+目标：覆盖推理优化岗位对算子/硬件/图模式的常见追问；诚实边界：框架主战场 + Roofline/读源码撑追问，不谎称独立交付 AscendC/HCCL。</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 阅读顺序（由浅入深）<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">顺序</th>
+<th>文档</th>
+<th>深度</th>
+<th>解决什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">0</td>
+<td><a href="../%E7%AE%97%E5%AD%90%E5%9F%BA%E7%A1%80%E6%9C%AF%E8%AF%AD%E4%B8%8E%E9%9D%A2%E8%AF%95%E9%97%AE%E7%AD%94/">算子基础术语与面试问答.md</a></td>
+<td>L0 入门</td>
+<td>术语大白话 + 简历过渡问答</td>
+</tr>
+<tr>
+<td style="text-align: center;">0.5</td>
+<td><a href="../08-%E6%98%93%E6%B7%B7%E6%B7%86%E6%A6%82%E5%BF%B5%E4%B8%8E%E6%95%B0%E5%80%BC%E7%9B%B4%E8%A7%89/">08-易混淆概念与数值直觉.md</a></td>
+<td>L0→L1</td>
+<td>易混对照 + 手算例子</td>
+</tr>
+<tr>
+<td style="text-align: center;">1</td>
+<td><a href="../%E7%AE%97%E5%AD%90%E4%B8%8E%E5%9B%BE%E7%BC%96%E8%AF%91%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">算子与图编译学习笔记.md</a></td>
+<td>L1 核心</td>
+<td>GE vs aclgraph + FA/online softmax</td>
+</tr>
+<tr>
+<td style="text-align: center;">2</td>
+<td><a href="../01-Linear-FFN-MatMul-SwiGLU/">01-Linear-FFN-MatMul-SwiGLU.md</a></td>
+<td>L1→L2</td>
+<td>GEMV/FFN/大 batch</td>
+</tr>
+<tr>
+<td style="text-align: center;">3</td>
+<td><a href="../02-Norm-RoPE-%E8%9E%8D%E5%90%88/">02-Norm-RoPE-融合.md</a></td>
+<td>L1→L2</td>
+<td>小算子为何必须融合</td>
+</tr>
+<tr>
+<td style="text-align: center;">4</td>
+<td><a href="../03-Attention%E5%AE%B6%E6%97%8F-Paged-MLA/">03-Attention家族-Paged-MLA.md</a></td>
+<td>L2</td>
+<td>PFA/IFA/Paged/MLA</td>
+</tr>
+<tr>
+<td style="text-align: center;">5</td>
+<td><a href="../04-MoE%E4%B8%8E%E9%80%9A%E7%AE%97%E8%9E%8D%E5%90%88MC2/">04-MoE与通算融合MC2.md</a></td>
+<td>L2</td>
+<td>MoE + TP/EP MC2</td>
+</tr>
+<tr>
+<td style="text-align: center;">6</td>
+<td><a href="../05-%E9%87%8F%E5%8C%96%E4%B8%8EKVCache%E7%AE%97%E5%AD%90/">05-量化与KVCache算子.md</a></td>
+<td>L2</td>
+<td>W8A8/KV 量化</td>
+</tr>
+<tr>
+<td style="text-align: center;">7</td>
+<td><a href="../07-%E8%B0%83%E5%BA%A6%E4%B8%8E%E7%AE%97%E5%AD%90%E4%BA%A4%E7%95%8C/">07-调度与算子交界.md</a></td>
+<td>L2 系统</td>
+<td>CB/PD/SpecDec/Profiling</td>
+</tr>
+<tr>
+<td style="text-align: center;">8</td>
+<td><a href="../14-Prefill%E5%A4%8D%E7%94%A8%E4%B8%8E%E4%BA%B2%E5%92%8C%E5%91%BD%E4%B8%AD%E5%90%8E%E5%B0%91%E7%AE%97%E4%BB%80%E4%B9%88/">14-Prefill复用与亲和命中后少算什么.md</a></td>
+<td>L2 简历</td>
+<td>命中后少跑哪些算子</td>
+</tr>
+<tr>
+<td style="text-align: center;">8.5</td>
+<td><a href="../15-Sampler-Logits-%E7%BA%A6%E6%9D%9F%E8%A7%A3%E7%A0%81%E8%84%9A%E5%8D%B0/">15</a> / <a href="../16-%E8%B7%A8%E8%8A%82%E7%82%B9KV%E4%BC%A0%E8%BE%93%E4%B8%8E%E9%87%8D%E7%AE%97%E8%B4%A6%E6%9C%AC/">16</a> / <a href="../18-LMHead%E4%B8%8EVocab%E5%B9%B6%E8%A1%8C/">18</a></td>
+<td>L2 交界</td>
+<td>采样·传KV·LM Head</td>
+</tr>
+<tr>
+<td style="text-align: center;">8.6</td>
+<td><a href="../17-SpecDec-MTP%E9%AA%8C%E8%AF%81%E6%AD%A5%E4%B8%8E%E7%AE%97%E5%AD%90%E5%83%8F/">17</a> / <a href="../19-MLA-Decode-Roofline%E5%8F%AF%E4%BF%A1%E6%91%98%E8%A6%81/">19</a> / <a href="../20-%E9%87%8F%E5%8C%96%E8%90%BD%E5%9C%B0PTQ%E9%AA%A8%E6%9E%B6/">20</a></td>
+<td>L2 防守</td>
+<td>SpecDec·MLA·PTQ</td>
+</tr>
+<tr>
+<td style="text-align: center;">9</td>
+<td><a href="../%E7%AE%97%E5%AD%90%E5%AD%A6%E4%B9%A0%E6%8B%93%E5%B1%95-%E9%9D%A2%E8%AF%95%E8%BF%BD%E9%97%AE%E5%BC%B9%E8%8D%AF/">算子学习拓展-面试追问弹药.md</a></td>
+<td>L2 速查</td>
+<td>家族全景速答卡</td>
+</tr>
+<tr>
+<td style="text-align: center;">10</td>
+<td><a href="../06-%E6%8E%A8%E7%90%86%E4%BC%98%E5%8C%96%E7%AE%97%E5%AD%90%E5%85%A8%E6%99%AF%E9%9D%A2%E8%AF%95%E9%A2%98%E5%BA%93/">06-推理优化算子全景面试题库.md</a></td>
+<td>L3</td>
+<td>通用算子题库</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>R1</strong></td>
+<td><a href="../09-%E7%AE%80%E5%8E%86%E4%B8%8E%E7%AE%97%E5%AD%90%E6%8C%82%E9%92%A9%E5%9C%B0%E5%9B%BE/">09-简历与算子挂钩地图.md</a></td>
+<td>简历</td>
+<td>条目→算子总表</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>R2</strong></td>
+<td><a href="../10-%E7%AE%80%E5%8E%86%E5%90%91%E8%BF%BD%E9%97%AE%E9%A2%98%E5%BA%93/">10-简历向追问题库.md</a></td>
+<td>简历</td>
+<td>结构化输出/亲和专项题</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>R3</strong></td>
+<td><a href="../11-%E7%89%B9%E6%80%A7%E4%B8%8E%E7%AE%97%E5%AD%90%E4%BA%A4%E7%95%8C%E4%B8%93%E9%A2%98/">11-特性与算子交界专题.md</a></td>
+<td>简历</td>
+<td>特性脚印图</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>R4</strong></td>
+<td><a href="../12-%E9%9D%A2%E8%AF%95%E6%95%85%E4%BA%8B%E7%BA%BF%E4%B8%8E%E7%99%BD%E6%9D%BF%E7%A8%BF/">12-面试故事线与白板稿.md</a></td>
+<td>简历</td>
+<td>20/45 分钟讲述</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>R5</strong></td>
+<td><a href="../13-%E6%8C%87%E6%A0%87%E6%8B%86%E8%A7%A3%E4%B8%8E%E5%BD%92%E5%9B%A0%E5%8F%8D%E6%A8%A1%E5%BC%8F/">13-指标拆解与归因反模式.md</a></td>
+<td>简历</td>
+<td>-70%/-50% 答辩</td>
+</tr>
+<tr>
+<td style="text-align: center;">参考</td>
+<td><a href="../ops-Q%26A/">ops-Q&amp;A.md</a></td>
+<td>L3</td>
+<td>Roofline 长文（口径以 03/08/19 为准）</td>
+</tr>
+<tr>
+<td style="text-align: center;">地图</td>
+<td><a href="../%E5%A4%96%E9%93%BE%E4%B8%80%E8%A7%88-KV%E4%B8%8E%E9%9D%A2%E8%AF%95%E5%A4%8D%E7%9B%98/">外链一览-KV与面试复盘.md</a></td>
+<td>导航</td>
+<td>接 <code>kv knowledge</code> / <code>interview-review</code></td>
+</tr>
+<tr>
+<td style="text-align: center;">卡片</td>
+<td><a href="../21-%E7%AE%80%E5%8E%86%E7%AE%97%E5%AD%9060%E7%A7%92%E6%A0%87%E5%87%86%E7%AD%94%E5%8D%A1%E7%89%87/">21-简历算子60秒标准答卡片.md</a></td>
+<td>简历</td>
+<td>8 题口述</td>
+</tr>
+<tr>
+<td style="text-align: center;">交界</td>
+<td><a href="../23-ToolCall%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E4%BA%A4%E7%95%8C/">23-ToolCall与结构化输出交界.md</a></td>
+<td>简历</td>
+<td>解析 vs 约束</td>
+</tr>
+<tr>
+<td style="text-align: center;">用词</td>
+<td><a href="../24-%E7%AD%94%E8%BE%A9%E7%94%A8%E8%AF%8D%E5%AF%B9%E7%85%A7/">24-答辩用词对照.md</a></td>
+<td>简历</td>
+<td>PDF/口误→现场口径</td>
+</tr>
+</tbody>
+</table>
+<p><strong>简历冲刺路径（1 天）</strong>：术语 → 08 → <strong>09 → 14 → 13 → 12 → 10</strong> → <strong>15 → 16 → 21 → 23/24</strong> → 抽查 03/19/图编译笔记。</p>
+<h3 id="_2">冲刺一页纸（可打印）<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>块</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>当日顺序</strong></td>
+<td>术语→08→09→14→<strong>13§1.1</strong>→12→10→15→16→<strong>21</strong>→23/24→抽查03/19</td>
+</tr>
+<tr>
+<td><strong>必背数字</strong></td>
+<td>4K 高前缀；tokenize≈6ms；Prefill 数百 ms；TTFT <strong>−70%</strong>；E2E <strong>−50%</strong></td>
+</tr>
+<tr>
+<td><strong>开场 10 秒</strong></td>
+<td>FIFO≠LRU；少 Prefill≠改 FA；Mooncake=索引；Tool=解析；框架主场（<a href="./24"><code>24</code></a>）</td>
+</tr>
+<tr>
+<td><strong>三句禁止</strong></td>
+<td>「我优化了 FA」/「写了 bitmask 算子」/「−70% 因为算子更快」</td>
+</tr>
+<tr>
+<td><strong>卡壳回退</strong></td>
+<td>故事线 <a href="./12"><code>12</code></a>§6.1；60 秒 <a href="./21"><code>21</code></a>；用词 <a href="./24"><code>24</code></a></td>
+</tr>
+<tr>
+<td><strong>计时模考</strong></td>
+<td><a href="./21"><code>21</code></a> 文末「模拟面试计时清单」约 25 分钟</td>
+</tr>
+</tbody>
+</table>
+<p>配套外仓：
+- 算子实现：<code>ops-transformer/</code>（总览 <code>ops-transformer/docs/zh/op_list.md</code>）
+- 图运行时：<code>runtime/</code>（aclgraph）
+- 简历 PDF：<code>cvs/林炜-推理框架方向.pdf</code>
+- 框架侧对照：<code>docs/2026-07-10/02-算子层加速FlashAttention-CUDAGraph专题.md</code>
+- KV/亲和背景：<code>docs/kv knowledge/</code>、<code>docs/interview-review/</code> 相关篇</p>
+<hr />
+<h2 id="2-decode-step">2. Decode Step 算子地图（把零散知识钉在时间线上）<a class="headerlink" href="#2-decode-step" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Embed → RMSNorm → QKV proj → RoPE → KV write → Attention → O proj
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>      → RMSNorm → FFN/MoE → … ×L 层 → LM Head → Sampler
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Step</th>
+<th>阶段</th>
+<th>算子层在干什么</th>
+<th>本仓主落点</th>
+<th>常见瓶颈</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">0</td>
+<td>Embed</td>
+<td>查表</td>
+<td><a href="../22-Embed%E5%8D%8A%E9%A1%B5/"><code>22</code></a></td>
+<td>通常小</td>
+</tr>
+<tr>
+<td style="text-align: center;">1</td>
+<td>Pre-Attn Norm</td>
+<td>Vector 归一化</td>
+<td><a href="../02-Norm-RoPE-%E8%9E%8D%E5%90%88/"><code>02</code></a>；常融入 <code>qkv_rms_norm_rope_cache</code></td>
+<td>单独做则 Host/小算子开销大</td>
+</tr>
+<tr>
+<td style="text-align: center;">2</td>
+<td>QKV proj</td>
+<td>Cube MatMul/GEMV</td>
+<td><a href="../01-Linear-FFN-MatMul-SwiGLU/"><code>01</code></a>；MLA：<code>mla_preprocess/prolog</code>；TP：<code>mc2/*</code></td>
+<td>Decode 访存密集</td>
+</tr>
+<tr>
+<td style="text-align: center;">3</td>
+<td>RoPE</td>
+<td>Vector 旋转</td>
+<td><a href="../02-Norm-RoPE-%E8%9E%8D%E5%90%88/"><code>02</code></a>；<code>apply_rotary_pos_emb</code> / 融入 1–2</td>
+<td>小算子，宜融合</td>
+</tr>
+<tr>
+<td style="text-align: center;">4</td>
+<td>KV write</td>
+<td>写 Paged/连续 cache</td>
+<td><a href="../03-Attention%E5%AE%B6%E6%97%8F-Paged-MLA/"><code>03</code></a>；<code>scatter_pa_kv_cache</code>、<code>rope_quant_kvcache</code></td>
+<td>带宽</td>
+</tr>
+<tr>
+<td style="text-align: center;">5</td>
+<td>Attention</td>
+<td>FA 分块 + online softmax</td>
+<td><a href="./03"><code>03</code></a>；Prefill:<code>PFA</code> Decode:<code>IFA</code> 统一:<code>FIA</code></td>
+<td>Prefill 算力 / Decode 带宽</td>
+</tr>
+<tr>
+<td style="text-align: center;">6</td>
+<td>O proj</td>
+<td>MatMul + 常 AllReduce</td>
+<td><a href="./01"><code>01</code></a>；<code>matmul_all_reduce</code>（<a href="./04"><code>04</code></a> MC2）</td>
+<td>TP 通信</td>
+</tr>
+<tr>
+<td style="text-align: center;">7</td>
+<td>Post Norm</td>
+<td>Vector</td>
+<td><a href="./02"><code>02</code></a>；常融入 <code>*_add_rms_norm</code></td>
+<td>同 1</td>
+</tr>
+<tr>
+<td style="text-align: center;">8a</td>
+<td>Dense FFN</td>
+<td>GateUp+SwiGLU+Down</td>
+<td><a href="./01"><code>01</code></a>；<code>ffn/ffn</code>、<code>grouped_matmul_swiglu_quant</code></td>
+<td>Decode 访存；大 batch 可翻计算</td>
+</tr>
+<tr>
+<td style="text-align: center;">8b</td>
+<td>MoE</td>
+<td>gating→permute→GMM→finalize</td>
+<td><a href="../04-MoE%E4%B8%8E%E9%80%9A%E7%AE%97%E8%9E%8D%E5%90%88MC2/"><code>04</code></a></td>
+<td>EP 通信 + 专家负载</td>
+</tr>
+<tr>
+<td style="text-align: center;">9</td>
+<td>LM Head</td>
+<td>MatMul（N=V）</td>
+<td><a href="../18-LMHead%E4%B8%8EVocab%E5%B9%B6%E8%A1%8C/"><code>18</code></a></td>
+<td>大 V 带宽；vocab parallel</td>
+</tr>
+<tr>
+<td style="text-align: center;">10</td>
+<td>Sampler (+mask)</td>
+<td>Vector / 图外</td>
+<td><a href="./15"><code>15</code></a>、<a href="./11"><code>11</code></a>、<a href="../23-ToolCall%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E4%BA%A4%E7%95%8C/"><code>23</code></a></td>
+<td>Host/错位/约束</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3">3. 覆盖清单（自检：推理优化常见问题是否答得上）<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<h3 id="a-roofline">A. 硬件与 Roofline<a class="headerlink" href="#a-roofline" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] Cube / Vector / HBM / L1 / UB / fractal 16×16×16</li>
+<li>[x] OI、屋脊点、compute/memory/Host-bound</li>
+<li>[x] Prefill 计算密集 vs Decode 访存密集</li>
+<li>[x] 大 batch 对 FFN vs Attention 收益差异</li>
+</ul>
+<h3 id="b">B. 图与下发<a class="headerlink" href="#b" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] GE vs aclgraph（省 Device vs 省 Host）</li>
+<li>[x] 静态 shape、tiling 冻结、attention 打补丁</li>
+<li>[x] CUDA Graph / ACL Graph 对照</li>
+</ul>
+<h3 id="c-attention">C. Attention<a class="headerlink" href="#c-attention" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] FlashAttention 三招 + online softmax 手推</li>
+<li>[x] PFA / IFA / FIA 选型</li>
+<li>[x] PagedAttention（scatter/gather）</li>
+<li>[x] MHA / GQA / MLA absorb</li>
+<li>[x] FA 反向 recompute</li>
+</ul>
+<h3 id="d-linear-ffn">D. Linear / FFN / 融合<a class="headerlink" href="#d-linear-ffn" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] GEMM vs GEMV</li>
+<li>[x] QKV 合并、SwiGLU、RMSNorm+RoPE+Cache 融合</li>
+<li>[x] 图融合 / UB 融合 / SuperKernel 三层次</li>
+</ul>
+<h3 id="e-moe">E. MoE / 并行 / 通信<a class="headerlink" href="#e-moe" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] MoE 完整算子链路 + grouped_matmul</li>
+<li>[x] TP Column/Row + MC2 通算融合</li>
+<li>[x] EP dispatch/combine</li>
+<li>[x] Prefill 偏 TP、Decode 偏 DP/EP</li>
+</ul>
+<h3 id="f">F. 量化与显存<a class="headerlink" href="#f" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] W8A8 / KV 量化动机</li>
+<li>[x] per-token vs per-tensor</li>
+<li>[x] RoPE+Quant+写 cache 融合</li>
+</ul>
+<h3 id="g">G. 工程与排查<a class="headerlink" href="#g" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] AscendC host/kernel/aclnn 三段式</li>
+<li>[x] Decode 变慢分层排查口诀</li>
+<li>[x] 简历边界诚实答法</li>
+</ul>
+<h3 id="h">H. 调度交界（系统题）<a class="headerlink" href="#h" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] Continuous Batching 的算子层收益差异（FFN vs Attn）</li>
+<li>[x] Chunked Prefill 与 OI 折中</li>
+<li>[x] PD 分离的 Roofline 依据</li>
+<li>[x] SpecDec/MTP「拉大 M」的算子视角（深挖见 <code>17</code>）</li>
+<li>[x] Profiling 六层排查</li>
+<li>[x] TTFT / TPOT / 吞吐指标定义</li>
+<li>[x] 传 KV vs 重算账本（<code>16</code>）</li>
+<li>[x] Sampler/bitmask/LM Head 脚印（<code>15</code>/<code>18</code>）</li>
+</ul>
+<h3 id="j">J. 清晰度与数值直觉（本轮补强）<a class="headerlink" href="#j" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] M/N/K 三维与「只怕 M 小」</li>
+<li>[x] Online Softmax 两块手算例子</li>
+<li>[x] 大 batch OI≈M 粗算</li>
+<li>[x] Host-bound 诊断表（aclgraph vs GE 选型）</li>
+<li>[x] IFA 为何 reduce（切输出行 vs 切同一行的 KV）</li>
+<li>[x] Paged：scatter 写 + FA 内读，非必 gather</li>
+<li>[x] W8A8 展开；KV 量化读写/dequant 时机</li>
+<li>[x] MoE routing/permute 关系；负载不均</li>
+<li>[x] RMSNorm 公式；Column/Row 文字图</li>
+<li>[x] 易混淆对照总表（<code>08</code>）</li>
+<li>[x] MLA Decode 翻转条件可信摘要（<code>19</code>）</li>
+</ul>
+<h3 id="i">I. 可后续加深（非阻塞面试防守）<a class="headerlink" href="#i" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] 手写 AscendC tiling（不要求）</li>
+<li>[ ] HCCL 协议细节（不要求）</li>
+<li>[ ] NSA/Lightning Indexer 细节（长序列加分项）</li>
+<li>[ ] 具体 PTQ 校准**完整流水线**（动机+骨架已覆盖：<a href="../20-%E9%87%8F%E5%8C%96%E8%90%BD%E5%9C%B0PTQ%E9%AA%A8%E6%9E%B6/"><code>20</code></a>；非阻塞加分）</li>
+<li>[ ] online softmax 合并 O 的 kernel 逐行对照（已有公式+sum 侧源码）</li>
+</ul>
+<hr />
+<h2 id="4">4. 与简历的挂钩策略（贯穿全套文档）<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>简历点</th>
+<th>挂到算子/硬件的说法</th>
+<th>详解文档</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KV 亲和调度降 TTFT 70%</td>
+<td>省的是 <strong>Prefill 重算</strong>；Prefill 计算密集</td>
+<td><code>09</code> <code>13</code> <code>14</code></td>
+</tr>
+<tr>
+<td>tokenize 前置 6ms</td>
+<td>Host 轻量 vs Device Prefill 数百 ms</td>
+<td><code>09</code> <code>13</code></td>
+</tr>
+<tr>
+<td>token 级 vs 字符级</td>
+<td>防假命中 → Attention/KV 正确性</td>
+<td><code>09</code> <code>10</code> <code>14</code></td>
+</tr>
+<tr>
+<td>unified / load_gated</td>
+<td>前缀收益 vs Decode 拥塞（IFA/FFN）</td>
+<td><code>07</code> <code>10</code></td>
+</tr>
+<tr>
+<td>PD 分离/混部</td>
+<td>Prefill/Decode OI 不同 → PFA vs IFA；传 KV vs 重算</td>
+<td><code>07</code> <code>11</code> <code>16</code></td>
+</tr>
+<tr>
+<td>结构化输出 bitmask</td>
+<td>NPU Vector element-wise；常图外</td>
+<td><code>09</code> <code>11</code> <code>15</code></td>
+</tr>
+<tr>
+<td>编译缓存 SHA256+FIFO（容量约 100，命中不调序）</td>
+<td>Host 层，非 Device FLOPs</td>
+<td><code>09</code> <code>13</code> <code>15</code></td>
+</tr>
+<tr>
+<td>mask/采样错位</td>
+<td>异步 CB 时序对齐</td>
+<td><code>10</code> <code>11</code> <code>15</code></td>
+</tr>
+<tr>
+<td>Tool Call / DSV3</td>
+<td>解析交付；模型侧转 MLA/MoE 知识点</td>
+<td><code>04</code> <code>09</code> <code>19</code></td>
+</tr>
+<tr>
+<td>Server 重构</td>
+<td>可维护性，便于接 Graph/采样钩子</td>
+<td><code>09</code></td>
+</tr>
+<tr>
+<td>没写过 AscendC/HCCL</td>
+<td>读源码+Roofline；选型与归因</td>
+<td><code>09</code> <code>12</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>简历冲刺</strong>：见 §1「简历冲刺路径」。</p>
+<hr />
+<h2 id="5">5. 完成定义（本轮迭代验收）<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>本目录在下列条件同时满足时视为「完整覆盖推理优化常见算子追问」：</p>
+<ol>
+<li>Decode 时间线每个 step 都有对应文档章节与 <code>ops-transformer</code> 路径。</li>
+<li>硬件 / 图模式 / Attention / FFN / MoE / MC2 / 量化 / 融合 / 排查 / 调度交界 均有由浅入深讲解。</li>
+<li>有一份可背诵的全景面试题库，且含简历诚实边界答法。</li>
+<li>覆盖清单 §3 中 A–H 全部打勾；I 明确为加分项而非阻塞项。</li>
+</ol>
+<hr />
+<h2 id="6">6. 二次确认记录（迭代自检）<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<p><strong>确认时间</strong>：文档成套落地时自检。</p>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Decode 时间线 Step0–10 是否有落点</td>
+<td>通过</td>
+<td>Embed→<code>22</code>；Norm/RoPE→<code>02</code>；Linear/FFN→<code>01</code>；Attn/Paged→<code>03</code>；MoE→<code>04</code>；LM Head→<code>18</code>；Sampler/Tool→<code>15</code>/<code>23</code></td>
+</tr>
+<tr>
+<td>术语 L0 → 机制 L1 → 源码/路径 L2 → 题库 L3</td>
+<td>通过</td>
+<td><code>基础术语</code>→<code>08</code>→<code>01~07</code>→<code>06题库</code>+<code>ops-Q&amp;A</code></td>
+</tr>
+<tr>
+<td>与已有长文是否重复失控</td>
+<td>通过</td>
+<td>深公式仍指向 <code>ops-Q&amp;A</code>；本套重「可学可背」</td>
+</tr>
+<tr>
+<td>简历诚实边界是否贯穿</td>
+<td>通过</td>
+<td>题库 I3/G5/H3 与索引 §4</td>
+</tr>
+<tr>
+<td>推理优化「系统题」是否只停在算子名</td>
+<td>通过</td>
+<td><code>07</code> 覆盖 CB/PD/Chunked/SpecDec/Profiling</td>
+</tr>
+<tr>
+<td>是否假装覆盖手写 AscendC/HCCL</td>
+<td>通过</td>
+<td>明确列入非阻塞加分项 I</td>
+</tr>
+</tbody>
+</table>
+<p><strong>遗漏补丁（成套落地时）</strong>：
+1. 仅有 Attention/图模式不够 → 补 Linear/Norm/MoE/Quant/交界；
+2. 拓展弹药偏提纲 → 用 <code>01~07</code> 做由浅入深正文；
+3. 缺总索引与验收清单 → 本文件 §1–§6。</p>
+<hr />
+<h2 id="7">7. 三次确认记录（清晰度 / 完整性补强）<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<p><strong>确认时间</strong>：本轮「检查不清晰与不完整并持续优化」之后。</p>
+<table>
+<thead>
+<tr>
+<th>原问题</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>缺 M/N/K、TTFT/TPOT、workspace、block_table</td>
+<td>写入基础术语</td>
+</tr>
+<tr>
+<td>online softmax 只有公式无手算</td>
+<td><code>08</code> §4 + 主笔记互链</td>
+</tr>
+<tr>
+<td>大 batch 缺数量级直觉</td>
+<td><code>08</code> §3 + <code>01</code> 互链</td>
+</tr>
+<tr>
+<td>aclgraph/GE 缺「怎么判断瓶颈」</td>
+<td>主笔记「诊断表」+ <code>08</code> §6</td>
+</tr>
+<tr>
+<td>IFA reduce 说不清</td>
+<td><code>03</code> L1.3 + <code>08</code> §7</td>
+</tr>
+<tr>
+<td>Paged 误以为必先 gather</td>
+<td><code>03</code> + <code>08</code> §8</td>
+</tr>
+<tr>
+<td>W8A8 / KV dequant 时机含糊</td>
+<td><code>05</code> 展开</td>
+</tr>
+<tr>
+<td>MoE routing vs permute、负载不均</td>
+<td><code>04</code> 补节</td>
+</tr>
+<tr>
+<td>RMSNorm 无公式、TP 无图</td>
+<td><code>02</code> / <code>01</code> / <code>08</code> §9</td>
+</tr>
+<tr>
+<td>易混概念分散</td>
+<td>新建 <code>08</code> 总对照表</td>
+</tr>
+</tbody>
+</table>
+<p><strong>仍刻意不展开（避免伪完整）</strong>：手写 tiling、HCCL 协议、NSA 细节、完整 PTQ——见 §3.I。</p>
+<p><strong>结论</strong>：常见追问的「概念清晰度 + 数值直觉 + 易混辨析」已补齐；学习顺序改为 <strong>术语 → 08 → 主笔记 → 01~07 → 题库</strong>。</p>
+<hr />
+<h2 id="8">8. 四次确认记录（简历结合专项）<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<p><strong>确认时间</strong>：用户要求「持续优化并与简历结合」之后。</p>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>简历每条大颗粒特性是否有算子翻译</td>
+<td>通过：<code>09</code> 总表</td>
+</tr>
+<tr>
+<td>-70%/-50% 是否有归因与反模式</td>
+<td>通过：<code>13</code></td>
+</tr>
+<tr>
+<td>命中后「少算什么」是否讲清</td>
+<td>通过：<code>14</code></td>
+</tr>
+<tr>
+<td>是否有可背故事线与白板</td>
+<td>通过：<code>12</code></td>
+</tr>
+<tr>
+<td>是否有简历向题库</td>
+<td>通过：<code>10</code>；<code>06</code> 增 L 节</td>
+</tr>
+<tr>
+<td>专题数据流/脚印</td>
+<td>通过：<code>11</code></td>
+</tr>
+<tr>
+<td>既有 01–08 是否加简历挂钩</td>
+<td>通过</td>
+</tr>
+<tr>
+<td>是否夸大成算子作者</td>
+<td>通过：<code>09</code> 禁止说法表</td>
+</tr>
+</tbody>
+</table>
+<p><strong>本轮新增</strong>：<code>09</code>–<code>14</code>。</p>
+<p><strong>简历冲刺路径</strong>：术语 → 08 → <strong>09 → 14 → 13 → 12 → 10</strong> → <strong>15 → 16 → 21 → 23/24</strong> → 抽查 03/19/图编译笔记。</p>
+<hr />
+<h2 id="9-3h">9. 五次确认记录（交界补强 · 持续 3h 批次）<a class="headerlink" href="#9-3h" title="Permanent link">&para;</a></h2>
+<p><strong>确认时间</strong>：用户要求「持续 3 小时优化并与简历结合」推进中。</p>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sampler/LM Head 是否有独立落点</td>
+<td>通过：<code>15</code> <code>18</code>；Decode 地图 Step9–10</td>
+</tr>
+<tr>
+<td>PD 传 KV vs 重算是否有账本</td>
+<td>通过：<code>16</code></td>
+</tr>
+<tr>
+<td>SpecDec 是否不止「拉大 M」</td>
+<td>通过：<code>17</code></td>
+</tr>
+<tr>
+<td>MLA 可疑长文是否有可信摘要</td>
+<td>通过：<code>19</code>；<code>ops-Q&amp;A</code> 加阅读指引</td>
+</tr>
+<tr>
+<td>断链 Common-Q&amp;A</td>
+<td>已改指 <code>07</code>/<code>16</code></td>
+</tr>
+<tr>
+<td>图编译「选型口诀」重复</td>
+<td>已删重</td>
+</tr>
+<tr>
+<td>术语 G 是否链到 13–24</td>
+<td>通过</td>
+</tr>
+</tbody>
+</table>
+<p><strong>本批新增</strong>：<code>15</code>–<code>24</code>（含交界补强、60 秒卡片、用词对照）。</p>
+<p><strong>简历冲刺路径</strong>：术语 → 08 → <strong>09 → 14 → 13 → 12 → 10</strong> → <strong>15 → 16 → 21 → 23/24</strong> → 抽查 03/19/图编译笔记。</p>
+<hr />
+<h2 id="10-3h-tick14">10. 六次确认记录（3h 窗口 tick1–4 收口）<a class="headerlink" href="#10-3h-tick14" title="Permanent link">&para;</a></h2>
+<p><strong>确认时间</strong>：持续 3h 优化推进约 1h+ 后。</p>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sampler / 传KV / SpecDec / LM Head / MLA / PTQ</td>
+<td>通过：<code>15</code>–<code>20</code></td>
+</tr>
+<tr>
+<td>Tool vs 结构化 / 答辩用词</td>
+<td>通过：<code>23</code> <code>24</code></td>
+</tr>
+<tr>
+<td>60 秒口述与故事线闭环</td>
+<td>通过：<code>21</code>；<code>12</code> 挂 15/16/21/24</td>
+</tr>
+<tr>
+<td>Decode 地图 Step0–10 文档落点</td>
+<td>通过：含 <code>22</code>/<code>18</code>/<code>15</code>/<code>23</code></td>
+</tr>
+<tr>
+<td>FIFO≠LRU、Attn 大 batch 机制钉死</td>
+<td>通过：<code>09</code>/<code>13</code>/<code>15</code>/<code>ops-Q&amp;A</code>§3/<code>01</code></td>
+</tr>
+<tr>
+<td>简历数字卡（4K/6ms/−70%/−50%）</td>
+<td>通过：<code>13</code>§1.1</td>
+</tr>
+<tr>
+<td>外链 kv knowledge / interview-review</td>
+<td>通过：<code>外链一览</code></td>
+</tr>
+<tr>
+<td>题库/弹药冲刺含 21–24</td>
+<td>通过</td>
+</tr>
+</tbody>
+</table>
+<p><strong>刻意不再大开新页</strong>；后续 tick 以断链/口误/模拟题补洞为主。</p>
+<hr />
+<h2 id="11-tick58">11. 七次确认记录（模考闭环 · tick5–8）<a class="headerlink" href="#11-tick58" title="Permanent link">&para;</a></h2>
+<p><strong>确认时间</strong>：3h 窗口后半段。</p>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>冲刺可打印一页纸</td>
+<td>通过：<code>00</code> §1</td>
+</tr>
+<tr>
+<td>模拟面试计时清单（~25min）</td>
+<td>通过：<code>21</code> 文末</td>
+</tr>
+<tr>
+<td>压力 5 连（简历雷区）</td>
+<td>通过：<code>12</code> §6.1</td>
+</tr>
+<tr>
+<td>题库 E/F 挂用词总表</td>
+<td>通过：<code>10</code>→<code>24</code></td>
+</tr>
+<tr>
+<td>Prefill 复用篇挂数字卡</td>
+<td>通过：<code>14</code>→<code>13</code>§1.1</td>
+</tr>
+<tr>
+<td>调度/图编译/Norm 简历钩挂 24</td>
+<td>通过：<code>07</code>/主笔记/<code>02</code></td>
+</tr>
+<tr>
+<td>PTQ「后续批次」过时句</td>
+<td>已改指 <code>20</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>使用建议</strong>：面试前一日按 <code>00</code> 一页纸 + <code>21</code> 计时清单跑一遍；当天只过 <code>24</code> + <code>13</code>§1.1 + <code>12</code>§6.1。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

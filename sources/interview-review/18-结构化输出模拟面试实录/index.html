@@ -1,0 +1,2154 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/interview-review/18-%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E6%A8%A1%E6%8B%9F%E9%9D%A2%E8%AF%95%E5%AE%9E%E5%BD%95/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>专题 18：结构化输出——模拟面试实录（严格面试官 × 面试者 多轮对话） - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#18" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              专题 18：结构化输出——模拟面试实录（严格面试官 × 面试者 多轮对话）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        面试实录
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="面试实录">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-fifo100-vs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 1 轮 · 编译缓存的容量口径（FIFO/100 vs 按字节）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-xgrammar-vs-outlines-vs-llguidance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 2 轮 · 后端选型：xgrammar vs Outlines vs llguidance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-mask-tpot-batch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 3 轮 · 费米估算：mask 开销占 TPOT 的比例，batch 放大后是否成立
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-bugoff-by-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 4 轮 · 异步调度 + 约束解码的时序 bug（off-by-one）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-rollback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 5 轮 · 投机解码 × 约束解码：前瞻校验与 rollback 的正确性
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-npu-bitmask-h2d-kernel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 6 轮 · NPU 落地：bitmask 的 H2D 传输、kernel 选择与压缩比
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 7 轮 · 输出质量：约束何时有害、何时该关掉
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第 8 轮 · 收尾：补齐两笔欠账，宣布结束
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        复盘总结（Review）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="复盘总结（Review）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#8_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一、本场覆盖的 8 个考点与结论
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        二、面试官认可的亮点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        三、被面试官抓到的短板（改进清单）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        四、可复用的"降维打击"话术锚点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        五、总评
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        附录 A：投机解码 × 结构化输出——当前缺口与可行实现方案
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="附录 A：投机解码 × 结构化输出——当前缺口与可行实现方案">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.0 结论先行（一句话）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.1 现状：两特性各自长什么样（代码事实）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.2 如实总结："当前没有实现 / 没打通的点"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a3-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.3 参照蓝本：vLLM 是怎么做对的（代码事实）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="A.3 参照蓝本：vLLM 是怎么做对的（代码事实）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rollback-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为何 rollback 必须在 verify 之前（正确性 + 暴露窗口）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.4 可行实现方案（落地导向、分阶段）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="A.4 可行实现方案（落地导向、分阶段）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-xgrammargrammar-grammarbackend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) 接口层：给 XgrammarGrammar / GrammarBackend 补齐能力
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-bitmask-1k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) bitmask 生成：单位置 → (1+k) 位置多行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-propose-verify-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) 主循环整合：propose 与 verify 两阶段挂同一份多位置 mask
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-persistent-stack-max_rollback_tokens-case" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) 回滚正确性：persistent stack + max_rollback_tokens + 边界 case
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) 工程分期、验收标准与风险
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-grammar-rollback-accept" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) 时序框图：一次投机步内 grammar 的试探 → rollback → 正式 accept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.5 小结（做了什么调研、结论几期）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="18">专题 18：结构化输出——模拟面试实录（严格面试官 × 面试者 多轮对话）<a class="headerlink" href="#18" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>本文由两个 agent 角色扮演生成：一位**极其严格、细致、爱刨根问底的面试官**，一位**基于真实项目经验的面试者**。围绕结构化输出 / 约束解码项目的**技术选型理由**、<strong>实际性能数据与手动分析</strong>、**A vs B 的取舍**展开多轮追问，直到面试官认为覆盖完整为止。文末附整体复盘总结。</p>
+<p>相关素材：<code>03-结构化输出与约束解码专题.md</code>、<code>16-结构化输出复习专题.md</code>、<code>17-FunctionCall与结构化输出综合专题.md</code>。</p>
+</blockquote>
+<hr />
+<h2 id="_1">面试实录<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<h3 id="1-fifo100-vs">第 1 轮 · 编译缓存的容量口径（FIFO/100 vs 按字节）<a class="headerlink" href="#1-fifo100-vs" title="Permanent link">&para;</a></h3>
+<p><strong>面试官：</strong> 你好，我是负责推理引擎方向的面试官，今天想把你 MindIE 的结构化输出这条线挖到底。第一个问题：你的编译缓存用 SHA-256 做 key——代码里默认容量多少、淘汰是 LRU 还是 FIFO？为什么是"按条数"而不是像 vLLM 那样按字节上限？单条编译产物大小量级？最坏内存上界多少？</p>
+<p><strong>面试者：</strong> 先对齐代码真相，避免被翻仓：默认容量 <strong>100</strong>（<code>grammar_cache_size</code>，<code>_DEFAULT_GRAMMAR_CACHE_SIZE=100</code>），淘汰是 <strong>FIFO</strong>——普通 <code>dict</code>，超限时 <code>next(iter())</code> 删最早插入项，<strong>命中不会 move-to-end</strong>，所以严格说不是 LRU。简历若曾写 LRU/128，那是早期口述口径，以代码为准。</p>
+<p>为什么选 FIFO：目标场景是 tool-calling／Agent，schema 种类通常个位数到几十个、集合稳定近「全热」，FIFO 与 LRU 命中率差异小，实现最简（不用 OrderedDict / 链表）。100 条相对常见 schema 种类留了几倍余量，经验命中率约 85%–95%。key 用规范化 schema 串的 SHA-256，二次请求零编译。</p>
+<p>单条产物量级：PDA + adaptive mask cache，扁平 schema 几百 KB，深嵌套多 anyOf 可到几 MB。</p>
+<p>内存上界隐患在「按条数」：100 × 几百 KB ≈ 几十 MB 可控；若 100 条全是 ~5MB 深嵌套，≈500MB，可能逼近甚至超过 vLLM 默认 512MB 字节上限。根因是条数不约束单条大小方差。自我迭代：改成 vLLM 式字节上限，或 <strong>条数 + 字节双门限</strong>（例如 <code>max_bytes=512MB AND max_entries=256</code>）。</p>
+<h3 id="2-xgrammar-vs-outlines-vs-llguidance">第 2 轮 · 后端选型：xgrammar vs Outlines vs llguidance<a class="headerlink" href="#2-xgrammar-vs-outlines-vs-llguidance" title="Permanent link">&para;</a></h3>
+<p><strong>面试官：</strong> 回答合格——你主动把 FIFO/100 和代码对齐了，也算清了按条数的失控上界，这点我满意。但"双门限兜底"先记下阈值。下一个问题，别跟我说"xgrammar 快"：为什么选 xgrammar 而不是 Outlines 或 llguidance？请给三组可量化对比——编译期耗时、每步 μs 级开销、对 JSON 递归嵌套的表达能力，然后告诉我：在 MindIE 跑 NPU、要靠 C++ 内核可移植性的这个具体环境里，压死骆驼、让你排除掉 Outlines 和 llguidance 的那个**决定性**因素到底是哪一个？</p>
+<p><strong>面试者：</strong> 先给三组硬对比。</p>
+<p>编译期：xgrammar 复杂 schema 100–200ms、简单的 5–15ms；Outlines 正则→FSM，复杂 schema 曾到分钟级（core 用 Rust 重写后改善），是它最大的痛点；llguidance 走 Earley 惰性解析，没有重编译负担但把成本摊到每步。</p>
+<p>每步 μs：xgrammar 20–80μs（99% 查表＋&lt;1% 现场检查）；Outlines FSM 纯查表 10–20μs，最快；llguidance ~50μs。单看每步 Outlines 略胜，但差距在同一量级、会被 GPU/NPU 前向淹没。</p>
+<p>递归表达：这是分水岭。xgrammar 字节级 PDA 带栈，原生表达任意嵌套 JSON Schema；Outlines 本质是 FSM，递归结构要展开近似，深层嵌套或无界递归表达不了，对"任意 JSON Schema"这个刚需是硬伤；llguidance 是完整 CFG，表达最灵活，这项和 xgrammar 打平。</p>
+<p>决定性因素——落到 MindIE 跑 NPU、要 C++ 内核可移植这个具体环境：是**架构解耦与可移植性**。xgrammar 核心是 C++、bitmask 与后端算子解耦，我只需在 NPU 侧接一条 <code>masked_fill_(-inf)</code> 路径就能落地；Outlines/llguidance 早期跟 CUDA/Python 生态耦合更紧，迁到 NPU 成本高。Outlines 还叠加了递归要展开近似这条硬伤，直接出局；llguidance 表达够但可移植性不占优。</p>
+<p>坦白讲，这也是跟随 vLLM/SGLang 主流选型的结果——它们默认 xgrammar，我在 NPU 上复用其 C++ 内核，风险最低。</p>
+<h3 id="3-mask-tpot-batch">第 3 轮 · 费米估算：mask 开销占 TPOT 的比例，batch 放大后是否成立<a class="headerlink" href="#3-mask-tpot-batch" title="Permanent link">&para;</a></h3>
+<p><strong>面试官：</strong> 数据摆得不错，但"跟随 vLLM/SGLang 主流"这半句划掉——那是背书不是论证，别在我这儿用；可移植性也别当万能挡箭牌，回头我会追你 NPU 上 masked_fill_ 到底怎么落的。现在当场算笔账：batch=64、词表 12.8 万、TPOT≈30ms 的 NPU 场景。把两块分开：mask 生成能和前向 overlap，那它占关键路径几乎为零——你要证明"能被藏住"的前提；bitmask apply 是关键路径上躲不掉的，64×15.6KB 的位图展开做 masked_fill_，你估它多少 μs、占 30ms 的百分之几？再回答我：batch 从 64 拉到 512，你那个"&lt;1%~3%"还成立吗，为什么？</p>
+<p><strong>面试者：</strong> 分两块算。</p>
+<p>先说 mask 生成"能被藏住"的前提：它跑在 CPU/host 侧，与 NPU 前向是两条流。单请求填 bitmask 20–80μs，batch 64 用线程池并行填，墙钟时间远小于 64× 串行。只要这个 host 耗时 &lt; 一次前向的 30ms，就能被 overlap 完全藏掉，关键路径占比≈0。但前提是两条：一是 host 侧别成瓶颈（CPU 核够、并行真的展开），二是调度上真的把 mask 生成排在前向的 non-blocking 窗口里——否则就暴露到关键路径，这正是我们异步调度叠约束踩时序坑的地方。</p>
+<p>再算 bitmask apply（躲不掉的）：batch 64 时位图 64×15.6KB≈1MB，读进来展开；真正主导的是对 logits 的写——64×12.8万×4B(float32)≈32MB。masked_fill_ 是纯 element-wise、访存主导。按 NPU HBM ~1TB/s 带宽，32MB 读＋写≈几十 μs，算上 kernel 启动和位图展开，给 50–100μs 量级。换算 100μs/30ms≈0.33%，落在 0.1%~0.5%，确实 &lt;1%。</p>
+<p>batch 拉到 512：apply 绝对开销随 batch 近线性涨约 8×，到几百 μs~1ms 量级。但——TPOT 本身在 512 batch 下前向计算量也显著变大（访存/算力都涨），分母同步放大，所以占比大致守恒，不会简单线性恶化。真正的风险不在 apply，在两处：一是 mask 生成的 host 串行部分若没并行化，512 请求累积可能"藏不住"暴露到关键路径；二是 context-dependent token 的现场检查在大 batch 下线性累积。所以我的辩证结论是：apply 占比大致守恒仍 &lt;1%~3%，但大 batch 下的真实风险是 host 侧 mask 生成的瓶颈，那才是会让占比抬头的地方。</p>
+<h3 id="4-bugoff-by-one">第 4 轮 · 异步调度 + 约束解码的时序 bug（off-by-one）<a class="headerlink" href="#4-bugoff-by-one" title="Permanent link">&para;</a></h3>
+<p><strong>面试官：</strong> 32MB÷带宽这个算法我认，但你计账重复了——argmax/softmax 本来就要遍历整行 logits，masked_fill 的访存很大程度被采样 kernel 摊掉甚至可融合，你那 50–100μs 是高估；顺带记着，回头告诉我 mask 能不能跟采样融合成一个 kernel。现在别打太极，把你反复提的那个异步调度时序 bug 讲透：bitmask 是基于哪一步的 grammar 状态生成的、又 apply 到哪一步的 logits？异步把 sampling 结果回传延后一拍后，grammar 状态和 mask 具体怎么错位、错的是哪个 token？你当时靠什么现象定位到的、最后怎么修的——是加屏障、状态回滚，还是延迟推进？给我真实的调用栈级细节。</p>
+<p><strong>面试者：</strong> 先认批评。50–100μs 是高估——argmax/softmax 本来就要遍历整行 logits，masked_fill 的访存基本被采样 kernel 摊掉甚至融合，不该单独计账。融合问题直接答：mask apply 原则上能和采样融进一个 kernel，vLLM 就是用 Triton kernel 做 apply，理论上可与 argmax/softmax 融合、省一次全行读写；工程上是否真融看实现。下修到几十 μs 甚至更低，占 30ms 远不到 0.1%。</p>
+<p>再讲那个 off-by-one。grammar 状态演进依赖"上一步真正采样出的 token"：正常同步流程是 step N 基于"已 accept 到 token_{N-1} 的状态"生成 mask → apply 到第 N 步 logits → 采样出 token_N → <code>accept_token(token_N)</code> 推进 → 再算 step N+1 的 mask。</p>
+<p>异步/流水线下采样结果回传延后一拍：step N 的 token_N 到 step N+1 才拿到。如果状态推进没跟上，step N+1 就用"还没 accept token_N 的旧状态"去生成 mask——mask 比实际输出滞后一个 token，错的正是当前正在解码那个 token 的合法集合。表现为偶发吐非法字段名、括号提前/延迟闭合、JSON 校验挂。</p>
+<p>定位：低并发同步跑死活不复现，一开异步调度或高并发才偶发，且和 batch 内位置相关。我在每步打了两条日志——grammar 内部的状态指针/已处理 token 数，和该请求实际 accepted token 序列，逐步比对，发现两者差一个，就是 off-by-one 坐实。</p>
+<p>修法诚实说：核心是让 <code>accept_token</code> 推进与真实 token 回传严格对齐——延迟推进，拿到确定的 token_N 之后再推进状态、再生成下一步 mask，绝不用未对齐的旧状态填 mask；对约束请求必要时加个轻量屏障，不让它进入会导致状态错位的那级异步流水线，牺牲这一个请求的一点 overlap 换正确性。本质上这和投机解码"前瞻推进、拒绝后 rollback"是同构问题——都是 grammar 状态和真实被接受 token 必须严格对齐，差一个都不行。</p>
+<h3 id="5-rollback">第 5 轮 · 投机解码 × 约束解码：前瞻校验与 rollback 的正确性<a class="headerlink" href="#5-rollback" title="Permanent link">&para;</a></h3>
+<p><strong>面试官：</strong> off-by-one 的因果链和延迟推进我认，屏障也确实是最稳的兜底。但挑两点：加屏障就把你辛苦攒的 overlap 又吐回去了，有没有不牺牲并发的做法？延迟推进会不会让约束请求整体慢一拍，你量过没有？先记着。顺你自己的类比往下：投机解码一次抛 k 个 draft token，约束校验到底发生在草稿阶段还是验证阶段？grammar 要一次前进 k 步再按接受数回滚——这个 rollback 靠 xgrammar 的 persistent execution stack 和 max_rollback_tokens 怎么落地？关键场景：第 j 个 draft 被 grammar 判非法、却被目标模型接受，或反之，你怎么保证最终采纳的 token 序列既合法又符合投机解码的分布正确性？</p>
+<p><strong>面试者：</strong> 先接两个挑刺。(1) 不牺牲并发：不该给整条请求加屏障，只对"grammar 状态推进"这一步做细粒度依赖——拿到真实 token 才推进，而 mask 生成对大多数请求照样 overlap；再激进点可以"推测性推进+事后校正"，先按最可能 token 推进，回传不一致再回滚，把屏障粒度压到最低。(2) 延迟推进影响的是"下一步 mask 何时能算"，只要 mask 本来就藏在前向后面，延迟一拍通常仍落在前向时间窗内，对约束请求 TPOT 影响小于一个 step 量级——但我诚实说，这只是定性观察，没跑严格 benchmark，欠你一个数。</p>
+<p>投机解码。校验时机：<strong>草稿和验证两阶段都要用同一个 grammar mask</strong>。草稿阶段每步都要用 mask 约束候选 token，否则草稿会吐一堆必被拒的非法 token，接受率暴跌；验证阶段目标模型对每个位置的分布也被同一 mask 约束。</p>
+<p>rollback 落地（<strong>三段式，勿说成「verify 后再从 k 回滚到 m」</strong>）：</p>
+<ol>
+<li><strong>试探</strong>：沿 k 个 draft 逐个 <code>accept_token</code> 临时推进，边推进边填每个 speculative 位置的 bitmask——这时**假设 draft 全被接受**，但不是正式提交；靠建 matcher 时声明的 <code>max_rollback_tokens=k</code> + xgrammar persistent execution stack。</li>
+<li><strong>立刻整体 rollback</strong>：mask 算完马上 <code>rollback(state_advancements)</code>，grammar 回到窗口前真实状态——<strong>发生在目标模型 verify 之前</strong>。</li>
+<li><strong>verify 后正式 accept</strong>：目标模型验证后真实路径可能与 draft 分歧（不只是截断）。例：Draft=<code>A,B,C</code>，验证后=<code>A,X</code>（A 接受、B 拒绝、分歧改采 X，C 丢弃）。若没先 rollback，grammar 会假停在 <code>A→B→C</code>，而真实应是 <code>A→X</code>；从假状态无法靠「少回滚几步」直接得到 <code>A→X</code>。所以 verify 之后做的是**按真实采纳序列正式 <code>accept</code>**，不是 <code>rollback(k→m)</code>。</li>
+</ol>
+<p>为什么 rollback 必须在 verify 前：① 分歧可能换 token 而不只是截断前缀；② GPU 验证耗时长，越早撤假状态，依赖 grammar 的逻辑看到假路径 <code>A→B→C</code> 的窗口越短。</p>
+<p>正确性关键正是"同一 mask 作用于草稿和验证"：非法 token 在两阶段都被置 -inf，目标模型根本不可能采样到它，所以你说的"grammar 判非法却被目标接受"这个矛盾从机制上不存在。分布正确性：mask 只是把非法 token 概率清零，不改变草稿分布 q 和目标分布 p 在**合法子集**上的相对比例；在 mask 后归一化的分布上做标准 rejection sampling（按 min(1, p/q) 接受、拒绝则从残差分布重采样），依然无偏——投机解码的分布保证不被约束破坏。</p>
+<p>诚实边界：MindIE 当前是 <strong>Serving 入口硬互斥</strong>（<code>InferParam::ValidateMtpConstraints</code>），插件层仍未联调；我更有把握讲清的是 vLLM <code>grammar_bitmask</code> 的 <code>(1+max_spec_tokens)</code> 多位置 mask ＋「试探推进 → 立刻 rollback → verify 后正式 accept」三段式。深文见 <code>03</code> §3.5.5、本附录 A.3/A.4。</p>
+<h3 id="6-npu-bitmask-h2d-kernel">第 6 轮 · NPU 落地：bitmask 的 H2D 传输、kernel 选择与压缩比<a class="headerlink" href="#6-npu-bitmask-h2d-kernel" title="Permanent link">&para;</a></h3>
+<p><strong>面试官：</strong> "同一份 mask 同时作用于草稿和验证、rejection sampling 在合法子集上依旧无偏"——这个洞察是今天最亮的一点，说明你没把约束和投机当两张皮，认可。现在收网，把我憋了几轮的 NPU 落地问题一次问透：(1) host 侧算好的 int32 压缩 bitmask 怎么过到 NPU——H2D 拷贝走没走 pin memory、和前向是不是异步双流？(2) 位图展开加 masked_fill_ 到 logits，你是接 xgrammar 官方 kernel 还是自己写 NPU 算子，为什么？(3) batch×15.6KB≈1MB/步 的 H2D 传输，在总线上占多少带宽、会不会成瓶颈，你凭什么判断"传压缩位图"比"传完整 mask"划算？给我数。</p>
+<p><strong>面试者：</strong> 三个都给数和取舍。</p>
+<p>(1) 传输：bitmask 在 host 算好后走 H2D 到 NPU。要点是锁页内存（pin memory）让 DMA 直传、省掉一次从可分页内存到锁页的额外拷贝，并且放在**独立拷贝流**上异步 H2D，与前向计算流分开，让传输和计算 overlap。vLLM 就是 pin memory + <code>non_blocking=True</code> 的做法；MindIE NPU 侧对应用 ACL 的异步内存拷贝流（aclrtMemcpyAsync + 独立 stream），拷完再让计算流 wait 一下这个流。</p>
+<p>(2) kernel：优先复用 xgrammar 思路，在 NPU 上用 <code>masked_fill_</code>（torch_npu 的 masked_fill_ 或等价 NPU 算子）落地，不自研。原因是这类算子 element-wise、访存主导，框架算子已接近带宽上限，自己写一个高性能 NPU kernel 成本高、收益有限。工程节奏是先用框架算子快速落地保证正确性，性能不够再谈把 apply 融进采样 kernel——vLLM GPU 侧就有自研 Triton kernel 和直接调 xgrammar 官方 kernel 两条路并存，验证了"能融、也能直接用现成算子"。</p>
+<p>(3) 带宽账。batch=64、压缩位图 1MB/步、一步 30ms：1MB/30ms≈33MB/s。相对 PCIe Gen4 ~32GB/s（或 NPU 片上/总线带宽更高），占比 0.1% 量级，九牛一毛，根本不是瓶颈。</p>
+<p>为什么传压缩位图划算：int32 位图每 bit 表示一个 token 合法性，压缩比正好 32×。若改传"完整 mask"，per-token 用 float32 就是 64×12.8万×4B≈32MB/步，是压缩位图的 32 倍，32MB/30ms≈1GB/s——虽仍没打满总线，但白白多占 32× 传输量，而且到了 device 还是要展开。所以传 bit-packed 位图省 32× 传输，代价只是 device 侧多一步位展开，那是 element-wise、几乎免费。结论：压缩位图在传输量和总线压力上都明显优，是正确取舍。</p>
+<p>诚实边界：MindIE NPU 侧算子的具体实现以当时版本为准，我这里讲的是设计取舍逻辑，不是逐行背实现。</p>
+<h3 id="7">第 7 轮 · 输出质量：约束何时有害、何时该关掉<a class="headerlink" href="#7" title="Permanent link">&para;</a></h3>
+<p><strong>面试官：</strong> pin memory + ACL 异步流、复用框架算子不自研、32× 压缩比带宽占比 0.1%——这套账清清楚楚，NPU 落地这块我没什么可挑的了，过。倒数第二题，换个不那么好躲的角度：有人质疑"强约束会把模型逼进低概率路径、产出合法但语义变差的输出"，你怎么接？给我三样东西，别和稀泥：(1) 一个真会因约束而质量下降的具体例子；(2) 从概率分布角度说清为什么变差——是不是等于对合法子集做了重归一化、丢了什么；(3) 什么场景你会**主动建议关掉约束**、改走 prompt+few-shot 或后校验？要有明确立场，别两头讨好。</p>
+<p><strong>面试者：</strong> 三样都给，不和稀泥。</p>
+<p>(1) 具体例子：schema 要求模型输出推理密集任务的答案，但只留了 <code>answer</code> 字段、没留 reasoning 字段——模型被 mask 逼着跳过 chain-of-thought 直接闭合到 answer，等于砍掉了它算对答案所依赖的中间步骤，准确率明显掉。同类还有：枚举字段模型本想输出一个语义更贴切但不在枚举集里的值，被逼选次优枚举；数字字段模型想输出 "3.14159"，schema 限定 integer，被截成 "3"；或深层嵌套里被逼提前闭合括号。</p>
+<p>(2) 分布角度说清：约束 = 把非法 token 概率置 0、再在合法子集上重归一化。数学上它不改变"给定合法前缀下、合法 token 之间的相对比例"，这也是投机解码那套 rejection sampling 还能无偏的原因。但它丢的是**概率质量的位置**：如果模型此刻的高概率质量大量压在非法 token 上（说明模型本来强烈不想走这个格式），重归一化就把采样强行搬到长尾的低概率合法 token 上。这些尾部 token 对应的是模型没对齐好、没怎么见过的路径，一步走偏、后续 conditioning 在这个坏前缀上继续偏，产生 compounding error。一句话：合法子集只占模型概率质量一小部分时，约束等于强采分布尾部，质量必然下降——<strong>格式和模型意图冲突越大，损失越大</strong>。</p>
+<p>(3) 我的明确立场，什么时候主动关：
+a) 模型经过 function-calling SFT、加清晰 prompt 本就能高概率产出合法格式——此时约束是保险丝不是主力，可以只做后校验+失败重试，甚至只在偏离时兜底，没必要全程 mask。
+b) 开放式/推理密集任务（长 CoT、创意写作），全程格式约束会腰斩质量，应改 prompt+few-shot 引导 + 输出后 parser 校验、失败重采。
+c) schema 与模型能力严重不匹配（罕见格式、模型没见过），硬约束只会批量产语义垃圾，不如先放宽 schema。</p>
+<p>反过来，高并发、要求 100% 合法、schema 稳定的 tool-calling 生产链路，约束解码是刚需，光靠 prompt 兜不住。</p>
+<p>总立场：<strong>约束解码解决"合法性"，不解决"质量"</strong>。合法性和模型意图对齐时它近乎免费；两者冲突时它是有害的。工程上正解不是加大约束力度，而是用宽松 schema 设计 + few-shot 让模型"本来就想"输出合法格式，把冲突降到最低——约束只做最后那道硬保证。</p>
+<h3 id="8">第 8 轮 · 收尾：补齐两笔欠账，宣布结束<a class="headerlink" href="#8" title="Permanent link">&para;</a></h3>
+<p><strong>面试官：</strong> 最后收两笔欠账，简短给数就行：(a) 你那个"条数+字节双门限"到底卡多少——比如多少 MB 封顶、多少条封顶，说个你敢写进配置默认值的数；(b) 延迟推进对约束请求 TPOT 的实测多几个百分点、还是多一个 step 的绝对毫秒数。整场评价：通过。亮点是量化功底扎实、账目自洽，"同一份 mask 让投机解码仍无偏"和 off-by-one 因果链是真懂不是背的；还欠的是遇到"跟随主流""双门限"这类地方容易滑成口号，落地数字偶有高估——把这些逼成硬数字，你就是很强的候选人了。</p>
+<p><strong>面试者：</strong> 两笔账直接给数。</p>
+<p>(a) 双门限我敢写进默认配置的是：<code>max_bytes=512MB</code> AND <code>max_entries=256</code>，谁先触发谁先 LRU 淘汰。512MB 对齐 vLLM 默认、保证内存硬上界；256 条覆盖绝大多数 tool-calling schema 种类，防止条数爆的同时也挡住"256 条全是大产物撑爆内存"——字节门限兜住上界，条数门限兜住碎片。</p>
+<p>(b) 延迟推进对约束请求 TPOT：典型场景增量 &lt;1%，绝对值几百 μs 量级，远小于一个 step——因为它只是把下一步 mask 生成推后到 token 回传后，只要 mask 仍藏在 30ms 前向窗内就几乎无感。只有 host 侧已成瓶颈、mask 藏不住时才退化到最坏情况：多一个完整 step，即 +30ms、该步近翻倍。坦白讲我有把握的是这个量级判断，精确曲线欠一次严格 benchmark。</p>
+<blockquote>
+<p>【面试结束】——面试官判定：<strong>通过</strong>。</p>
+</blockquote>
+<hr />
+<h2 id="review">复盘总结（Review）<a class="headerlink" href="#review" title="Permanent link">&para;</a></h2>
+<h3 id="8_1">一、本场覆盖的 8 个考点与结论<a class="headerlink" href="#8_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>考点方向</th>
+<th>核心结论（面试者站住脚的论证）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>缓存容量口径：<strong>FIFO/100 vs 按字节</strong></td>
+<td>代码真相是默认 <strong>100 条 FIFO</strong>（非 LRU/128）；最坏 100×~5MB≈500MB 会失控，按字节（512MB）更稳。迭代目标：<strong>双门限</strong> <code>max_bytes=512MB AND max_entries=256</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>后端选型：<strong>xgrammar vs Outlines vs llguidance</strong></td>
+<td>三组量化对比（编译期 / 每步 μs / 递归表达）；决定性因素是 NPU 落地下的 <strong>C++ 内核可移植性 + bitmask 与算子解耦</strong>；Outlines 递归需展开近似出局</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>费米估算</strong>：mask 开销占 TPOT</td>
+<td>apply 走 HBM 带宽账 ≈几十 μs、占 30ms 约 0.1%~0.5%；batch 放大后占比**大致守恒**，真实风险在 host 侧 mask 生成瓶颈</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>异步调度 off-by-one</strong> 时序 bug</td>
+<td>grammar 状态推进必须与真实回传 token 严格对齐；用**延迟推进 + 细粒度屏障**修复；与投机解码 rollback 同构</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>投机解码 × 约束解码</strong></td>
+<td>同一份 mask 作用于草稿+验证两阶段 → 非法 token 两阶段均置 -inf；三段式：试探填 mask → <strong>立刻</strong> rollback → verify 后正式 accept；<strong>rejection sampling 在合法子集上仍无偏</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>NPU 落地</strong>：H2D / kernel / 压缩比</td>
+<td>pin memory + ACL 异步拷贝流；复用框架 <code>masked_fill_</code> 不自研；int32 位图 <strong>32× 压缩</strong>、带宽占比 0.1% 非瓶颈</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>输出质量</strong>：约束何时有害</td>
+<td>约束=对合法子集重归一化，丢"概率质量位置"→ 冲突大时强采分布尾部、compounding error；<strong>约束解决合法性不解决质量</strong>，给出三类主动关约束场景</td>
+</tr>
+<tr>
+<td>8</td>
+<td>收尾补数</td>
+<td>双门限具体阈值 + 延迟推进 TPOT 影响（典型 &lt;1%，最坏 +1 step）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_2">二、面试官认可的亮点<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>量化功底扎实、账目自洽</strong>：全程用费米估算（内存上界、HBM 带宽、32× 压缩比、占比守恒）支撑结论，且数字前后一致。</li>
+<li><strong>两个"真懂而非背诵"的信号</strong>：① "同一份 mask 同时约束草稿与验证 ⇒ 投机解码分布仍无偏"这一洞察，把约束解码与投机解码打通；② 异步 off-by-one 的完整因果链 + 真实定位手段（对比 grammar 状态指针与 accepted token 序列）。</li>
+<li><strong>诚实的取舍意识</strong>：主动承认按条数缓存的缺陷、50–100μs apply 是高估、延迟推进只有定性观察等，不吹牛、划得清能力边界。</li>
+</ul>
+<h3 id="_3">三、被面试官抓到的短板（改进清单）<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>口号化倾向</strong>：出现过"跟随 vLLM/SGLang 主流""双门限兜底"这类未展开的背书式表达 —— 教训：任何选型理由都要落到**技术因果**或**具体数字**，别用"主流/更优"糊弄。</li>
+<li><strong>落地数字偶有高估</strong>：bitmask apply 的 50–100μs 未考虑与 argmax/softmax 的访存复用/kernel 融合，被当场修正为几十 μs 甚至更低。</li>
+<li><strong>欠账 benchmark</strong>：延迟推进对 TPOT 的影响、mask 生成能否被 overlap 藏住，均只有定性判断，缺严格实测曲线 —— 后续应补基准测试把量级判断钉成硬数据。</li>
+</ol>
+<h3 id="_4">四、可复用的"降维打击"话术锚点<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>缓存："默认 100 条 FIFO；最坏按条数可到数百 MB，正解是 <code>512MB AND 256 条</code> 双门限，字节兜上界、条数兜碎片。"</li>
+<li>选型："xgrammar 赢在 NPU 可移植——C++ 核心、bitmask 与算子解耦，我只接一条 <code>masked_fill_</code> 就落地；Outlines 递归要展开近似，对任意 JSON Schema 是硬伤。"</li>
+<li>性能："apply 走 HBM 带宽账占 TPOT 0.1%~0.5%，batch 放大占比守恒；真正的风险是 host 侧 mask 生成藏不住。"</li>
+<li>正确性："同一份 mask 作用于草稿和验证，非法 token 两阶段都 -inf，所以 rejection sampling 在合法子集上依旧无偏——约束不破坏投机解码分布。"</li>
+<li>质量边界："约束解决合法性、不解决质量；冲突越大损失越大，正解是宽松 schema + few-shot，而不是加大约束力度。"</li>
+</ul>
+<h3 id="_5">五、总评<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p>面试官最终判定 <strong>通过</strong>，评语核心：<em>"量化功底扎实、账目自洽，是真懂不是背的；把'跟随主流/双门限'这类口号逼成硬数字，就是很强的候选人。"</em> 本场实录可作为结构化输出方向面试的**标准答法模板 + 反面教材（口号化、数字高估）对照**双重素材。</p>
+<hr />
+<h2 id="a">附录 A：投机解码 × 结构化输出——当前缺口与可行实现方案<a class="headerlink" href="#a" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>第 5 轮面试者留了一句诚实边界：<em>"MindIE 当时投机+约束是否完整联调上线要看版本。"</em> 本附录基于**当前仓库真实代码**把这句话钉死：先如实盘点两特性各自的实现与"是否打通"，再参照 vLLM 的成熟做法给出一个落地导向、分阶段的实现方案。</p>
+<p><strong>阅读约定</strong>：凡标注「代码依据」的是从本仓库读到的**事实**（给出文件/类/方法名）；凡标注「设计建议」「推测」「需进一步确认」的是**方案侧**内容，非现状。性能数字沿用全文口径并标注为量级估计。</p>
+</blockquote>
+<h3 id="a0">A.0 结论先行（一句话）<a class="headerlink" href="#a0" title="Permanent link">&para;</a></h3>
+<p><strong>插件层未打通 + Serving 入口已硬拦（分层真相）</strong>：投机解码（MTP 插件）与结构化输出（xgrammar 约束）在引擎插件侧**各自能独立工作、但两者没有打通（未联调）<strong>——grammar 没有 rollback 接口、matcher 建立时没设 <code>max_rollback_tokens</code>、bitmask 只按单位置生成、FSM 状态每步只推进 1 个 token，而 MTP 的 propose/verify 路径完全不碰 grammar。<br />
+**产品侧</strong>：<code>InferParam::ValidateMtpConstraints</code> 已对 <code>mtp + response_format</code> 做**入口硬互斥**（报错 <code>"structured output (response_format) cannot be used with mtp"</code>；UT 有断言）——属于「契约 fail-fast 盖住工程缺口」。<br />
+<strong>勿再说</strong>「完全无互斥 / 配置上可同时开启且无报错」——那是只 grep 了 Python 插件的旧口径；C++ Serving 入口已拦。插件层「无联动 raise」仍是事实，但那是能力缺口，不是「产品允许同开」。</p>
+<h3 id="a1">A.1 现状：两特性各自长什么样（代码事实）<a class="headerlink" href="#a1" title="Permanent link">&para;</a></h3>
+<p><strong>结构化输出（约束解码）</strong>——<code>mindie_llm/text_generator/plugins/structured_output/</code></p>
+<ul>
+<li><code>XgrammarGrammar</code>（<code>structured_output_grammar.py</code>）暴露的方法只有：<code>num_processed_tokens</code>、<code>num_tried_tokens</code>、<code>accept_tokens</code>、<code>fill_bitmask</code>、<code>is_terminated</code>。<code>accept_tokens</code> 内部对每个 token 调 <code>matcher.accept_token(token)</code> <strong>只前进、不回退</strong>。</li>
+<li><code>GrammarBackend.create_grammar</code>（<code>structured_output_manager.py</code>）里 <code>matcher = compiled.xgr_module.GrammarMatcher(compiled.ctx)</code>——<strong>构造 matcher 时没有传 <code>max_rollback_tokens</code></strong>。</li>
+<li><code>fill_bitmask</code> 调 <code>matcher.fill_next_token_bitmask(bitmask, idx)</code>，<strong>一次只填 1 个位置</strong>；bitmask 缓冲区 <code>_init_bitmask_buffer</code> 形状是 <code>[bitmask_prealloc_batch, vocab_size//32]</code>，即 <strong>batch × 1 个位置 × (vocab/32)</strong>。</li>
+<li><code>update_states_after_sampling</code> 把 <code>token_ids</code> reshape 成一维后，对第 i 个请求取 <code>flattened_token_ids[i]</code>、只 <code>accept_tokens(..., [token])</code> <strong>一个</strong> token——<strong>隐含"每步每请求恰好 1 个 token"的假设</strong>。</li>
+</ul>
+<p><strong>投机解码（MTP）</strong>——<code>mindie_llm/text_generator/plugins/mtp/</code></p>
+<ul>
+<li><code>MtpPlugin</code> + <code>DecodingPolicy</code>：草稿模型一次 propose <code>num_speculative_tokens</code>（记为 k）个 draft token，主模型在 k+1 个位置上验证。</li>
+<li>验证是**贪婪逐位精确匹配**：<code>verify_greedy_one_batch</code>（draft==target 才继续，<code>plugin_verify_exp</code> 用 <code>torch.cumprod(matches)</code> 数接受长度 <code>indices_counts</code>）。当前**不是 rejection sampling**，也不涉及分布残差重采。</li>
+<li><code>handle_sampling</code> 把采样参数复制成 <code>batch*(k+1)</code> 份，主模型 logits 也变成 <code>batch*(k+1)</code> 行。</li>
+</ul>
+<p><strong>关键事实：<code>mtp_plugin.py</code> / <code>decoding_policy.py</code> 全文没有出现 <code>grammar</code> / <code>bitmask</code> / <code>structured</code> 任何引用</strong>——投机路径与约束路径在代码上零交集。</p>
+<h3 id="a2">A.2 如实总结："当前没有实现 / 没打通的点"<a class="headerlink" href="#a2" title="Permanent link">&para;</a></h3>
+<p>下表每行 = <strong>现象 + 代码依据 + 影响</strong>。凡本仓库能定位到的都给了文件/方法名；查不到的标「需进一步确认」。</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>缺口现象</th>
+<th>代码依据（文件 / 类 / 方法）</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>grammar 无 rollback 接口</strong>，只支持逐 token 顺序 accept，不能"前瞻 k 个 draft 后回退 m 步"</td>
+<td><code>structured_output_grammar.py::XgrammarGrammar</code>——只有 <code>accept_tokens</code>（纯前进），无 <code>rollback</code> / <code>validate_tokens</code>。对照 vLLM <code>backend_xgrammar.py::XgrammarGrammar.rollback()</code> / <code>validate_tokens()</code></td>
+<td>投机 reject 后 FSM 状态无法回退，无法复用"advance-k / rollback-to-m"范式</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>matcher 未声明回滚能力</strong>：构造时没传 <code>max_rollback_tokens</code></td>
+<td><code>structured_output_manager.py::GrammarBackend.create_grammar</code>——<code>GrammarMatcher(compiled.ctx)</code>。对照 vLLM 传 <code>max_rollback_tokens=num_speculative_tokens</code></td>
+<td>即使加 <code>rollback()</code>，xgrammar 底层 persistent stack 未预留回滚窗口，调用会失败/越界（<strong>需进一步确认 xgrammar 默认回滚窗口大小</strong>）</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>bitmask 只有单位置</strong>：按 batch×1 生成，没扩到 batch×(1+k)</td>
+<td><code>structured_output_manager.py::_init_bitmask_buffer</code>（buffer=<code>[batch, vocab//32]</code>）、<code>grammar_bitmask</code>、<code>XgrammarGrammar.fill_bitmask</code>（单 idx）。对照 vLLM <code>__init__.py::grammar_bitmask</code> 分配 <code>max_batch_size*(1+max_num_spec_tokens)</code> 行</td>
+<td>草稿阶段的第 2…k 个位置、验证阶段的多位置都拿不到对应 mask，无法在投机窗口内逐位约束</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>FSM 每步只推进 1 个 token</strong></td>
+<td><code>structured_output_manager.py::update_states_after_sampling</code>（<code>flattened_token_ids[i]</code> 取单 token）；<code>compute_structured_output_accepted</code> 同理</td>
+<td>投机一步接受 m(≥1) 个 token 时，状态只推进 1 个 → grammar 与真实序列错位（与第 4 轮 off-by-one 同构，只是放大到 m 个）</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>投机主循环与约束 handler 未在 propose/verify 挂载</strong></td>
+<td><code>mtp_plugin.py::sample_preprocess</code> / <code>plugin_verify</code> 不引用 grammar/bitmask；约束只在 <code>plugin_manager.py::preprocess</code> 生成 <code>[batch, width]</code> 的 <code>guided_bitmask</code>，由 <code>GuidedDecodingLogitsHandler</code>（<code>pta_handlers.py</code>）apply</td>
+<td>约束仅覆盖"每步单 token"语义，未覆盖草稿生成阶段与多位置验证阶段</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>行数失配已被感知但只是跳过</strong>：bitmask 行数 ≠ logits 行数时不处理</td>
+<td><code>sampler.py::split_sampling_metadata</code>——<code>if gb.shape[0] != row_mask.size: 警告并 skip slicing</code>。而 <code>decoding_policy.py::handle_sampling</code> 把 logits 扩成 <code>batch*(k+1)</code> 行</td>
+<td>同开投机时 <code>guided_bitmask</code>（batch 行）与 logits（batch*(k+1) 行）对不齐，约束**静默失效或被跳过**（确切分支**需实机确认**）</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>同步/异步路径推进时机不一致</strong></td>
+<td>同步 <code>plugin_manager.py::postprocess</code> 先 <code>plugin_verify_manager</code> 再 <code>compute_structured_output_accepted</code>；异步 <code>forward_loop</code> 先 <code>compute_structured_output_accepted</code>（L~756）再 <code>plugin_verify_manager</code>（L~771）</td>
+<td>异步路径会用"未验证的 draft"推进 grammar，叠加投机后错位风险更高</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Python 插件层无联动 guard</strong>（≠ Serving 无互斥）</td>
+<td>引擎侧 grep <code>enable_structured_output</code> × <code>num_speculative_tokens</code> 无联动、无 <code>raise</code>；二者是独立 plugin。但 <strong>Serving</strong> <code>infer_param.cpp::ValidateMtpConstraints</code> 已硬拦同开（见 A.0）</td>
+<td>绕过 Serving 直打引擎仍可能静默失效；入口硬拦正是防这条路径</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>说明：<strong>"是否打通"的核心判据</strong>——投机的多 token 验证路径里有没有调 grammar 对 draft token 逐个 mask/校验、accept/reject 后 grammar 有没有"前进 k 步 + 回滚 m 步"。<strong>答案：没有。</strong>（依据：MTP 文件零 grammar 引用 + grammar 无 rollback + bitmask 单位置。）</p>
+</blockquote>
+<h3 id="a3-vllm">A.3 参照蓝本：vLLM 是怎么做对的（代码事实）<a class="headerlink" href="#a3-vllm" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>matcher 预留回滚窗口</strong>：<code>backend_xgrammar.py::XgrammarBackend.compile_grammar</code> 里 <code>xgr.GrammarMatcher(ctx, max_rollback_tokens=self.num_speculative_tokens)</code>。</li>
+<li><strong>grammar 暴露回滚/试探</strong>：<code>XgrammarGrammar.rollback(n)</code>（<code>matcher.rollback(n)</code> + 同步 <code>num_processed_tokens</code>）、<code>validate_tokens()</code>（accept 一串后立即 rollback，不真正推进；用于草稿过滤）。</li>
+<li><strong>多位置 bitmask + 三段式时序</strong>（<code>__init__.py::grammar_bitmask</code>）：</li>
+<li><strong>试探填 mask</strong>：分配 <code>max_batch_size*(1+max_num_spec_tokens)</code> 行；沿 draft 窗边 <code>fill_bitmask</code> 边 <code>accept_tokens</code>——<strong>假设 draft 全被接受</strong>，但这是临时推进、非正式提交；</li>
+<li><strong>立刻整体 rollback</strong>：<code>grammar.rollback(state_advancements)</code> 退回窗口前——<strong>发生在目标模型 verify 之前</strong>；</li>
+<li><strong>verify 后正式 accept</strong>：scheduler 拿到真实 <code>new_token_ids</code> 后再 <code>accept_tokens</code>（路径可能与 draft 分歧，见下）。</li>
+<li><strong>reasoning/think 跨窗口</strong>：<code>should_advance</code> / <code>trim_reasoning_for_advance</code> / <code>reasoning_end_token_index</code> 处理"思考段 token 不能喂给 grammar、投机窗口跨越 think→answer 边界"。</li>
+</ul>
+<h4 id="rollback-verify">为何 rollback 必须在 verify 之前（正确性 + 暴露窗口）<a class="headerlink" href="#rollback-verify" title="Permanent link">&para;</a></h4>
+<p>反例（draft 与验证路径分歧，<strong>不只是截断前缀</strong>）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Draft:           A → B → C
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>目标模型验证后:   A → X      （A 接受，B 拒绝，分歧位改采 X；C 丢弃）
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>若……</th>
+<th>grammar 会怎样</th>
+<th>问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>试探后**不** rollback，带着 <code>A→B→C</code> 去 verify</td>
+<td>假状态长期停留</td>
+<td>真实应是 <code>A→X</code>；从 <code>A→B→C</code> 无法只靠「回滚 2 步」得到 <code>A→X</code></td>
+</tr>
+<tr>
+<td>rollback 放在 verify <strong>之后</strong></td>
+<td>验证期间所有读 grammar 的逻辑看到 <code>A→B→C</code></td>
+<td>GPU 验证耗时长 → <strong>假状态暴露窗口被拉长</strong></td>
+</tr>
+<tr>
+<td><strong>先 rollback 再 verify</strong>（vLLM）</td>
+<td>假状态只存在于填 mask 的短同步段</td>
+<td>verify 后只需沿 <code>A→X</code> <strong>正式 accept</strong>，契约干净</td>
+</tr>
+</tbody>
+</table>
+<p><strong>口径纠偏</strong>：勿说「verify 后按接受长度从 k 回滚到 m」。接受长度 m 决定的是**正式 accept 几个 token**；试探态是在 verify 前就**整段撤掉**的。深文同步见 <code>03</code> §3.5.5。</p>
+<p>这套「<strong>试探推进 → 立刻 rollback → 真实 token 再正式推进</strong>」正是 MindIE 缺的骨架。</p>
+<h3 id="a4">A.4 可行实现方案（落地导向、分阶段）<a class="headerlink" href="#a4" title="Permanent link">&para;</a></h3>
+<p>以下均为**设计建议**（非现状）。命名沿用现有类；xgrammar 原生能力以 vLLM 用法为参照，落地前**需对齐 MindIE 侧 xgrammar 版本**是否具备 <code>rollback</code> / <code>max_rollback_tokens</code>（<strong>需进一步确认</strong>）。</p>
+<h4 id="1-xgrammargrammar-grammarbackend">1) 接口层：给 <code>XgrammarGrammar</code> / <code>GrammarBackend</code> 补齐能力<a class="headerlink" href="#1-xgrammargrammar-grammarbackend" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>GrammarBackend.create_grammar</code>：构造 matcher 时传 <code>max_rollback_tokens = num_speculative_tokens</code>（k）——对应 xgrammar <code>GrammarMatcher(ctx, max_rollback_tokens=k)</code>，让底层 persistent execution stack 预留 k 步回滚窗口。</li>
+<li><code>XgrammarGrammar</code> 新增：</li>
+<li><code>rollback(n)</code> → <code>matcher.rollback(n)</code> 并同步 <code>_num_processed_tokens -= n</code> / 复位 <code>_is_terminated</code>；</li>
+<li><code>validate_tokens(tokens)</code> → 逐个 <code>accept_token</code> 记录被接受前缀，末尾 <code>rollback(len(accepted))</code>，<strong>只探测不推进</strong>（草稿阶段可用）；</li>
+<li>（可选）<code>accept_tokens</code> 支持"批量前瞻 + 返回接受数"，便于一次喂 k 个 draft。</li>
+<li><strong>注意</strong>：现有 <code>num_tried_tokens</code>（replay 游标，含 rejected）与 rollback 的语义要对齐——rollback 只应回退**被 grammar 真正 accept** 的步数，不要动 replay 游标口径（现有 <code>sync_states_for_decode</code> 依赖 <code>num_tried_tokens</code> 做切片，别破坏）。</li>
+</ul>
+<h4 id="2-bitmask-1k">2) bitmask 生成：单位置 → (1+k) 位置多行<a class="headerlink" href="#2-bitmask-1k" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>_init_bitmask_buffer</code> 的 buffer 扩为 <code>[batch*(1+k), vocab//32]</code>（<strong>量级</strong>：batch=64、k=4、词表 12.8 万 → 64×5×15.6KB ≈ 5MB，仍 host 侧、μs~ms 级）。</li>
+<li><code>grammar_bitmask</code> 对每个请求填 <strong>1+k 行</strong>，填充顺序（照抄 vLLM）：</li>
+<li>草稿阶段：<code>for j in range(len(draft_tokens))</code>：先 <code>fill_bitmask(row_j)</code>，再 <code>accept_tokens([draft_j])</code> 前进一步，记 <code>state_advancements += 1</code>；</li>
+<li>末尾 bonus 行：再 <code>fill_bitmask(row_{k})</code>（第 k+1 个真实/奖励位置）；</li>
+<li><strong>窗口算完整体 <code>rollback(state_advancements)</code></strong>，把 grammar 退回窗口前状态。</li>
+<li>与前向 overlap 保留现有 host 侧并行填充思路（第 3 轮口径：host 填 mask 藏在 30ms 前向后）。</li>
+</ul>
+<h4 id="3-propose-verify-mask">3) 主循环整合：propose 与 verify 两阶段挂同一份多位置 mask<a class="headerlink" href="#3-propose-verify-mask" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>草稿阶段</strong>：draft 模型每步用"当前位置那一行 mask"约束候选，避免草稿吐必被拒的非法 token（否则接受率崩）。</li>
+<li><strong>验证阶段</strong>：主模型对 k+1 个位置的 logits，用**同一份** (1+k) 行 mask 逐位 apply（需把 <code>GuidedDecodingLogitsHandler</code> 的 apply 从 batch 行扩到 batch*(1+k) 行，并保证与 MTP <code>handle_sampling</code> 扩展后的 logits 行对齐——正好补上 A.2#3/#6）。</li>
+<li><strong>接受 m 个后推进</strong>：验证得到接受数 m（≤k），grammar 从"窗口前状态"正式 <code>accept_tokens</code> 前 m 个真实 token，再 <code>accept</code> 第 m+1 个（bonus/真实采样）token。</li>
+<li><strong>正确性论证（同一份 mask ⇒ 无偏）</strong>：非法 token 在草稿与验证两阶段都被同一 mask 置 -inf，目标模型不可能采样到它 → "grammar 判非法却被目标接受"从机制上不存在；mask 只清零非法 token、不改变**合法子集**上 q/p 的相对比例，在 mask 后归一化分布上做标准 rejection sampling 仍无偏（与第 5 轮结论一致）。<strong>注意</strong>：现有 MTP 是**贪婪 verify**，要享受这个无偏性需把 verify 升级为 mask 后的 rejection sampling（<strong>范围扩大点，列为优化期</strong>）。</li>
+</ul>
+<h4 id="4-persistent-stack-max_rollback_tokens-case">4) 回滚正确性：persistent stack + max_rollback_tokens + 边界 case<a class="headerlink" href="#4-persistent-stack-max_rollback_tokens-case" title="Permanent link">&para;</a></h4>
+<ul>
+<li>回滚窗口硬上界 = k，<code>max_rollback_tokens=k</code> 保证 <code>rollback(state_advancements)</code> 里 <code>state_advancements ≤ k</code> 永不越界。</li>
+<li>边界 case：</li>
+<li><strong>全部拒绝（m=0）</strong>：草稿窗口 rollback 到窗口前，只 accept 主模型第 1 个真实 token，等价退化为单 token 约束解码；</li>
+<li><strong>全部接受（m=k）</strong>：正式 accept k 个 + bonus，grammar 前进 k+1；</li>
+<li><strong>reasoning/think 跨投机窗口</strong>：思考段 token 不喂 grammar，需类比 vLLM <code>trim_reasoning_for_advance</code> / <code>reasoning_end_token_index</code> 处理"窗口跨越 think→answer 边界"（<strong>MindIE 侧当前无此逻辑，需新增；且 MindIE 是否有 reasoning parser 需进一步确认</strong>）；</li>
+<li><strong>terminated 跨窗口</strong>：窗口内 FSM 提前到达接受态，其后位置 mask 应置全 1（现有 <code>fill_bitmask</code> 已有 <code>is_terminated → bitmask=-1</code> 分支，可复用）。</li>
+</ul>
+<h4 id="5">5) 工程分期、验收标准与风险<a class="headerlink" href="#5" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>期</th>
+<th>目标</th>
+<th>关键动作</th>
+<th>验收标准</th>
+<th>主要风险</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MVP</strong></td>
+<td>串行正确性优先，不追性能</td>
+<td>投机窗口内**逐 token 校验**：每接受 1 个 draft 就 grammar accept 1 个，遇非法即截断该请求本步接受数（等价"投机窗口内退化为单 token 约束"）；先不做多位置并行 mask</td>
+<td>开投机+约束，输出 100% 合法、JSON 可解析；关投机时与现状逐 token 对齐</td>
+<td>grammar 状态与 draft/target token 对齐；同步/异步推进时机统一（A.2#7）</td>
+</tr>
+<tr>
+<td><strong>优化</strong></td>
+<td>拿回投机吞吐</td>
+<td>多位置 (1+k) mask 并行填充、与前向 overlap；verify 升级为 mask 后 rejection sampling（保无偏）；apply 扩到 batch*(1+k) 行</td>
+<td>接受率不因约束显著下降；TPOT 相对纯投机劣化在可接受量级（<strong>需 benchmark</strong>）</td>
+<td>多位置 mask 与 MTP logits 行对齐；异步调度叠加时序（第 4 轮 off-by-one 的放大版）</td>
+</tr>
+<tr>
+<td><strong>兜底</strong></td>
+<td>保证不出错</td>
+<td>检测到该请求带 grammar 且 rollback 能力不可用/未验证时，<strong>自动对该请求关闭投机、退回单 token 约束解码</strong>（"约束优先、投机降级"）</td>
+<td>任何情况下约束请求都合法产出，最坏只是该请求没享受到投机加速</td>
+<td>降级判定要 per-request、不影响同 batch 其他纯投机请求</td>
+</tr>
+</tbody>
+</table>
+<p><strong>总原则</strong>：<strong>约束优先，投机降级</strong>——正确性（合法性）不可让步，性能可分期拿回。</p>
+<h4 id="6-grammar-rollback-accept">6) 时序框图：一次投机步内 grammar 的试探 → rollback → 正式 accept<a class="headerlink" href="#6-grammar-rollback-accept" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>                       ┌───────────────── 一个投机步 (k=4) ─────────────────┐
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a> grammar 真实态 S0      ① 试探填 mask（假设 draft 全接受；非正式提交）
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>   │                    propose 侧也可用同一套 mask 约束草稿候选
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>   │   fill row0 ─ accept d0 ─┐
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>   │   fill row1 ─ accept d1  │  state_advancements += 1 (每步)
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>   │   fill row2 ─ accept d2  │
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>   │   fill row3 ─ accept d3  │
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>   │   fill row4 (bonus 位)   │   ← 共填 (1+k)=5 行 mask
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>   ▼                          ▼
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>  S0 ──临时前进 k=4 步──────► S0+4 (假状态，仅用于算 mask)
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>                              │
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>                              │  ② rollback(state_advancements=4)  ← 必须在 verify 之前
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>                              ▼     max_rollback_tokens=k 保证不越界
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>  S0 ◄──────回到真实态──────── S0
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>   │
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>   │  ③ verify：主模型对 (1+k) 位置用【同一份多位置 mask】apply
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>   │     得到真实采纳序列（可能 ≠ draft 前缀截断，例如 draft ABC → 真实 AX）
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>   │
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>   ▼  正式推进：accept 真实采纳的 token（非「从 k 回滚到 m」）
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>  S0 ──前进 m+1 步──────────► S_{m+1}   ← 与真实输出严格对齐
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>  正确性锚点：propose 与 verify 用【同一份 mask】⇒ 非法 token 两阶段都 -inf
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>             ⇒ rejection sampling 在合法子集上仍无偏（约束不破坏投机分布）
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>  时序锚点：假状态暴露窗口 = 仅 ① 的短同步段；勿拖过 GPU 验证
+</code></pre></div>
+<h3 id="a5">A.5 小结（做了什么调研、结论几期）<a class="headerlink" href="#a5" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>代码里确认的事实</strong>：① 投机（MTP 插件）与结构化输出（xgrammar 约束）<strong>插件层未打通</strong>——MTP 的 propose/verify 全程不碰 grammar；② <code>XgrammarGrammar</code> <strong>没有 rollback 接口</strong>，<code>accept_tokens</code> 只前进；③ 建 matcher 时**未设 <code>max_rollback_tokens</code><strong>；④ bitmask **只按 batch×1 单位置生成</strong>，FSM <strong>每步只推进 1 个 token</strong>；⑤ sampler 已能感知"bitmask 行数≠logits 行数"但只是**跳过**，没有多位置处理；⑥ <strong>Serving 入口已硬互斥</strong>（<code>ValidateMtpConstraints</code>）；Python 插件层仍无联动 raise——分层讲，勿说「完全无互斥」。</li>
+<li><strong>标注为"需进一步确认"</strong>：绕过 Serving 直打引擎同开时的确切行为（静默 skip vs 异常）、MindIE 侧 xgrammar 版本是否具备 <code>rollback</code> / <code>max_rollback_tokens</code> 与其默认回滚窗口、MindIE 是否有 reasoning parser（think 标签跨窗口处理）。</li>
+<li><strong>对照蓝本</strong>：vLLM 已用 <code>max_rollback_tokens=k</code> + <code>rollback()</code> / <code>validate_tokens()</code> + <code>(1+k)</code> 多位置 bitmask + <strong>三段式</strong>（试探填 mask → 立刻 rollback → verify 后正式 accept）实现该组合；rollback 在 verify 前是为缩短假状态暴露、并正确处理「draft 与真实路径分歧不只截断」的 case（<code>A,B,C</code> → <code>A,X</code>）。</li>
+<li><strong>方案分三期</strong>：<strong>MVP</strong>（投机窗口内逐 token 串行校验，先保正确）→ <strong>优化</strong>（多位置并行 mask + rejection sampling 无偏 + 与前向 overlap，拿回吞吐）→ <strong>兜底</strong>（检测到约束请求即 per-request 关投机、退回单 token 约束，"约束优先、投机降级"）。当前产品选择是入口硬互斥，属兜底的契约化形态。</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

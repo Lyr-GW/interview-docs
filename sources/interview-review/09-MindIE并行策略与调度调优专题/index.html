@@ -1,0 +1,2257 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/interview-review/09-MindIE%E5%B9%B6%E8%A1%8C%E7%AD%96%E7%95%A5%E4%B8%8E%E8%B0%83%E5%BA%A6%E8%B0%83%E4%BC%98%E4%B8%93%E9%A2%98/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>专题 09：MindIE 并行策略 ×调度调优——面试问答准备 - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#09mindie" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              专题 09：MindIE 并行策略 ×调度调优——面试问答准备
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 一句话定位（面试开口先说这句）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-tpdpcpspep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 并行策略基础原理（TP/DP/CP/SP/EP 分别切什么）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 并行策略基础原理（TP/DP/CP/SP/EP 分别切什么）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-tptensor-parallel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 TP（Tensor Parallel，张量并行）—— 切权重矩阵，是其他所有并行的基础
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-dpdata-parallel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 DP（Data Parallel，数据并行）—— 不切矩阵，切请求
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-cpcontext-parallel-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 CP（Context Parallel，上下文并行）—— 切同一个请求的 sequence 维
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-spsequence-parallel-kv-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 SP（Sequence Parallel，序列并行）—— 切 KV Cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#241-cp-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4.1 深挖 CP：长上下文切开后，为什么每个 token 仍能看到全局上下文？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#242-sp-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4.2 深挖 SP：分片间的 KV 到底保存什么、传什么、谁负责定位？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#243-vllmpcpdcp-context-parallel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4.3 对比 vLLM：PCP/DCP 是两套目的不同的 Context Parallel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-moe-ep-moe-tp-moe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 MoE-EP / MoE-TP —— 对 MoE 层单独的一套并行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 一张图总结 5 种并行切的是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 并行参数的硬约束（代码 + 文档双重核实）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 并行参数的硬约束（代码 + 文档双重核实）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-moe-tp-ep-world_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 代码里真实存在的校验：MoE TP × EP 必须等于 world_size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 文档明确的互斥/绑定关系（一定要背）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 并行策略如何"传导"到调度调优参数
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 并行策略如何&#34;传导&#34;到调度调优参数">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-batch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 传导路径：并行 → 显存分配 → batch 上限
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-enable_lm_head_local_tp-padding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 代码证据：enable_lm_head_local_tp 直接改变调度期 padding 逻辑
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 一分钟总结（面试收尾）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 模拟面试实录（10 问，由浅入深 + 代码阅读 + 现场设计题）
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="09mindie">专题 09：MindIE 并行策略 ×调度调优——面试问答准备<a class="headerlink" href="#09mindie" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>主题：MindIE-LLM（<code>mindie_llm/</code> 仓）的并行策略参数（TP/DP/CP/SP/MoE-EP/MoE-TP/local_tp）与调度调优参数（<code>maxBatchSize</code>/<code>npuMemSize</code>/异步调度…）的关系。
+代码与文档均在本工作区核实：约束校验见 <code>mindie_llm/runtime/utils/distributed/parallel_info_manager.py</code>；MoE 通信策略见 <code>mindie_llm/runtime/layers/fused_moe/moe_comm_strategy.py</code>；官方限制见 <code>docs/zh/user_guide/feature/{context_parallel,sequence_parallel,tensor_parallel,expert_parallel}.md</code> 与 <code>docs/zh/user_guide/optimization_and_tuning.md</code>。</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 一句话定位（面试开口先说这句）<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>"MindIE 的配置分两层：<strong>并行策略</strong>（<code>tp</code>/<code>dp</code>/<code>cp</code>/<code>sp</code>/<code>moe_tp</code>/<code>moe_ep</code>）决定模型和 KV Cache 怎么切到多卡、单卡显存够不够；<strong>调度调优</strong>（<code>maxBatchSize</code>/<code>npuMemSize</code>/异步调度/SplitFuse）在并行框架确定之后，决定每张卡具体跑多少活、怎么榨吞吐。前者是'架构选择'，后者是'架构内的性能旋钮'，调参必须先定并行再调 batch，顺序反了容易 OOM 或者 batch 虚高。"</p>
+</blockquote>
+<pre class="mermaid"><code>flowchart TB
+    subgraph L1["第一层：并行策略"]
+        P1["worldSize / tp / dp / cp / sp"]
+        P2["moe_tp / moe_ep / ep_level"]
+        P3["lm_head_local_tp / o_proj_local_tp"]
+    end
+    subgraph L2["第二层：调度与加速"]
+        S1["maxBatchSize / maxPrefillBatchSize"]
+        S2["npuMemSize / maxSeqLen"]
+        S3["异步调度 / SplitFuse / MTP"]
+    end
+    L1 --&gt;|"决定显存占用、通信量、可用 batch 上限"| L2
+    L2 --&gt;|"在并行框架内榨性能"| R["吞吐 / 时延"]</code></pre>
+<hr />
+<h2 id="2-tpdpcpspep">2. 并行策略基础原理（TP/DP/CP/SP/EP 分别切什么）<a class="headerlink" href="#2-tpdpcpspep" title="Permanent link">&para;</a></h2>
+<p>先建立直觉：<strong>并行策略的核心问题永远是"切什么维度、切完之后要不要通信、通信是 AllGather 还是 AllReduce"</strong>。下面结合矩阵乘法示意图逐一说明。</p>
+<p><img alt="Column Parallel vs Row Parallel" src="../assets/tp-column-row-parallel.png" /></p>
+<p><strong>图解逐块说明（对照图中 0~5 号色块）：</strong></p>
+<ul>
+<li><strong>0. 普通矩阵乘法（基线）</strong>：<code>Y = X @ W</code>，<code>X:[B,H]</code>、<code>W:[H,O]</code>、<code>Y:[B,O]</code>。图中给的例子 <code>B=2, H=8, O=8, TP=4</code>——4 张卡、把 <code>H</code> 或 <code>O</code> 都均分成 4 份（每份 2）。后面 1~5 号色块都是在这个基线上做切分，理解这一块是看懂全图的前提。</li>
+<li><strong>1. Column Parallel（列切）</strong>：<code>W</code> 按列切成 <code>W₀..W₃</code>，每张卡 <code>[H, O/4]</code>；输入 <code>X</code> 每张卡都是完整的 <code>[B,H]</code>（图中 4 张卡的 <code>X[B,H]</code> 完全一样）；每张卡局部算出 <code>Yᵢ:[B,O/4]</code>，四块**颜色互不重叠**（分别是不同的输出通道），拼起来（AllGather）刚好还原成 <code>[B,O]</code>——图中第 4 步画的就是 <code>Y₀,Y₁,Y₂,Y₃</code> 横向拼接成一整条。</li>
+<li><strong>2. Row Parallel（行切）</strong>：<code>W</code> 按行切成 <code>W₀..W₃</code>，每张卡 <code>[H/4, O]</code>；这次连输入 <code>X</code> 也要按同样的方式切成 <code>X₀..X₃</code>（每张卡 <code>[B, H/4]</code>，只拿到部分输入特征）；每张卡局部算出的 <code>Y_partial_i</code> 形状已经是完整的 <code>[B,O]</code>，但只是"用了 1/4 输入特征"算出来的**残缺贡献**，图中用浅色/半透明表示这是"partial"而非最终值，必须做 AllReduce 求和才能还原正确的 <code>Y</code>。</li>
+<li><strong>3. AllReduce（求和）</strong>：图中给的小例子是向量 <code>[1,2],[3,4],[5,6],[7,8]</code> 逐元素求和得到 <code>[16,20]</code>（<code>1+3+5+7=16</code>，<code>2+4+6+8=20</code>），四张卡最后**每张卡都拿到同一份完整求和结果**——对应 Row Parallel 里 4 张卡的 <code>Y_partial</code> 求和后，每张卡都能拿到完整的 <code>Y</code>。</li>
+<li><strong>4. AllGather（拼接）</strong>：图中给的小例子是把 <code>[a,b],[c,d],[e,f],[g,h]</code> 按顺序拼接成 <code>[a,b,c,d,e,f,g,h]</code>，同样是**每张卡最后都拿到完整拼接结果**——对应 Column Parallel 里 4 张卡的 <code>Yᵢ</code> 拼接后，每张卡都能拿到完整的 <code>Y</code>。AllReduce 和 AllGather 的共同点是"操作完之后所有参与的卡都持有同一份完整结果"，区别只在于"怎么合并各卡的局部数据"——<strong>求和**还是**拼接</strong>，这一步选错就会得到错误的 <code>Y</code>。</li>
+<li><strong>5. 对比总结表</strong>：图里把"切分方式 / X 的形状 / 局部输出 / 通信方式 / 直观理解"五行并排放在一起，本质就是在提示"看到权重矩阵的切分方向，就能直接推出后面要用哪种集合通信"——<strong>这也是本节 2.1 下面表格的原始出处</strong>，面试被问到 TP 原理时，脑子里过一遍这张图就能把 Column/Row Parallel 讲全。</li>
+</ul>
+<h3 id="21-tptensor-parallel">2.1 TP（Tensor Parallel，张量并行）—— 切权重矩阵，是其他所有并行的基础<a class="headerlink" href="#21-tptensor-parallel" title="Permanent link">&para;</a></h3>
+<p>普通矩阵乘法 <code>Y = X @ W</code>，<code>X: [B,H]</code>，<code>W: [H,O]</code>，<code>Y: [B,O]</code>。TP 把 <code>W</code> 切到多张卡上，按切分维度分两种：</p>
+<p><strong>① Column Parallel（列切）—— 按输出维 O 切</strong></p>
+<ul>
+<li>每张卡持有 <code>W</code> 的一列切片 <code>Wᵢ: [H, O/4]</code>，但 <code>X</code> 是**完整拷贝**（每张卡都有全量 <code>[B,H]</code>）。</li>
+<li>每张卡局部算 <code>Yᵢ = X @ Wᵢ → [B, O/4]</code>，各卡算的是**不同的输出通道**，互不重叠。</li>
+<li>需要完整输出时用 <strong>AllGather</strong>（拼接）：<code>Y = concat(Y₀,Y₁,Y₂,Y₃) → [B,O]</code>。</li>
+<li>特点：<strong>只拼接，不用求和</strong>，因为每张卡贡献的是不同的列。</li>
+</ul>
+<p><strong>② Row Parallel（行切）—— 按输入维 H 切</strong></p>
+<ul>
+<li>每张卡持有 <code>W</code> 的一行切片 <code>Wᵢ: [H/4, O]</code>，同时 <code>X</code> 也按输入特征切分 <code>Xᵢ: [B, H/4]</code>（每张卡只拿部分输入特征）。</li>
+<li>每张卡局部算 <code>Y_partial_i = Xᵢ @ Wᵢ → [B, O]</code>——注意**输出已经是完整的 O 维**，但只是"部分贡献"（只用了 1/4 的输入特征）。</li>
+<li>需要完整输出时用 <strong>AllReduce（求和）</strong>：<code>Y = Σ Y_partial_i</code>。</li>
+<li>特点：<strong>各卡算的是同一个输出的部分贡献，必须求和</strong>，因为每张卡只看到了一部分输入特征，缺的部分靠别的卡补。</li>
+</ul>
+<p><strong>两者对比（面试背这张表）：</strong></p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Column Parallel（列切）</th>
+<th>Row Parallel（行切）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>切分方式</td>
+<td>按输出维 O 切 W</td>
+<td>按输入维 H 切 W</td>
+</tr>
+<tr>
+<td>X 的形状</td>
+<td>每卡都是完整的 <code>[B,H]</code></td>
+<td>每卡不同，<code>[B,H/4]</code></td>
+</tr>
+<tr>
+<td>局部输出</td>
+<td>每卡 <code>[B,O/4]</code>（不同通道）</td>
+<td>每卡 <code>[B,O]</code>（部分贡献，同一组通道）</td>
+</tr>
+<tr>
+<td>汇总通信</td>
+<td>AllGather（拼接）</td>
+<td>AllReduce（求和）</td>
+</tr>
+<tr>
+<td>直观理解</td>
+<td>大家算不同的输出，拼起来</td>
+<td>大家算同一个输出的一部分，加起来</td>
+</tr>
+</tbody>
+</table>
+<p><strong>为什么这个区分很重要</strong>：MindIE/vLLM 里 Attention/MLP 的 TP 实现通常是"列切 QKV/gate_up_proj + 行切 O_proj/down_proj"的组合——列切之后不立即通信（留到下一层输入前才需要完整值），行切之后必须立即 AllReduce 才能拿到正确结果。<strong>这也是为什么"AllReduce 通信量随 TP 增大而增大"是 TP 的主要代价</strong>：TP 每切一次，Attention 的 O_proj 和 MLP 的 down_proj 都要做一次 AllReduce，TP 越大，AllReduce 的调用次数不变但参与的卡数和跨卡带宽压力增大——这是"TP 越大、单卡权重越省但单步 decode 通信时延可能越高"的根本原因，也是第 4 节"并行传导到调度调优"要考虑的代价之一。</p>
+<p><code>o_proj_local_tp</code>（本文第 5 节表格）本质就是：全局 <code>tp=1</code> 不做常规 TP，但在 O_proj 这一个矩阵上单独临时开一个"局部行切 TP 域"做 AllReduce，只为了降低这一步的计算时延，而不承担全局 TP 的通信开销。</p>
+<p><strong>把 Column/Row Parallel 串起来看：一个 Attention block 内完整的 TP 流程（TP=4）</strong></p>
+<p><img alt="从进入QKV到执行完O_proj的完整流程" src="../assets/tp-attention-qkv-oproj-flow.png" /></p>
+<p>上面的抽象结论（"QKV 列切、O_proj 行切"）具体对应到 Attention 计算里是这 7 步（严格对照图中 ①~⑦）：</p>
+<ol>
+<li><strong>① 输入</strong>：上一层输出 <code>X:[B,H]</code>，4 张卡拿到的是**完全相同**的一份（这也是为什么进入 TP block 之前不需要通信——上一层如果也是 TP block，刚好在上一层末尾的 AllReduce 后每张卡已经拿到了完整的 <code>X</code>）。</li>
+<li><strong>② QKV 投影（Column Parallel）</strong>：<code>W_qkv:[H,3H]</code> 按输出维（列）切成 4 份，每张卡只算出自己那一份 <code>Qᵢ,Kᵢ,Vᵢ</code>（对应部分注意力头），<strong>列切完不需要通信</strong>——这一步的关键提醒：不是先算完整 QKV 再切，而是每张卡直接算的就是"局部"的 Q/K/V。</li>
+<li><strong>③ 分头（不通信）</strong>：把每张卡的 <code>Qᵢ,Kᵢ,Vᵢ</code> reshape 成多个注意力头，每张卡处理 <code>H/4</code> 维度对应的那几个头，头与头之间、卡与卡之间**天然不依赖**，所以这一步纯本地操作。</li>
+<li><strong>④ Attention 计算（不通信）</strong>：每张卡独立算自己负责的那几个头的 attention（<code>softmax(QKᵀ/√d)V</code>），因为 Q/K/V 都已经是本卡私有的切片，算 attention 全程不需要跨卡通信——<strong>这是 TP 相比"完整算完再切"节省通信的关键一步</strong>，真正的矩阵乘法和 softmax 都在本地完成。</li>
+<li><strong>⑤ 拼接当前卡的 head</strong>：每张卡把自己算完的几个头的 Attention Output 在**本地**拼接，得到 <code>[B, H/4]</code>——注意这一步的拼接是卡内本地操作，不是跨卡 AllGather；此刻"逻辑上"4 张卡拼起来就是完整的 <code>[B,H]</code>，但物理上每张卡只**实际持有**自己那 <code>H/4</code> 维度的部分。</li>
+<li><strong>⑥ O_proj 投影（Row Parallel）</strong>：<code>W_o:[H,H]</code> 按输入维（行）切成 4 份 <code>[H/4,H]</code>，正好和第⑤步每张卡手里的 <code>[B,H/4]</code> 对齐做矩阵乘，每张卡算出的是**最终输出的部分贡献** <code>[B,H]</code>（不是不同的通道，是同一组输出的不完整累加）。</li>
+<li><strong>⑦ AllReduce（求和）</strong>：4 张卡的部分贡献求和，才能得到正确的层输出 <code>Y:[B,H]</code>，而且**每张卡都要拿到这份完整结果**——因为下一步的残差连接（<code>X + Y</code>）和送入下一层，都要求每张卡手里是完整、正确的 <code>[B,H]</code>。</li>
+</ol>
+<p><strong>这张图补上了上一张 Column/Row Parallel 原理图缺的两个关键点</strong>：</p>
+<ul>
+<li><strong>通信只发生在一个地方</strong>：从②列切开始，到⑤本地拼接，中间③④⑤全程"不通信"，只有最后⑥→⑦的 Row Parallel 才触发一次 AllReduce——也就是说**一个 Attention block 只需要 1 次 AllReduce**，不是"切一次就通信一次"。这是"列切先算、行切后汇总"这套组合设计的核心价值：把通信压缩到整个 block 的最后一步。</li>
+<li><strong>"局部"和"完整"在图里是分得很清楚的两种状态</strong>：②③④⑤全程每张卡手里的数据都是**局部**（只对应本卡负责的那部分头/维度），只有⑦AllReduce 之后才变成**全局完整**——这也是为什么第 4 节里"MoE 通信策略要按 prefill/decode 阶段区分""<code>local_tp</code> 会改变 padding 逻辑"这些设计，本质都是在管理"局部 vs 完整"这个状态切换的时机和代价。</li>
+</ul>
+<h3 id="22-dpdata-parallel">2.2 DP（Data Parallel，数据并行）—— 不切矩阵，切请求<a class="headerlink" href="#22-dpdata-parallel" title="Permanent link">&para;</a></h3>
+<ul>
+<li>每一路 DP 持有**完整的模型副本**（内部可能还各自开 TP），处理**不同的请求**。</li>
+<li>没有对权重矩阵的切分，也没有 AllGather/AllReduce 意义上的"结果拼接"，各路之间近似无通信（除非做同步的 EP 路由统计等）。</li>
+<li>直觉：TP/CP/SP 是"一个请求，多卡协作算"；DP 是"多个请求，各自的卡独立算"。</li>
+</ul>
+<h3 id="23-cpcontext-parallel-sequence">2.3 CP（Context Parallel，上下文并行）—— 切同一个请求的 sequence 维<a class="headerlink" href="#23-cpcontext-parallel-sequence" title="Permanent link">&para;</a></h3>
+<ul>
+<li>按 sequence 维把同一条长输入逻辑分给多个 CP rank（MindIE 当前仅支持 <code>cp=2</code>）；为平衡因果 attention 的工作量，实际输入会切成 <code>2×cp</code> 个 chunk，再首尾配对分给各 rank，详见 2.4.1。</li>
+<li>各卡算自己那部分 token 的局部 attention，卡间用 **ring 通信**传递 KV，类似 ring-attention，最后修正合并分块结果。这里的"修正"不是近似：通过分块 FlashAttention 的在线 softmax 归并，得到的结果与每个 Query 一次性看到全部历史 KV 的因果 attention 等价。</li>
+<li>和 Row Parallel 的相似之处：都是"局部结果需要跨卡修正/合并"；不同之处：CP 切的是 sequence 维（数据切分），TP 切的是权重矩阵维（模型切分）。</li>
+<li>收益：多卡并行处理长 prompt 的 attention 计算，降低首 token 时延（TTFT）。</li>
+</ul>
+<h3 id="24-spsequence-parallel-kv-cache">2.4 SP（Sequence Parallel，序列并行）—— 切 KV Cache<a class="headerlink" href="#24-spsequence-parallel-kv-cache" title="Permanent link">&para;</a></h3>
+<ul>
+<li>严格来说这里的 SP 是"KV Cache 按 sequence 切分到 sp 个 rank"，每个 sp rank 只保存自己那部分序列位置的 KV，<code>sp</code> 必须等于 <code>tp</code>（沿用 TP 的通信域）。</li>
+<li>收益：单卡 KV Cache 显存占用降低，支持更长序列；代价是访问 KV 时需要跨卡查找/聚合，调度逻辑更复杂。</li>
+<li>和 CP 的关系：CP 负责"计算"怎么切长序列的 attention，SP 负责"存储"怎么切长序列的 KV Cache，两者通常配套开启（<code>cp</code> 开必须开 <code>sp</code>）。</li>
+</ul>
+<h3 id="241-cp-token">2.4.1 深挖 CP：长上下文切开后，为什么每个 token 仍能看到全局上下文？<a class="headerlink" href="#241-cp-token" title="Permanent link">&para;</a></h3>
+<p>先抓住一个容易混淆的点：<strong>CP 切的是 Query 的计算归属和 KV 的常驻归属，不是把注意力的可见范围切小。</strong> 对于位置为 <code>t</code> 的 token，正确的 causal attention 仍是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>O_t = Softmax(Q_t · K_[0:t]^T / √d) · V_[0:t]
+</code></pre></div>
+<p>也就是说，<code>t</code> 所在的 CP rank 虽然只常驻一部分 KV，却必须把 <code>[0:t]</code> 的所有 KV 分块都纳入计算；CP 用 <strong>KV 流动、Q 不动</strong> 来做到这一点。</p>
+<p><strong>1）MindIE 的 CP=2 如何实际切序列：不是简单二分，而是首尾配对。</strong></p>
+<p>公开实现中，<code>_cp_partition_data</code> 会把一条序列切为 <code>2 × cp</code> 个等长 chunk；对 CP rank <code>r</code>，分到第 <code>r</code> 个和倒数第 <code>r</code> 个 chunk。以 16 个 token、<code>cp=2</code> 为例：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>全局位置：  [ 0 ...  3] [ 4 ...  7] [ 8 ... 11] [12 ... 15]
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>chunk 编号：       0           1           2           3
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>CP rank 0：  chunk 0                                  + chunk 3
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>CP rank 1：                  chunk 1   + chunk 2
+</code></pre></div>
+<p>这是**因果负载均衡**：前面的 Query 可见 KV 少，后面的 Query 可见 KV 多。上例中 rank 0 的三角计算量是 <code>(1+2+3+4) + (13+14+15+16) = 68</code>，rank 1 是 <code>(5+6+7+8) + (9+10+11+12) = 68</code>；若只按前/后 8 个 token 二分，二者会是 <code>36</code> 和 <code>100</code>。代码同时保留原始 <code>position_ids</code>，因此即使物理输入被重排，RoPE 的位置语义和 causal mask 的全局位置语义也不变。</p>
+<p><strong>2）一次 ring 的计算过程：每个 rank 的 Q 留在本地，KV 块依次绕环。</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>                    第 0 轮：各自的本地 KV
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  rank 0: Q(chunk 0 + chunk 3)  ×  KV block A  ──send──► rank 1
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  rank 1: Q(chunk 1 + chunk 2)  ×  KV block B  ──send──► rank 0
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>                    第 1 轮：收到对方的 KV
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  rank 0: 本地 Q       ×  KV block B
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  rank 1: 本地 Q       ×  KV block A
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>  对每一个 Q：只累计 mask 后允许看到的历史位置；不允许的未来位置仍被 causal mask 排除。
+</code></pre></div>
+<p>真实的长序列会按更细的 FlashAttention block 做同样的事。环上传的是当前需要参与计算的 <code>K/V</code> 工作块；每块在本卡完成一次 <code>QK^T → softmax → PV</code> 后继续传给下一 rank。因而每张卡从未需要常驻一份完整 KV，却让自己的 Query 逐块“见过”全局历史。</p>
+<p><strong>3）分块 softmax 怎么精确合并：保存 <code>(m, l, u)</code> 三个在线状态。</strong></p>
+<p>softmax 不能把每个 KV 块各自归一化后直接相加。对一个 Query，处理到第 <code>j</code> 个块时维护：<code>m</code>（已见 score 的最大值）、<code>l = Σ exp(s-m)</code>（归一化分母）和 <code>u = Σ exp(s-m)V</code>（未归一化输出分子）。新块算出自己的 <code>(m_b, l_b, u_b)</code> 后，令 <code>m' = max(m, m_b)</code>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>l&#39; = exp(m - m&#39;) · l   + exp(m_b - m&#39;) · l_b
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>u&#39; = exp(m - m&#39;) · u   + exp(m_b - m&#39;) · u_b
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>O  = u&#39; / l&#39;                 （所有 KV 块处理完后）
+</code></pre></div>
+<p>这个合并满足结合律，并且数值稳定；所以 KV 块按 ring 的到达顺序、按多少块切分，都不会改变最终的 <code>O</code>。这就是 CP 能“切长上下文但保持全局信息”的数学原因，而不是把别的分片的 hidden state 复制一份。</p>
+<p><strong>4）输出如何回到后续层：不需要把 sequence 维 AllGather 回全量。</strong></p>
+<p>完成 attention 后，每个 token 的输出仍归属其 CP rank，并在本地继续残差、MLP 和下一层；下一层对同一批局部 Query 重复 ring-attention。只有模型末端需要取每个请求最后一个有效 token 的 logits 时，运行时用全局位置计算 <code>prefill_head_indices</code>，定位该 token 落在哪个 CP rank、哪个局部偏移，再取对应的 lm-head 结果。换言之，<strong>全局依赖在 attention 内通过 KV 和在线状态完成，全局“取最后一个 token”的需求通过位置索引完成</strong>，而不是每层都还原完整序列。</p>
+<blockquote>
+<p>面试一句话：CP 保持全局信息靠的是“Q 留本地、KV 绕环、online softmax 精确归并”；它并不要求每张卡保存全局 KV 或每层 AllGather 全序列输出。</p>
+</blockquote>
+<h3 id="242-sp-kv">2.4.2 深挖 SP：分片间的 KV 到底保存什么、传什么、谁负责定位？<a class="headerlink" href="#242-sp-kv" title="Permanent link">&para;</a></h3>
+<p>把 KV 的生命周期分成两类，最不容易答错：</p>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>生命周期</th>
+<th>是否长期保存</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本 rank 负责的 KV Cache page/block</td>
+<td>请求存活期间，逐层累积</td>
+<td>是</td>
+<td>保存某层、某些全局 token 位置的 <code>K</code> 和 <code>V</code>，供后续 decode / attention 使用</td>
+</tr>
+<tr>
+<td>ring 中收到的远端 KV 工作块</td>
+<td>一次 attention block / 一轮 ring</td>
+<td>否</td>
+<td>让本地 Query 计算对远端上下文的贡献；用完转发或释放</td>
+</tr>
+<tr>
+<td><code>(m,l,u)</code>、局部 attention output</td>
+<td>一次 attention 计算</td>
+<td>否</td>
+<td>归并各 KV 块，得到本地 Query 的精确最终输出</td>
+</tr>
+<tr>
+<td><code>request_id, layer_id, global_position/block_id, cp/sp rank</code> 等元数据</td>
+<td>请求存活期间</td>
+<td>是</td>
+<td>把逻辑位置映射到正确的 KV 分片，保证重排后仍能查到正确历史</td>
+</tr>
+</tbody>
+</table>
+<p><strong>SP 的持久化职责**是把 KV Cache 沿 sequence 维分到 <code>sp</code> 个 rank：每个 rank 只为自己拥有的全局位置写入本地 KV pool，不保存整条请求的重复副本。MindIE 文档要求 <code>sp = tp</code>，因此 KV shard 与 TP 通信域对齐；在 <code>cp=2, sp=tp=8</code> 的配置中，可以把它理解为“先确定 CP 下本 rank 负责的 token 块，再在对应 TP/SP 域内按 SP rank 放置 KV page”。具体的物理 page-table / block 地址属于后端实现细节，公开代码没有把其完整布局暴露为一个稳定接口；面试时应说清**逻辑归属和访问协议</strong>，不要臆造某个固定的连续地址排布。</p>
+<p>**CP 与 SP 的配合**可以这样记：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>CP：Prefill 时把“谁算哪些 Query、谁参与哪轮 ring”切开，主要解决长 prompt 的计算并行度/TTFT。
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>SP：把“历史 token 的 KV 长期落在哪张卡”切开，主要解决 KV Cache 显存；后续访问按位置元数据找到 shard。
+</code></pre></div>
+<p>因此，分片之间不会把“完整上下文状态”持久地互相复制。远端 KV 在需要时以通信工作块形式到达，结合本地在线 softmax 状态完成本轮计算，随后即可释放；真正留下的是各自拥有的 KV page 和全局位置到 shard 的映射。Decode 的新 token 也遵循同一原则：新产生的 KV 被写入它所属 shard；计算该新 Query 时，运行时依靠 CP/SP 的长度与位置元数据访问全部历史 shard，而不是重新构造完整 KV Cache。</p>
+<p>**和 Prefix Cache / PD 分离的关系：**SP 分片后，可复用或传输的基本单位也应携带上述逻辑位置信息和 shard 归属。否则即使拿到了字节内容，也无法保证把第 <code>L</code> 层、第 <code>p</code> 个 token 的 KV 放回正确 rank；这正是“KV Cache 是带位置语义的状态”，而不只是可随意拼接的一段内存。</p>
+<h3 id="243-vllmpcpdcp-context-parallel">2.4.3 对比 vLLM：PCP/DCP 是两套目的不同的 Context Parallel<a class="headerlink" href="#243-vllmpcpdcp-context-parallel" title="Permanent link">&para;</a></h3>
+<p><strong>先给结论：vLLM 能支持 <code>CP &gt; 2</code>，但要先问清是在说 Prefill 还是 Decode。</strong> 它没有沿用 MindIE 单一的 <code>cp</code> 参数，而是拆成两个独立旋钮：</p>
+<table>
+<thead>
+<tr>
+<th>vLLM 参数</th>
+<th>解决的主要问题</th>
+<th>是否增加进程/GPU 数</th>
+<th>CP 大于 2 的主要约束</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--prefill-context-parallel-size</code>（<code>-pcp</code>）</td>
+<td>长 prompt Prefill 的 TTFT</td>
+<td><strong>会增加</strong>，<code>worldSize = pp × tp × pcp</code></td>
+<td>参数本身只要求 <code>&gt;=1</code>；attention backend 必须声明支持 PCP。当前官方文档仍把两种 PCP 算法标为 active development，不能把“配置可填”误说成所有模型/后端均可生产使用。</td>
+</tr>
+<tr>
+<td><code>--decode-context-parallel-size</code>（<code>-dcp</code>）</td>
+<td>Decode 时减少 KV Cache 重复、提升可容纳 batch</td>
+<td><strong>不会增加</strong>，复用一个 TP 组内的 GPU</td>
+<td><code>dcp</code> 必须整除 <code>tp</code>；通常 <code>dcp ≤ tp</code>。GQA/MQA 还受 <code>dcp ≤ tp / num_kv_heads</code> 且每 KV head 对应的 Q head 数可被 <code>dcp</code> 整除的限制。</td>
+</tr>
+</tbody>
+</table>
+<p>因此，<strong>“vLLM 支不支持 CP=4/8？”答案是支持，最成熟、文档明确支持的是 DCP=4/8 一类配置</strong>。例如 DeepSeek-R1 的 MLA 是单 KV head；<code>tp=8, dcp=8</code> 可以把传统 TP 下的 8 份 KV 重复消掉。对于有 4 个 KV head 的 Qwen3-235B，<code>tp=8</code> 时最大 DCP 通常是 <code>8/4=2</code>，此时 <code>dcp=4</code> 反而会被配置校验拒绝。不要只看卡数，还要看 KV head 数。</p>
+<p><strong>1）vLLM DCP：不是 ring 把 KV 转一圈，而是“KV 常驻分片 + 局部 attention + softmax 状态合并”。</strong></p>
+<p>vLLM 将一个 TP 组切为若干 DCP group；DCP 不增 world size。它使用 <code>cp_kv_cache_interleave_size</code> 做交错存储：设总 CP rank 为 <code>r</code>、总 CP 度为 <code>C = pcp × dcp</code>，每连续 <code>interleave_size</code> 个 token 放到一个 rank，下一段放到下一个 rank。<code>interleave_size=1</code> 时就是 token <code>i</code> 落在 <code>i mod C</code> 对应的 shard；这样 Decode 持续追加新 token 时，新 KV 天然轮转到后续 rank，不必搬迁旧 cache。</p>
+<p>对某个 decode Query，DCP 的每个 rank 只读取本地 paged-KV shard，得到自己的局部 <code>(O_r, LSE_r)</code>。随后用 LSE（log-sum-exp，也就是上一节 <code>(m,l)</code> 的对数形式）恢复各 shard 的相对 softmax 权重，精确合并为全局输出：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>rank r:  O_r, LSE_r = Attention(Q, K_r, V_r)
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>所有 rank:  LSE = logsumexp_r(LSE_r)
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>全局输出:   O = Σ_r exp(LSE_r - LSE) · O_r
+</code></pre></div>
+<p>默认通信后端是 <strong>AllGather + ReduceScatter</strong>：聚合必要的局部结果后把已合并输出分发到后续 TP 计算所需的 rank。对 MLA，vLLM 还提供 <code>--dcp-comm-backend a2a</code>，以 All-to-All 交换部分输出与 LSE，再用 Triton kernel 合并，目标是将每层 NCCL 调用由 3 次降为 2 次。这里与 MindIE CP 的共同点是“在线 softmax 保持精确全局 attention”；差异是 vLLM DCP 的优化中心是**长期 KV 的交错常驻和 Decode 的显存去重**，而非 MindIE CP=2 的 Prefill ring 流转。</p>
+<p><strong>2）vLLM PCP：把 Prefill 的 Q/K/V 分到更多 GPU。</strong></p>
+<p>对一个含 <code>T</code> 个新 token 的长 prompt，PCP 把 token 切为 <code>pcp</code> 个 chunk，各 GPU 计算自己 chunk 的 Q/K/V。官方设计文档列出两条路径：</p>
+<ul>
+<li><strong>partial Q + full KV</strong>：先收集全部 KV，再让各 rank 只算自己 Query chunk 的输出；适用于 KV 可以临时全量容纳、目标是降低 TTFT 的情况。</li>
+<li><strong>partial Q + partial KV</strong>：若完整 KV 也放不下，则以 ring-attention 类方法按块 send/recv KV，并以 LSE/online-softmax 合并；这和 2.4.1 的“Q 留本地、KV 流动”原理相同。</li>
+</ul>
+<p>从当前 vLLM 源码可见，PCP 是一个独立通信组：rank 布局为 <code>(DP, PP, PCP, TP)</code>，并将 <code>PCP</code> 计入 world size；attention 初始化时会检查 backend 的 <code>supports_pcp</code> 能力。故 PCP 在拓扑语义上更接近“为 Prefill 新增并行资源”，而 DCP 是“在已有 TP 资源内消除 KV 冗余”。两者可同时配置，总 KV 的逻辑分片数为 <code>pcp × dcp</code>；相关 KV Cache 容量、block/hash 粒度也会按这个乘积调整。</p>
+<p><strong>3）和 MindIE 的面试对照：不要混用约束。</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>MindIE：单一 cp，目前只支持 2；cp 必须与 sp 搭配，重点是 P 侧长上下文计算 + KV 存储协同。
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>vLLM ：PCP 与 DCP 分离；DCP 可以 &gt;2，但必须嵌在 TP 的可分组范围及 KV-head 约束内；
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>       PCP 也无“只能 2”的参数上限，但属于后端/版本相关的开发中能力，应实测确认。
+</code></pre></div>
+<p>代码定位（以本工作区 vLLM <code>8df14cfc8</code> 为准）：参数和 DCP 整除校验见 <code>vllm/config/parallel.py</code>；GQA/MQA 的 <code>tp/kv-head</code> 上限见 <code>vllm/config/model.py</code>；DCP/PCP 通信组的构造见 <code>vllm/distributed/parallel_state.py</code>；KV 的交错映射语义见 <code>cp_kv_cache_interleave_size</code> 注释；attention backend 对 PCP/DCP 的能力校验见 <code>vllm/v1/worker/cp_utils.py</code>。官方文档为 <a href="https://docs.vllm.ai/en/latest/serving/context_parallel_deployment/">Context Parallel Deployment</a>。</p>
+<h3 id="25-moe-ep-moe-tp-moe">2.5 MoE-EP / MoE-TP —— 对 MoE 层单独的一套并行<a class="headerlink" href="#25-moe-ep-moe-tp-moe" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>MoE-EP（Expert Parallel）</strong>：把不同的专家（expert）分布到不同卡上，每张卡只保存一部分专家的权重；token 路由到哪个专家，就要通过 AllToAll（或 MC2 融合算子）把 token 发送到对应专家所在的卡。这是"按专家切分"，类似把一个大 MoE 层的多个"列切分支"（每个专家本身就是一个 FFN）分给不同卡。</li>
+<li><strong>MoE-TP</strong>：在单个专家内部再做一次 TP（Column+Row 切分同前面 2.1 的原理），用于专家本身太大单卡放不下的场景。</li>
+<li>二者满足 <code>moe_tp × moe_ep = worldSize</code>，因为要覆盖所有的卡：先按专家分组（EP 维度），组内再切分单个专家的权重矩阵（TP 维度）。</li>
+</ul>
+<h3 id="26-5">2.6 一张图总结 5 种并行切的是什么<a class="headerlink" href="#26-5" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>矩阵乘法视角：Y = X @ W
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>├─ TP  Column：切 W 的输出列 → AllGather 拼接
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>├─ TP  Row   ：切 W 的输入行 → AllReduce 求和
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>├─ DP        ：不切矩阵，复制整套 W，切的是&quot;请求批次&quot;
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>├─ CP        ：不切 W，切 X 的 sequence 维，ring 通信修正
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>├─ SP        ：不切 W，切 KV Cache 的 sequence 维（配合 CP/TP）
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>└─ MoE-EP/TP ：MoE 层专用，EP 切&quot;哪些专家在哪张卡&quot;，TP 切&quot;专家内部矩阵&quot;
+</code></pre></div>
+<hr />
+<h2 id="3">3. 并行参数的硬约束（代码 + 文档双重核实）<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<h3 id="31-moe-tp-ep-world_size">3.1 代码里真实存在的校验：MoE TP × EP 必须等于 world_size<a class="headerlink" href="#31-moe-tp-ep-world_size" title="Permanent link">&para;</a></h3>
+<p>```121:127:mindie_llm/runtime/utils/distributed/parallel_info_manager.py
+        if self.moe_tp.group_size * self.moe_ep.group_size != self.world_size:
+            error_msg = (
+                f"MoE parallel strategy process number mismatch: "
+                f"global world_size({self.world_size}) != "
+                f"moe_tp.group_size({self.moe_tp.group_size}) × moe_ep.group_size({self.moe_ep.group_size})"
+            )
+            raise ValueError(error_msg)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>这是 `ParallelInfoManager.__init__` 里在**构造分布式进程组之前**做的硬校验，配错了直接 `ValueError`，服务起不来（不是运行时性能差，是启动失败）。
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>### 3.2 `ParallelInfoManager` 怎么把参数变成通信组
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>```94:152:mindie_llm/runtime/utils/distributed/parallel_info_manager.py
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    def __init__(self, local_rank: int, llm_config=None, server_config=None):
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>        ...
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>        self.world_size: int = torch.distributed.get_world_size()
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>        self.attn_tp = self._init_tp_parallel_info(server_config.get(&quot;tp&quot;, self.world_size))
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>        self.attn_dp = self._init_dp_parallel_info(server_config.get(&quot;dp&quot;, -1))
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>        self.attn_cp = self._init_dp_parallel_info(server_config.get(&quot;cp&quot;, -1))
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>        ...
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>        self.moe_tp = self._init_tp_parallel_info(server_config.get(&quot;moe_tp&quot;, -1), moe_tp_buffer_size)
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>        self.moe_ep = self._init_dp_parallel_info(server_config.get(&quot;moe_ep&quot;, -1), moe_ep_buffer_size)
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>        if self.moe_tp.group_size * self.moe_ep.group_size != self.world_size:
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>            raise ValueError(...)
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>        ...
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>        group_size = server_config.get(&quot;sp&quot;, -1)
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>        self.attn_inner_sp = self._init_tp_parallel_info(group_size)
+</code></pre></div></p>
+<p>两个关键私有方法揭示了 TP 类和 DP 类并行的**本质区别**（面试常问"TP 和 DP 在实现上有什么不同"）：</p>
+<p>```245:289:mindie_llm/runtime/utils/distributed/parallel_info_manager.py
+    def _init_tp_parallel_info(self, group_size=None, ...):
+        """Initializes tensor-parallel-style groups (contiguous ranks)."""
+        ...
+        for group_idx in range(parallel_info.num_group):
+            ranks = range(group_idx * parallel_info.group_size, (group_idx + 1) * parallel_info.group_size)
+            parallel_info.rank_per_group.append(list(ranks))
+        ...</p>
+<div class="highlight"><pre><span></span><code>def _init_dp_parallel_info(self, group_size=None, ...):
+    &quot;&quot;&quot;Initializes data-parallel-style groups (strided ranks).&quot;&quot;&quot;
+    ...
+    for group_idx in range(parallel_info.num_group):
+        ranks = range(group_idx, self.world_size, parallel_info.num_group)
+        parallel_info.rank_per_group.append(list(ranks))
+</code></pre></div>
+<p><code>``
+
+- **TP 分组是"连续切片"**：8 卡 tp=4 时，组是</code>[0,1,2,3]<code>、</code>[4,5,6,7]<code>——因为 TP 要在同一份权重的切片之间频繁 AllReduce，连续 rank 通常映射到同机内 NVLink/HCCL 高带宽互联。
+- **DP（以及 CP、MoE-EP）分组是"跳跃采样"**：8 卡 dp=4 时，组是</code>[0,4]<code>、</code>[1,5]<code>、</code>[2,6]<code>、</code>[3,7]<code>——因为 DP 各组之间几乎不通信，跳跃排布是为了让"同一个 TP 域"内部保持连续，DP 维度横跨 TP 域采样。
+- 这解释了为什么"TP+DP 可以叠加"：TP 组连续、DP 组跳着取，两者天然不冲突，</code>tp × dp = world_size` 就把 rank 空间划分完了。
+</p>
+<h3 id="33">3.3 文档明确的互斥/绑定关系（一定要背）<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>并行组合</th>
+<th>是否允许</th>
+<th>依据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TP + DP</td>
+<td>✅ 可叠加，<code>tp × dp = worldSize</code></td>
+<td><code>sequence_parallel.md</code>/<code>tensor_parallel.md</code></td>
+</tr>
+<tr>
+<td>TP + CP</td>
+<td>✅ 可叠加，但 <strong>dp 必须为 1</strong></td>
+<td><code>context_parallel.md</code>：「开启 CP 特性时，DP 必须等于 1」</td>
+</tr>
+<tr>
+<td>DP + CP</td>
+<td>❌ 不可叠加</td>
+<td>同上，CP 要求 dp=1，与 DP&gt;1 互斥</td>
+</tr>
+<tr>
+<td>CP 单独开</td>
+<td>❌ 必须同时开 SP</td>
+<td><code>context_parallel.md</code>：「当前不支持 CP 单独开启，开启 CP 需要同时开启 SP」</td>
+</tr>
+<tr>
+<td>SP</td>
+<td>必须 <code>sp = tp</code></td>
+<td><code>sequence_parallel.md</code>表1：「sp | int | sp=tp」</td>
+</tr>
+<tr>
+<td>ep_level=2 时 moe_tp</td>
+<td>只能为 1</td>
+<td>见下方 <code>moe_comm_strategy.py</code> 校验</td>
+</tr>
+<tr>
+<td>CP/SP 支持模型</td>
+<td>仅 DeepSeek-R1/V3/V3.1 的 W8A8/W4A8</td>
+<td>两个文档均写「当前仅 DeepSeek-R1 的 W8A8...支持此特性」，且**不支持 BF16**</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>真实的服务化配置示例（<code>context_parallel.md</code>，DeepSeek-R1，16 卡）：</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>```json</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>"dp": 1, "cp": 2, "sp": 8, "tp": 8, "moe_ep": 16, "moe_tp": 1</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>```</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>验证一下等式：<code>cp × tp = 2 × 8 = 16 = worldSize</code>；<code>sp(8) = tp(8)</code>；<code>dp=1</code>。四条约束同时满足。</p>
+<hr />
+<h2 id="4">4. 并行策略如何"传导"到调度调优参数<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="41-batch">4.1 传导路径：并行 → 显存分配 → batch 上限<a class="headerlink" href="#41-batch" title="Permanent link">&para;</a></h3>
+<p>MindIE 官方公式（<code>optimization_and_tuning.md</code> 及模型参数文档）指出：多卡 TP 场景下，**注意力头数要除以卡数**才能算单卡显存占用——也就是"权重和 KV Cache 都随 TP 均摊"。所以调参顺序是：</p>
+<ol>
+<li><code>tp</code> 定了 → 单卡权重显存、单卡 KV Cache 单 token 占用就定了；</li>
+<li><code>npuMemSize</code>（一般设 <code>-1</code> 自动分配剩余显存）定了可用的 KV Cache 总容量；</li>
+<li>总容量 / 每请求所需 block 数 ≈ <code>maxBatchSize</code> 的理论上限。</li>
+</ol>
+<p><strong>不能反过来先拍 <code>maxBatchSize</code>，再去凑 <code>tp</code></strong>——这是新手最容易踩的坑：<code>tp</code> 太小导致单卡权重占用过大，<code>npuMemSize</code> 自动分配后 KV 池很小，<code>maxBatchSize</code> 设大了直接 OOM 或者调度器把请求排队卡住。</p>
+<h3 id="42-enable_lm_head_local_tp-padding">4.2 代码证据：<code>enable_lm_head_local_tp</code> 直接改变调度期 padding 逻辑<a class="headerlink" href="#42-enable_lm_head_local_tp-padding" title="Permanent link">&para;</a></h3>
+<p>并行策略不仅影响"能不能跑""显存多大"，还会直接进入调度热路径，改变 batch 的 padding 方式：</p>
+<p>```783:788:mindie_llm/text_generator/adapter/generator_torch.py
+    def _get_dp_ep_inputs(self, batch_size, input_ids):
+        if self.mapping.enable_lm_head_local_tp or self.mapping.enable_o_proj_local_tp or \
+                self.model_wrapper.config.ep_level == 1:
+            max_decode_dp_token_size = self.max_batch_size * (self.num_speculative_tokens + 1)
+            padding_batch_size = max_decode_dp_token_size - batch_size
+        elif batch_size % self.mapping.attn_tp.group_size != 0:
+            ...
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>要点：一旦开了 `lm_head_local_tp` / `o_proj_local_tp`，或者 MoE 走 `ep_level=1`（AllGather 通信），Decode 阶段就必须把 batch **padding 到 `maxBatchSize × (投机 token 数+1)` 的固定大小**，而不是普通 TP 场景下&quot;补齐到 `attn_tp.group_size` 的整数倍&quot;即可。也就是说：**并行策略的选择，直接决定了调度器 padding 的粒度和额外的计算浪费**——`local_tp` 场景下 `maxBatchSize` 调大，每一步的 padding 开销也会跟着放大，这是评估&quot;该不该开 local_tp&quot;时要考虑的隐性代价。
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>### 4.3 MoE 并行如何自动选择通信算子（会影响 decode 时延和吞吐）
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>`moe_comm_strategy.py` 是一个典型的&quot;策略模式&quot;：按优先级依次尝试 `FusedMC2 → MC2 → All2All → AllGather`，每一步都要读当前的 `MOE_EP`/`MOE_TP`/`ATTN_DP` 并行状态：
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>```48:82:mindie_llm/runtime/layers/fused_moe/moe_comm_strategy.py
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>class FusedMC2Strategy(MoECommStrategyBase):
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>    &quot;&quot;&quot;Fused MC2 strategy: highest priority for Ascend 910C.
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>    Requirements: EP group size &lt;= 32, no MoE TP, tokens within capacity.
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>    &quot;&quot;&quot;
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>    @staticmethod
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>    def is_applicable(quant_type, max_num_tokens_per_device) -&gt; bool:
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>        ...
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>        if not parallel_mgr.get(ParallelType.MOE_EP).is_enabled():
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>            return False
+<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a>        if device_type != DeviceType.ASCEND_910_93:
+<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>            return False
+<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>        is_ep_valid = parallel_mgr.get(ParallelType.MOE_EP_MC2).group_size &lt;= 32
+<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>        tp_size = parallel_mgr.get(ParallelType.ATTN_TP).group_size
+<a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a>        num_tokens_per_device = (forward_ctx.batch_descriptor.num_tokens + tp_size - 1) // tp_size
+<a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a>        is_num_tokens_valid = num_tokens_per_device &lt;= max_num_tokens_per_device
+<a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a>        if not (is_ep_valid and is_num_tokens_valid):
+<a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a>            return False
+<a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a>        if parallel_mgr.get(ParallelType.MOE_TP).is_enabled():
+<a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a>            return False
+<a id="__codelineno-10-27" name="__codelineno-10-27" href="#__codelineno-10-27"></a>        return True
+</code></pre></div></p>
+<p><code>``130:158:mindie_llm/runtime/layers/fused_moe/moe_comm_strategy.py
+class All2AllStrategy(MoECommStrategyBase):
+    @staticmethod
+    def is_applicable(quant_type, max_num_tokens_per_device) -&gt; bool:
+        ...
+        if parallel_mgr.get(ParallelType.MOE_TP).is_enabled():
+            if parallel_mgr.get(ParallelType.ATTN_DP).is_enabled():
+                raise RuntimeError('MoECommType.MC2 and MoECommType.ALLTOALL: Do not support moe_tp &gt; 1')
+            return False
+        return True
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>面试要点提炼：
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>- **`FusedMC2`/`MC2` 都强制要求 `moe_tp` 不开启**（`if parallel_mgr.get(ParallelType.MOE_TP).is_enabled(): return False`），对应文档里&quot;`ep_level=2` 时 `moe_tp` 只能为 1&quot;的约束——**这是代码校验和文档描述完全一致的例子**。
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>- **`MC2` 在 910B 上要求 `world_size &gt;= 16` 且只在 decode 阶段生效**（prefill 阶段会被排除），说明**同一份并行配置在 prefill/decode 两个阶段可能走完全不同的通信算子**，这是&quot;调度调优要分阶段考虑&quot;的直接代码证据。
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>- **`ATTN_DP` 开启 + `MOE_TP` 开启 是显式禁止的组合**，代码里甚至用 `raise RuntimeError` 而不是静默降级——说明这条约束比&quot;不推荐&quot;更严格，是&quot;不支持&quot;。
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>---
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>## 5. 加速特性与并行的兼容关系（背这张表）
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>| 加速特性 | 与并行的强制关系 | 证据来源 |
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>|---------|-----------------|---------|
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>| CP（上下文并行） | 必须同时开 SP；开 CP 时 `dp` 必须为 1；`sp = tp`；`cp × tp = worldSize`（当前 cp 只支持 2） | `context_parallel.md` |
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>| SP（序列并行） | `sp = tp`；可以和 DP、CP 叠加但需满足各自等式 | `sequence_parallel.md` |
+<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>| CP/SP 支持范围 | 仅 DeepSeek-R1/V3/V3.1 的 W8A8/W4A8 量化模型，不支持 BF16，仅 Atlas 800I A2/A3 | 两文档一致 |
+<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>| MoE `ep_level=2`（MC2/FusedMC2） | 要求 `moe_tp` 不开启；EP group ≤ 32（FusedMC2）；仅 Ascend 910C 支持 FusedMC2 | `moe_comm_strategy.py` |
+<a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>| MoE `ep_level=1`（AllGather） | 可配 `enable_init_routing_cutoff` + `topk_scaling_factor` 做 topk 截断省显存 | `expert_parallel.md` |
+<a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>| `lm_head_local_tp` / `o_proj_local_tp` | 仅 DeepSeek-R1/V3/V3.1 支持；取值范围 `[1, worldSize/节点数]`；开启后 decode padding 固定为 `maxBatchSize × (投机token数+1)` | `tensor_parallel.md` + `generator_torch.py` |
+<a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>| 异步调度 | 与并行策略正交，但**明确要求 `maxBatchSize` 较大、输入输出较长**才有收益，否则 EOS 请求被重复计算，浪费 NPU 资源 | `optimization_and_tuning.md` |
+<a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>| CP/SP + MTP + 异步调度 + Prefix Cache | 文档写明可叠加使用 | `context_parallel.md`/`sequence_parallel.md` |
+<a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a>
+<a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a>---
+<a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a>
+<a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a>## 6. 推荐调参顺序（回答&quot;你会怎么调参&quot;时的框架）
+<a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a>
+<a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a>1. **定 worldSize**：卡数由模型大小和预算决定。
+<a id="__codelineno-11-27" name="__codelineno-11-27" href="#__codelineno-11-27"></a>2. **定并行拓扑（先满足硬约束）**：
+<a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a>   - 单卡放不下权重 → 开 TP；
+<a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a>   - 长 prompt 要降 TTFT → `cp=2` + `sp=tp` + `dp=1`（仅限 DeepSeek 系列量化模型）；
+<a id="__codelineno-11-30" name="__codelineno-11-30" href="#__codelineno-11-30"></a>   - MoE 模型 → `moe_ep × moe_tp = worldSize`，`ep_level=2` 时 `moe_tp` 固定为 1；
+<a id="__codelineno-11-31" name="__codelineno-11-31" href="#__codelineno-11-31"></a>   - PD 分离 D 节点、想降低单步矩阵计算时延 → `tp=1` + `lm_head_local_tp`/`o_proj_local_tp`。
+<a id="__codelineno-11-32" name="__codelineno-11-32" href="#__codelineno-11-32"></a>3. **定显存与序列上限**：`npuMemSize` 先用 `-1` 自动分配，`maxSeqLen`/`maxInputTokenLen` 按业务定，OOM 就先加大 TP 而不是先砍 batch。
+<a id="__codelineno-11-33" name="__codelineno-11-33" href="#__codelineno-11-33"></a>4. **定 batch 与调度**：`maxBatchSize`/`maxPrefillBatchSize` 在上面确定的显存余量内压测微调；如果开了 `local_tp` 或 `ep_level=1`，注意 decode padding 会被固定为 `maxBatchSize` 的整倍数，评估这部分浪费。
+<a id="__codelineno-11-34" name="__codelineno-11-34" href="#__codelineno-11-34"></a>5. **开加速特性**：`maxBatchSize` 大、长输出场景开异步调度；MoE 按硬件型号让 `moe_comm_strategy.py` 自动选算子，不需要手动指定。
+<a id="__codelineno-11-35" name="__codelineno-11-35" href="#__codelineno-11-35"></a>
+<a id="__codelineno-11-36" name="__codelineno-11-36" href="#__codelineno-11-36"></a>---
+<a id="__codelineno-11-37" name="__codelineno-11-37" href="#__codelineno-11-37"></a>
+<a id="__codelineno-11-38" name="__codelineno-11-38" href="#__codelineno-11-38"></a>## 7. 高频追问与参考答案
+<a id="__codelineno-11-39" name="__codelineno-11-39" href="#__codelineno-11-39"></a>
+<a id="__codelineno-11-40" name="__codelineno-11-40" href="#__codelineno-11-40"></a>**Q1：为什么 TP 的 rank 分组是连续的，DP 是跳跃的？**
+<a id="__codelineno-11-41" name="__codelineno-11-41" href="#__codelineno-11-41"></a>
+<a id="__codelineno-11-42" name="__codelineno-11-42" href="#__codelineno-11-42"></a>&gt; TP 组内的卡要对同一份切分权重做高频 AllReduce/AllGather，连续 rank 通常对应同一台机器内的高速互联（NVLink/HCCL），把 TP 组放在连续 rank 上能保证组内通信走最快的链路。DP（以及 CP、MoE-EP）各组之间几乎不通信，用跳跃采样（`range(group_idx, world_size, num_group)`）能保证&quot;同一个 TP 域&quot;始终完整地落在某一个连续区间里，不会被 DP 拆散。代码上体现为 `_init_tp_parallel_info` 用 `range(idx*gs, (idx+1)*gs)`，`_init_dp_parallel_info` 用 `range(idx, world_size, num_group)`。
+<a id="__codelineno-11-43" name="__codelineno-11-43" href="#__codelineno-11-43"></a>
+<a id="__codelineno-11-44" name="__codelineno-11-44" href="#__codelineno-11-44"></a>**Q2：CP 和 DP 为什么不能叠加，但 TP 和 CP 可以？**
+<a id="__codelineno-11-45" name="__codelineno-11-45" href="#__codelineno-11-45"></a>
+<a id="__codelineno-11-46" name="__codelineno-11-46" href="#__codelineno-11-46"></a>&gt; CP 是在 attention 内部按 sequence 维度做 ring 通信，本质上是&quot;同一个请求&quot;被拆到多张卡上协同完成一次 attention 计算；DP 是&quot;不同请求&quot;分别独立处理。如果 DP&gt;1 又开 CP，就会出现&quot;一部分卡在为请求 A 做 ring-attention 协同，另一部分卡在为请求 B 做&quot;，这打破了 CP 需要的固定通信拓扑，所以文档强制 `dp=1`。TP 只是把矩阵乘法切分到多卡，不改变&quot;一个请求由哪些卡协同处理&quot;的拓扑，所以能和 CP 叠加，只要满足 `cp × tp = worldSize`。
+<a id="__codelineno-11-47" name="__codelineno-11-47" href="#__codelineno-11-47"></a>
+<a id="__codelineno-11-48" name="__codelineno-11-48" href="#__codelineno-11-48"></a>**Q3：`ep_level=1` 和 `ep_level=2` 的本质区别？为什么 2 要求 `moe_tp=1`？**
+<a id="__codelineno-11-49" name="__codelineno-11-49" href="#__codelineno-11-49"></a>
+<a id="__codelineno-11-50" name="__codelineno-11-50" href="#__codelineno-11-50"></a>&gt; `ep_level=1` 是基于 AllGather 的 EP：每张卡先把需要的 token 从别的卡&quot;聚过来&quot;再算，实现简单但通信量大，允许专家计算内部再做 `moe_tp` 切分。`ep_level=2` 是基于 AllToAll + 通算融合（MC2/FusedMC2）的 EP：通信和计算融合成一个算子，这类融合算子（`FusedMC2Strategy`/`MC2Strategy`）在代码里显式检查 `if parallel_mgr.get(ParallelType.MOE_TP).is_enabled(): return False`，只要 `moe_tp&gt;1` 就直接放弃这条路径退化到 AllGather，所以官方约束里`ep_level=2` 必须 `moe_tp=1`，否则融合算子的收益就没了甚至可能报错（All2All 策略里对 `attn_dp` + `moe_tp&gt;1` 的组合直接 `raise RuntimeError`）。
+<a id="__codelineno-11-51" name="__codelineno-11-51" href="#__codelineno-11-51"></a>
+<a id="__codelineno-11-52" name="__codelineno-11-52" href="#__codelineno-11-52"></a>**Q4：并行策略和调度调优谁先调？为什么？**
+<a id="__codelineno-11-53" name="__codelineno-11-53" href="#__codelineno-11-53"></a>
+<a id="__codelineno-11-54" name="__codelineno-11-54" href="#__codelineno-11-54"></a>&gt; 先调并行策略，再调调度。因为并行策略决定了单卡权重占用和 KV Cache 单 token 占用，这两个数定了以后，`npuMemSize` 自动分配后剩多少显存给 KV Cache 池是确定的，`maxBatchSize` 的理论上限是&quot;KV 池容量 / 单请求 KV 占用&quot;算出来的。如果先拍一个很大的 `maxBatchSize` 再去凑并行度，很容易出现 TP 太小、单卡权重占用大、KV 池被压缩，`maxBatchSize` 设的值远超实际可用容量，服务跑起来就 OOM 或请求排队打不满。
+<a id="__codelineno-11-55" name="__codelineno-11-55" href="#__codelineno-11-55"></a>
+<a id="__codelineno-11-56" name="__codelineno-11-56" href="#__codelineno-11-56"></a>**Q5：`local_tp`（`lm_head_local_tp`/`o_proj_local_tp`）解决什么问题，代价是什么？**
+<a id="__codelineno-11-57" name="__codelineno-11-57" href="#__codelineno-11-57"></a>
+<a id="__codelineno-11-58" name="__codelineno-11-58" href="#__codelineno-11-58"></a>&gt; 用在 `tp=1` 的场景（典型是 PD 分离的 D 节点、DeepSeek 系列），全局不做 TP 以避免层间频繁 AllReduce，但 LmHead 和 Attention 的 O 矩阵这两个计算量大的矩阵单独做&quot;局部 TP&quot;切分来降低这两步的计算时延。代价在代码里能看到：一旦开启，`_get_dp_ep_inputs` 里 decode 阶段的 padding 策略从&quot;补齐到 `attn_tp.group_size` 整数倍&quot;变成&quot;固定 padding 到 `maxBatchSize × (投机token数+1)`&quot;，也就是不管实际 batch 多大，都要按最大配置去 padding，小 batch 场景下这部分 padding 开销占比会更明显，需要结合实际流量评估。
+<a id="__codelineno-11-59" name="__codelineno-11-59" href="#__codelineno-11-59"></a>
+<a id="__codelineno-11-60" name="__codelineno-11-60" href="#__codelineno-11-60"></a>**Q6：为什么 CP/SP 只支持 DeepSeek 系列量化模型，不支持 BF16？**
+<a id="__codelineno-11-61" name="__codelineno-11-61" href="#__codelineno-11-61"></a>
+<a id="__codelineno-11-62" name="__codelineno-11-62" href="#__codelineno-11-62"></a>&gt; 这是文档给出的现有限制（`context_parallel.md`/`sequence_parallel.md` 明确列出支持范围），本质是这两个特性的算子实现（ring-attention 分块修正、KV Cache 切分索引）目前只针对 DeepSeek-R1/V3/V3.1 的 W8A8/W4A8 量化路径做了适配和验证，BF16 路径的数值稳定性和算子融合还没有覆盖，属于工程落地的阶段性限制而非架构性限制。
+<a id="__codelineno-11-63" name="__codelineno-11-63" href="#__codelineno-11-63"></a>
+<a id="__codelineno-11-64" name="__codelineno-11-64" href="#__codelineno-11-64"></a>---
+<a id="__codelineno-11-65" name="__codelineno-11-65" href="#__codelineno-11-65"></a>
+<a id="__codelineno-11-66" name="__codelineno-11-66" href="#__codelineno-11-66"></a>## 8. 三个可以直接背的配置示例（均来自官方文档，非杜撰）
+<a id="__codelineno-11-67" name="__codelineno-11-67" href="#__codelineno-11-67"></a>
+<a id="__codelineno-11-68" name="__codelineno-11-68" href="#__codelineno-11-68"></a>**长序列 DeepSeek-R1，16 卡，CP+SP（`context_parallel.md`）：**
+<a id="__codelineno-11-69" name="__codelineno-11-69" href="#__codelineno-11-69"></a>
+<a id="__codelineno-11-70" name="__codelineno-11-70" href="#__codelineno-11-70"></a>```json
+<a id="__codelineno-11-71" name="__codelineno-11-71" href="#__codelineno-11-71"></a>{
+<a id="__codelineno-11-72" name="__codelineno-11-72" href="#__codelineno-11-72"></a>  &quot;worldSize&quot;: 16, &quot;dp&quot;: 1, &quot;cp&quot;: 2, &quot;sp&quot;: 8, &quot;tp&quot;: 8,
+<a id="__codelineno-11-73" name="__codelineno-11-73" href="#__codelineno-11-73"></a>  &quot;moe_ep&quot;: 16, &quot;moe_tp&quot;: 1, &quot;npuMemSize&quot;: -1
+<a id="__codelineno-11-74" name="__codelineno-11-74" href="#__codelineno-11-74"></a>}
+</code></pre></div>
+校验：</code>cp(2) × tp(8) = 16 = worldSize<code>；</code>sp(8) = tp(8)<code>；</code>moe_tp(1) × moe_ep(16) = 16`。</p>
+<p><strong>DeepSeek-R1，16 卡，DP+SP 混部（<code>sequence_parallel.md</code>）：</strong></p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">{</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">&quot;worldSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;dp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;sp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;tp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="nt">&quot;moe_ep&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;moe_tp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;npuMemSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="p">}</span>
+</code></pre></div>
+校验：<code>dp(2) × tp(8) = 16</code>；<code>sp(8) = tp(8)</code>。</p>
+<p><strong>MoE ep_level=2，8 卡（<code>expert_parallel.md</code>）：</strong></p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">&quot;worldSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;moe_ep&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="nt">&quot;models&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;deepseekv2&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;ep_level&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="nt">&quot;alltoall_ep_buffer_scale_factors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="mi">1048576</span><span class="p">,</span><span class="mf">1.32</span><span class="p">],[</span><span class="mi">524288</span><span class="p">,</span><span class="mf">1.4</span><span class="p">],[</span><span class="mi">262144</span><span class="p">,</span><span class="mf">1.53</span><span class="p">],[</span><span class="mi">131072</span><span class="p">,</span><span class="mf">1.8</span><span class="p">],[</span><span class="mi">32768</span><span class="p">,</span><span class="mf">3.0</span><span class="p">],[</span><span class="mi">8192</span><span class="p">,</span><span class="mf">5.2</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mf">8.0</span><span class="p">]]</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span><span class="p">}}</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="p">}</span>
+</code></pre></div>
+校验：<code>moe_tp</code> 未显式配置即默认与 <code>ep_level=2</code> 兼容为 1，<code>moe_tp(1) × moe_ep(8) = 8</code>。</p>
+<hr />
+<h2 id="9">9. 一分钟总结（面试收尾）<a class="headerlink" href="#9" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>"并行策略回答'能不能跑、单卡显存够不够'——<code>tp</code>/<code>dp</code>/<code>cp</code>/<code>sp</code>/<code>moe_ep</code>/<code>moe_tp</code> 之间有严格的等式约束和互斥关系，代码里 <code>ParallelInfoManager</code> 会在启动时直接校验，配错了服务起不来。调度调优回答'跑得多快'——在并行拓扑确定、<code>npuMemSize</code> 分配好 KV Cache 池之后，<code>maxBatchSize</code> 才有上限可算；MoE 场景下具体走哪种通信算子（AllGather/MC2/FusedMC2/All2All）也是由当前的并行状态（<code>moe_ep</code>/<code>moe_tp</code>/<code>attn_dp</code>）在运行时自动选出来的，而不是手动指定。所以我调参的顺序始终是：先按模型大小和场景确定并行拓扑，再在这个拓扑内调 batch 和调度特性。"</p>
+</blockquote>
+<hr />
+<h2 id="10-10">10. 模拟面试实录（10 问，由浅入深 + 代码阅读 + 现场设计题）<a class="headerlink" href="#10-10" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>面试官视角出题，覆盖：概念区分 → 图片推导 → 约束原理 → 代码阅读 → 故障排查 → 现场设计。每题先给"追问点"提示，再给参考回答，回答里能落到具体代码行的都标了引用。</p>
+</blockquote>
+<p><strong>Q1（开场，考基础）：你刚才画的图里，Column Parallel 用 AllGather，Row Parallel 用 AllReduce，能不能反过来？比如 Column Parallel 也用 AllReduce 行不行？</strong></p>
+<blockquote>
+<p>不行，这是由数学结构决定的，不是实现选择。Column Parallel 里每张卡算的是**不同的输出通道**（<code>Yᵢ = X @ Wᵢ</code>，<code>Wᵢ</code> 是不同的列），这些通道之间没有重叠、不需要相加，只需要按顺序拼在一起还原成 <code>[B,O]</code>，用 AllReduce 求和反而会把不同通道的值加错。Row Parallel 里每张卡算的是**同一组输出通道的部分贡献**（只用了 1/4 的输入特征），必须把 4 张卡的部分贡献加起来才是正确结果，用 AllGather 拼接的话，拼出来的是 4 份"残缺"的 <code>[B,O]</code>，不是想要的答案。一句话：<strong>输出维度被切分 → 拼接（AllGather）；输入维度被切分 → 求和（AllReduce）</strong>，这是矩阵乘法分配律决定的，不能互换。</p>
+</blockquote>
+<p><strong>Q2（追问，考迁移能力）：那 Attention 里的 QKV 矩阵和 O_proj 矩阵，分别用哪种切法，为什么？</strong></p>
+<blockquote>
+<p>QKV 用 Column Parallel（列切）：每张卡切出一部分注意力头，各自独立算完整的这几个头的 attention，互不依赖，算完不需要立即通信，可以留到后面再处理。O_proj 用 Row Parallel（行切）：因为输入是"多头 attention 拼接后的结果"，每张卡只有自己那部分头的输出，O_proj 的权重也按输入维（也就是头维度）切分，每张卡算出的是最终输出的"部分贡献"，必须 AllReduce 求和才能还原正确的层输出。这也是为什么"列切之后不立即通信，行切之后必须立即通信"——QKV 切完直接进 attention 计算，O_proj 切完必须 AllReduce 才能进下一层。</p>
+</blockquote>
+<p><strong>Q3（考图片信息提取 + 计算）：图里 B=2, H=8, O=8, TP=4。如果我把 TP 改成 8，Column Parallel 每张卡的 <code>Wᵢ</code> 形状变成什么？会不会有问题？</strong></p>
+<blockquote>
+<p>每张卡的 <code>Wᵢ</code> 从 <code>[H, O/4] = [8,2]</code> 变成 <code>[H, O/8] = [8,1]</code>，也就是每张卡只负责 1 个输出通道。理论上可以继续切，但会有两个问题：一是 O=8 时 TP 最多切到 8，再大就没法均分了（<code>even_divide</code> 会报错，<code>ParallelInfoManager</code> 里所有 <code>_init_tp_parallel_info</code>/<code>_init_dp_parallel_info</code> 都调用 <code>even_divide(self.world_size, group_size)</code> 做整除校验）；二是每张卡的计算量变得极小（<code>[B,H]@[H,1]</code>），这时候 AllGather 的通信延迟可能超过计算本身节省的时间，TP 切得过细反而不划算，这也是为什么实际生产里 TP 一般不会无限往大调，需要结合矩阵实际大小压测。</p>
+</blockquote>
+<p><strong>Q4（考代码阅读，给一段没讲过的代码）：我给你看 <code>parallel_info_manager.py</code> 里没细讲的一段，<code>_create_npu_process_group</code> 里为什么要遍历所有分组去 <code>dist.new_group</code>，即使当前 rank 不在这个组里？</strong></p>
+<p><code>178:196:mindie_llm/runtime/utils/distributed/parallel_info_manager.py
+    def _create_npu_process_group(parallel_info, is_all_reduce=False):
+        cur_process_group = None
+        for group_idx, group_ranks in enumerate(parallel_info.rank_per_group):
+            options = dist_c.ProcessGroupHCCL.Options()
+            ...
+            process_group = dist.new_group(ranks=group_ranks, pg_options=options)
+            if group_idx == parallel_info.current_group_id:
+                cur_process_group = process_group
+        return cur_process_group</code></p>
+<blockquote>
+<p>因为 <code>torch.distributed.new_group</code> 是一个**集合操作**：所有 rank（不管是否属于这个组）都必须参与同一次 <code>new_group</code> 调用序列，且调用顺序要严格一致，否则不同进程会把不同的通信组匹配到不同的 HCCL 通信域上，造成死锁或者串组。也就是说，即使某个 rank 不属于 group 1，它也要在自己的进程里"陪跑"一次 <code>dist.new_group(ranks=group1_ranks)</code>（只是最终返回的 <code>process_group</code> 它自己用不到），这样才能保证全局所有进程建通信域的顺序和数量对齐。代码注释里也写了"Need to traverse all groups... otherwise it will affect the global communication domain count"，这是分布式训练框架里一个常见但容易被忽略的坑。</p>
+</blockquote>
+<p><strong>Q5（考约束原理，反向推导）：如果我告诉你一个配置报错了——<code>moe_tp.group_size(2) × moe_ep.group_size(4) != world_size(16)</code>，除了改小 moe_tp/moe_ep，还有没有别的可能原因？你会怎么排查？</strong></p>
+<blockquote>
+<p>先看这个等式本身：2×4=8≠16，说明 worldSize 和 moe_tp/moe_ep 没对齐。排查顺序：① 先确认 <code>worldSize</code> 是不是被改过（比如从 8 卡扩到 16 卡但没同步改 moe_tp/moe_ep）；② 确认 <code>moe_tp</code>/<code>moe_ep</code> 是不是用了默认值 <code>-1</code>（代码里 <code>server_config.get("moe_tp", -1)</code>，如果没显式配置，<code>_init_tp_parallel_info</code> 会把 <code>-1</code> 当成"用 world_size"，但 <code>_init_dp_parallel_info</code> 的 <code>-1</code> 是保持默认 <code>group_size=1</code>，两者语义不一样，容易配错）；③ 如果是双机部署，确认两台机器的 <code>worldSize</code> 认知是否一致（比如一台机器只起了 8 个进程但 config 里写的是 16）。这个校验在 <code>ParallelInfoManager.__init__</code> 里、**建通信组之前**就执行，所以报错时进程组还没建好，不会是"某张卡挂了"这种运行时问题，一定是配置层面的数值对不上。</p>
+</blockquote>
+<p><strong>Q6（考对比 vLLM/Megatron 的知识边界）：Megatron-LM 的 TP 实现和你这里说的 Column/Row Parallel 是同一套东西吗？</strong></p>
+<blockquote>
+<p>本质思路一致，都是"输出维切分用 AllGather，输入维切分用 AllReduce"这套矩阵并行分配律，Megatron-LM 论文（Shoeybi et al. 2019）里对 MLP 和 Attention 的切分方式就是"第一个矩阵列切、第二个矩阵行切"的组合，和这里 MindIE 的"QKV/gate_up 列切、O_proj/down_proj 行切"是同一个套路，业界基本收敛到这个方案上，因为它能保证一个 Transformer block 内部只需要 2 次 AllReduce（Attention 后一次、MLP 后一次），通信次数最少。差异更多在工程实现细节上：比如 MindIE 针对 Ascend NPU 的 HCCL 通信库和融合算子（MC2/FusedMC2），Megatron 主要针对 NVIDIA NCCL，通信原语的底层实现和缓冲区管理不同，但数学上的切分逻辑是相通的。</p>
+</blockquote>
+<p><strong>Q7（考代价意识/工程权衡）：假设显存完全够用，为什么不无限加大 TP，反而要在够用的前提下尽量减小 TP？</strong></p>
+<blockquote>
+<p>因为 TP 每加大一倍，Attention 和 MLP 里各一次的 AllReduce 通信量基本不变（要传输完整的 <code>[B,O]</code> 张量），但参与通信的卡数变多，通信轮次或跨卡跳数增加，尤其跨机时还要过网络，AllReduce 的延迟会上升，直接影响 decode 阶段单步时延（TPOT）。而且 TP 越大，每张卡分到的计算量越小，容易出现"计算时间 &lt; 通信时间"，卡在等通信上，NPU 算力利用率下降。所以工程上的原则是：<strong>TP 只用来解决"单卡放不下"的问题，用刚好能放下的最小 TP</strong>，剩下的显存和卡数交给 DP 去提吞吐——DP 几乎不通信，扩展性比 TP 好得多。</p>
+</blockquote>
+<p><strong>Q8（现场设计题，综合运用）：给你 32 卡 Atlas 800I A3，部署 DeepSeek-V3 W4A8，业务方要求：平均输入 8K 长 prompt（要求 TTFT 低），同时要支撑较高并发。你会怎么配 <code>tp</code>/<code>dp</code>/<code>cp</code>/<code>sp</code>/<code>moe_ep</code>/<code>moe_tp</code>？说出配置和理由。</strong></p>
+<blockquote>
+<p>先看硬约束：DeepSeek-V3 W4A8 支持 CP/SP；CP 要求 <code>dp=1</code>，所以"降 TTFT"和"DP 提并发"在同一份配置里是冲突的——CP 用 <code>dp=1</code> 会牺牲并发扩展性。这里有两个方向：① 如果坚持单实例内既要降 TTFT 又要提并发，只能靠加大 <code>worldSize</code> 内的 <code>tp</code> 撑单请求吞吐，同时开 <code>cp=2</code> 降 TTFT，牺牲掉 DP；比如 <code>worldSize=32, tp=16, cp=2, sp=16, dp=1, moe_ep=32, moe_tp=1</code>（校验：<code>cp×tp=2×16=32</code>，<code>sp=tp=16</code>）。② 更推荐的做法是 PD 分离：Prefill 侧的实例专门开 CP+SP 降 TTFT（不需要 DP，因为 P 节点本身就是处理"当前这一批"长 prompt，多实例横向扩展并发而不是靠 DP），Decode 侧的实例用 TP+DP（比如 <code>tp=8,dp=4</code>）提升 decode 并发吞吐，两者通过 KV 传输连接。第二种方案是业界主流做法，也是本文档里"CP/SP 支持 PD 分离场景，仅在 P 节点开启"这条约束背后的设计意图——<strong>约束本身就在提示你"CP 是给 Prefill 用的，别指望它同时兼顾 Decode 的并发"</strong>。</p>
+</blockquote>
+<p><strong>Q9（挑战/深挖题，考是否真的理解而不是背表）：你说"CP 单独开必须搭配 SP"，如果我把这条约束去掉、强行只开 CP 不开 SP，理论上会出什么问题？</strong></p>
+<blockquote>
+<p>不能把它简单回答成“ring 里见过远端 KV，所以各卡必然会把全量 KV 都存下来”——ring 中收到的 KV 本可以只是临时工作块。正确说法是：MindIE 的公开约束明确规定 CP 必须与 SP 一起开；CP 只定义了 Prefill 中 Query/KV 的分块计算，而服务要在 Prefill 后继续正确地管理 KV Cache、Decode 访问和请求级 page 索引，还必须有一致的 KV shard 归属与长度/位置元数据。SP 正是这套持久化切分协议。若仅强行绕过配置校验，可能计算某次 Prefill attention 的数学结果，却没有受支持的 KV 分配、索引和后续访问语义，结果会是 cache 地址/长度不一致、错误读取或 OOM，而不是一个可用的“纯 CP 模式”。所以官方将两者绑定：CP 解决计算并行度，SP 解决 KV 的持久化归属和显存缩减。</p>
+</blockquote>
+<p><strong>Q10（收尾开放题，考工程判断力/表达）：如果面试官问你"这套并行体系设计得好在哪里，有没有你觉得可以改进的地方"，你会怎么答？</strong></p>
+<blockquote>
+<p>好的地方：<code>ParallelInfoManager</code> 用统一的 <code>ParallelType</code> 枚举 + 一张 map 管理所有并行域，TP 类和 DP 类分组分别用连续/跳跃两种排布方式对齐硬件互联拓扑，MoE 通信策略又用策略模式按硬件型号/并行状态自动选算子，扩展新的并行维度或新的通信策略时不需要改调用方代码，是比较标准的"关注点分离"设计。可以改进的地方：一是很多约束目前是**运行时报错**（比如 MoE 的等式校验、All2All 里的 <code>RuntimeError</code>），如果能在服务启动前做一次完整的"配置静态校验"（类似 lint），把所有并行参数的等式和互斥关系一次性检查完并给出清晰的报错定位，而不是跑到某个特定通信策略分支才发现配置不对，能减少调参时的排查成本；二是 <code>local_tp</code>/<code>ep_level</code> 这些特性目前和具体模型（DeepSeek 系列）强绑定，如果能把"是否支持某并行特性"做成模型能力的自描述（比如模型配置里声明自己支持哪些并行组合），而不是分散在各个文档和代码校验里，长期维护性会更好。</p>
+</blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>
