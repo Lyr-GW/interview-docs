@@ -1,0 +1,2136 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/2026-07-15/01-P0%E5%8F%A3%E8%BF%B0%E5%8D%A1-Dynamo%E6%8A%95%E6%9C%BA%E9%87%8F%E5%8C%96Profiling/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>P0 口述卡：Dynamo · 投机解码 · 量化 · Profiling - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#p0-dynamo-profiling" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              P0 口述卡：Dynamo · 投机解码 · 量化 · Profiling
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        交叉引用（深文路径）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        口径红线（上场先过脑）
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="p0-dynamo-profiling">P0 口述卡：Dynamo · 投机解码 · 量化 · Profiling<a class="headerlink" href="#p0-dynamo-profiling" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>本夜 Batch B 产物</strong>（2026-07-15 通宵迭代 · 口述闭环）<br />
+用途：上场可背；<strong>不重复长篇原理</strong>，深文只交叉引用。</p>
+</blockquote>
+<h2 id="_1">交叉引用（深文路径）<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>节</th>
+<th>深文</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td><a href="../../kv%20knowledge/03-NVIDIA-Dynamo/"><code>docs/kv knowledge/03-NVIDIA-Dynamo.md</code></a>、<a href="../../kv%20knowledge/08-%E9%80%89%E5%9E%8B%E4%B8%8E%E9%9D%A2%E8%AF%95%E5%8F%A3%E8%BF%B0/"><code>08-选型与面试口述.md</code></a></td>
+<td>cost / KVBM / approximate / 选型</td>
+</tr>
+<tr>
+<td>B</td>
+<td><a href="../../interview-review/02-%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81%E4%B8%93%E9%A2%98/"><code>docs/interview-review/02-投机解码专题.md</code></a>、<a href="../../interview-review/18-%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E6%A8%A1%E6%8B%9F%E9%9D%A2%E8%AF%95%E5%AE%9E%E5%BD%95/"><code>18-结构化输出模拟面试实录.md</code></a></td>
+<td>拒绝采样、演进、与结构化边界</td>
+</tr>
+<tr>
+<td>C</td>
+<td><a href="../../2026-07-10/03-%E9%87%8F%E5%8C%96%E4%B8%8EPD%E5%88%86%E7%A6%BB%E6%B7%B1%E5%BA%A6%E4%B8%93%E9%A2%98/"><code>docs/2026-07-10/03-量化与PD分离深度专题.md</code></a></td>
+<td>决策树、精度验收（本卡只取 Part A）</td>
+</tr>
+<tr>
+<td>D</td>
+<td><a href="../../2026-07-10/05-Profiling%E5%88%86%E5%B1%82%E6%8E%92%E6%9F%A5%E5%AE%9E%E6%88%98%E6%89%8B%E5%86%8C/"><code>docs/2026-07-10/05-Profiling分层排查实战手册.md</code></a></td>
+<td>四层、决策树、nsys/msprof、TTFT 五段</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">口径红线（上场先过脑）<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>红线</th>
+<th>正确口径</th>
+<th>禁止说法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MindIE 结构化**编译缓存**</td>
+<td><strong>FIFO / 容量 100</strong>（代码真相；Batch A 已对齐）</td>
+<td>LRU / 128 作为现行口径</td>
+</tr>
+<tr>
+<td><strong>TTFT −70%</strong></td>
+<td><strong>代表性测算</strong>（如 1187→351ms、高前缀重复场景）；机制可证（<code>cached_tokens</code> / Scheduler 日志），<strong>非客户原始日志</strong>——除非当场能出示拓扑+请求构造+基线毫秒</td>
+<td>「某客户实测日志 −70%」且拿不出证据</td>
+</tr>
+</tbody>
+</table>
+<p>数字标注约定：<code>[机制推导]</code> / <code>[经验量级]</code> / <code>[文档已有]</code>。</p>
+<hr />
+<h1 id="a-nvidia-dynamo">A. NVIDIA Dynamo<a class="headerlink" href="#a-nvidia-dynamo" title="Permanent link">&para;</a></h1>
+<p><strong>深文</strong>：<code>kv knowledge/03</code>、<code>08</code>。本节约 3 分钟口述。</p>
+<h3 id="a1-60">A.1 · 60 秒电梯稿（可直接背）<a class="headerlink" href="#a1-60" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>Dynamo 是分布式推理 runtime：<strong>Frontend + KV Router + KVBM + NIXL</strong>。路由默认 <code>--router-mode kv</code>，用**代价函数**选最低 cost worker。<br />
+cost ≈ <code>prefill_load_scale × adjusted_prefill + decode_blocks</code>；<code>adjusted_prefill</code> 先算 raw prefill blocks，再减掉按 <strong>Device/Host/Disk/Shared</strong> 分层加权的 overlap credit——<strong>亲和与三级池化权重在同一公式里</strong>。[文档已有]<br />
+KVBM：G1 Device → G2 Host（D2H）→ G3 Disk → G4 Remote（NIXL）。Disagg 时 Prefill 打完整 overlap，Decode 强制 overlap=0。[文档已有]<br />
+关 KV events（<code>--no-router-kv-events</code>）退化为 <strong>approximate</strong>：按路由决策预测缓存 + TTL（默认 120s）。<br />
+<strong>对标 Motor 一句</strong>：Dynamo = cost 公式里写死 tier 权重的统一栈；Motor = tokenize 后查 Mooncake Conductor 的 <strong>precise lookup</strong>——同一问题，precise 解法不同形态。[文档已有]</p>
+</blockquote>
+<h3 id="a2">A.2 · 白板要点<a class="headerlink" href="#a2" title="Permanent link">&para;</a></h3>
+<p><strong>Cost 公式（背步骤）</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>raw_prefill_blocks = (active_prefill_tokens + uncached_tokens) / block_size
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>overlap_credit =
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    overlap_score_credit × decay × device_overlap     # L1，默认 credit=1.0
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  + host_cache_hit_weight × host_overlap               # L2，默认 0.75
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  + disk_cache_hit_weight × disk_overlap               # L3，默认 0.25
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  + shared_cache_multiplier × shared_beyond_device     # 全局 L3，默认 0（关）
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>adjusted_prefill = max(raw_prefill_blocks − overlap_credit, 0)
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>cost = prefill_load_scale × adjusted_prefill + decode_blocks
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>→ 选 min(cost)；temperature&gt;0 则对 logits softmax 采样
+</code></pre></div>
+<p><strong>KVBM G1–G4</strong></p>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>名</th>
+<th>传输</th>
+<th>面试一句</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G1</td>
+<td>Device</td>
+<td>—</td>
+<td>GPU 本地最优</td>
+</tr>
+<tr>
+<td>G2</td>
+<td>Host</td>
+<td>CUDA D2H</td>
+<td>CPU pinned 扩容</td>
+</tr>
+<tr>
+<td>G3</td>
+<td>Disk</td>
+<td>NIXL Write</td>
+<td>本地盘/外置</td>
+</tr>
+<tr>
+<td>G4</td>
+<td>Remote</td>
+<td>NIXL 跨节点</td>
+<td>远程共享</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Disagg 亲和落点</strong>：Prefill 完整 overlap；Decode：<code>overlap_score_credit=0</code>，<code>assume_kv_reuse=false</code>。</p>
+<p><strong>Approximate</strong>：无 events → 预测 indexer + TTL；精度↓、运维成本↓。</p>
+<p><strong>与 Motor 对标句</strong>：Dynamo 把 tier 权重写进 cost；Motor 用 Conductor <code>/query</code> 精确最长前缀 + 负载融合。</p>
+<h3 id="a3-8">A.3 · 快问快答（≥8）<a class="headerlink" href="#a3-8" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问</th>
+<th>答要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Dynamo 一句话？</td>
+<td>cost 路由 + KVBM 统一分层内存。[文档已有]</td>
+</tr>
+<tr>
+<td>2</td>
+<td>cost 里为什么减 overlap？</td>
+<td>命中层越高，prefill 工作量越少；用 credit 折算。[机制推导]</td>
+</tr>
+<tr>
+<td>3</td>
+<td>默认权重为何 1.0 / 0.75 / 0.25？</td>
+<td>Device 最优；Host/Disk 依次降——远程命中仍有 PCIe/RDMA 税。[机制推导+文档已有]</td>
+</tr>
+<tr>
+<td>4</td>
+<td>shared multiplier 默认 0？</td>
+<td>全局 L3 默认关；开 <code>--shared-cache-type hicache</code> 才计超出 device 的 shared。[文档已有]</td>
+</tr>
+<tr>
+<td>5</td>
+<td>approximate 何时用？</td>
+<td>无 events / 运维简化；接受索引漂移与 TTL 误差。[文档已有]</td>
+</tr>
+<tr>
+<td>6</td>
+<td>PD 时亲和打哪？</td>
+<td>Prefill；Decode 关 overlap，看负载/拓扑/session。[文档已有]</td>
+</tr>
+<tr>
+<td>7</td>
+<td>有 L3 还要路由吗？</td>
+<td>要。L3 降惩罚上界，L1 亲和降 TTFT 下界。[文档已有]</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Dynamo vs llm-d？</td>
+<td>Dynamo：统一 KVBM+cost；llm-d：EPP 插件化、K8s 标准化组合。[文档已有]</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Dynamo vs Motor？</td>
+<td>Dynamo 栈内公式；Motor tokenize+Conductor precise。[文档已有]</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Session affinity？</td>
+<td><code>X-Dynamo-Session-ID</code>+TTL；P/D 独立 binding。[文档已有]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="a4-3">A.4 · 第三层追问 3 连<a class="headerlink" href="#a4-3" title="Permanent link">&para;</a></h3>
+<p><strong>① Host weight 从 0.75 改成 0.1，系统行为怎么变？</strong><br />
+→ Host 命中几乎不减 cost，路由更不倾向「KV 在 CPU 的 worker」，易把请求打到空 GPU 重算；TTFT 变差、G2 利用率虚高。[机制推导]<br />
+→ <strong>答不上的边界</strong>：没背过默认权重数值时，可以说「权重反映介质延迟比，具体数以 CLI 默认为准」，不要编造线上 A/B。</p>
+<p><strong>② Prefill 与 Decode 共用同一 KvIndexer，为何 Decode 强制 overlap=0？</strong><br />
+→ Decode 阶段请求已绑定、KV 在 D 侧消费；再按 overlap 抢亲和会干扰负载均衡，且 Disagg 下 decode worker 的 device overlap 语义与 prefill 不同。[文档已有]<br />
+→ <strong>边界</strong>：未读过 <code>router-disaggregated-serving</code> 时，承认「以官方：Decode 关 overlap」为准，不臆造源码字段名。</p>
+<p><strong>③ approximate 模式最容易踩的坑？</strong><br />
+→ 预测缓存与真实 BlockStored/Removed 不同步 → 假命中；TTL 过长假命中、过短等价无亲和。[机制推导]<br />
+→ <strong>边界</strong>：Dynamo TTL 默认 120s 可报；线上假命中率数字若无本仓实测，标「未测，只讲机制」。</p>
+<hr />
+<h1 id="b">B. 投机解码<a class="headerlink" href="#b" title="Permanent link">&para;</a></h1>
+<p><strong>深文</strong>：<code>interview-review/02</code>；与结构化边界见 <code>18</code>。</p>
+<h3 id="b1-60">B.1 · 60 秒电梯稿（可直接背）<a class="headerlink" href="#b1-60" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>Decode 小 batch 是 memory-bound：权重搬运贵、算力闲。投机 = <strong>便宜 draft 串行/并行猜 k 个 → target 一次前向并行验</strong>。<br />
+拒绝采样：接受概率 <code>min(1, p(x)/q(x))</code>；拒绝则从 <code>norm(max(0,p−q))</code> 重采样——<strong>数学无损</strong>。[机制推导]<br />
+账本：<code>单 token 延迟 = (T_draft + T_verify) / τ</code>；要 <code>(T_draft+T_verify)/τ &lt; T_target</code>。[机制推导]<br />
+演进：EAGLE（特征级自回归）→ MTP（训练期联合草稿头）→ DSpark（半自回归 Markov + 置信度按负载裁 k）。[文档已有]<br />
+<strong>与结构化</strong>：MindIE 上 MTP 与并行解码插件互斥；MTP×xgrammar <strong>插件未打通</strong>（无 rollback、单位置 bitmask），但 Serving <strong><code>InferParam</code> 入口硬互斥</strong>（<code>structured output cannot be used with mtp</code>）。勿说「可以一起开」；细则见本夜 <code>23</code>。[代码核实·红线#5]</p>
+</blockquote>
+<h3 id="b2">B.2 · 白板要点<a class="headerlink" href="#b2" title="Permanent link">&para;</a></h3>
+<p><strong>拒绝采样（白板四步）</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>1) Draft 自回归/并行出 x1..xk 及分布 q
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>2) Target 对「上下文+草稿」一次前向 → 各位置 p
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>3) 对位置 i：以 α=min(1, p(xi)/q(xi)) 接受；
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>   拒 → 丢弃 i 之后全部草稿，从 norm(max(0,p−q)) 采样 1 个，本轮结束
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>4) 全接受 → 还可 bonus 1 token（从 target 分布直接采）
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>性质：输出分布 ≡ 纯 target 自回归（standard 拒绝采样）
+</code></pre></div>
+<p><strong>性能不等式</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>加速比 ≈ T_target · τ / (T_draft + T_verify) &gt; 1
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>失效：τ↓（接受率低）| T_verify↑（大 batch compute-bound）| T_draft↑（串行 draft 太贵）
+</code></pre></div>
+<p><strong>EAGLE → MTP → DSpark（演进箭头）</strong></p>
+<table>
+<thead>
+<tr>
+<th>代</th>
+<th>核心一手</th>
+<th>代价/遗留</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EAGLE</td>
+<td>特征层自回归 + 复用 emb/LM head；EAGLE-2 动态树；EAGLE-3 去 l_fea+多层融合</td>
+<td>draft 仍串行，T_draft∝k</td>
+</tr>
+<tr>
+<td>MTP</td>
+<td>预训练带顺序 MTP 模块，推理当 draft，对齐天然好</td>
+<td>依赖模型自带权重；层间仍串行</td>
+</tr>
+<tr>
+<td>DSpark</td>
+<td>并行主干（T_draft≈与 k 解耦）+ 低秩 Markov 头补块内连贯 + confidence 按 GPU 负载裁验证长度</td>
+<td>工程最重；通用第三方落地仍在扩</td>
+</tr>
+</tbody>
+</table>
+<p><strong>与结构化互斥（诚实口径）</strong></p>
+<table>
+<thead>
+<tr>
+<th>对</th>
+<th>事实</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MindIE 插件间</td>
+<td>MTP ↔ 并行解码（LA/Memory）<strong>文档互斥</strong>；LA ↔ Memory 互斥。[文档已有]</td>
+</tr>
+<tr>
+<td>MTP × 结构化</td>
+<td><strong>入口硬互斥</strong>（<code>ValidateMtpConstraints</code>）；插件层仍**未联调**（无 rollback、单位置 mask、propose/verify 不碰 grammar）。[代码核实·02§7/<code>23</code>]</td>
+</tr>
+<tr>
+<td>vLLM</td>
+<td>有多位置 mask + rollback 路径（深文 03/18）；MindIE 尚未对齐到同能力，故入口 fail-fast。[文档已有]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b3-8">B.3 · 快问快答（≥8）<a class="headerlink" href="#b3-8" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问</th>
+<th>答要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>为何能加速？</td>
+<td>闲置算力换一次 verify 覆盖 k 步；memory-bound 时划算。[机制推导]</td>
+</tr>
+<tr>
+<td>2</td>
+<td>无损指什么？</td>
+<td>拒绝采样保证分布与 target 一致；非「永远加速」。[机制推导]</td>
+</tr>
+<tr>
+<td>3</td>
+<td>大 batch 为何失效？</td>
+<td>decode 变 compute-bound，verify 抢别人算力 → 吞吐↓。[文档已有]</td>
+</tr>
+<tr>
+<td>4</td>
+<td>EAGLE 相对 Medusa？</td>
+<td>特征层+真实 token 反馈，序列依赖更强；Medusa 多头独立。[文档已有]</td>
+</tr>
+<tr>
+<td>5</td>
+<td>MTP 为何对齐好？</td>
+<td>与主干联合训练，共享表征。[文档已有]</td>
+</tr>
+<tr>
+<td>6</td>
+<td>DFlash vs DSpark？</td>
+<td>DFlash 纯并行易 suffix decay；DSpark 加 Markov 连贯 + 负载调度 verify。[文档已有]</td>
+</tr>
+<tr>
+<td>7</td>
+<td>提高接受率手段？</td>
+<td>看 target 内部表征、蒸馏对齐、联合训练、动态树、按置信止损。[文档已有]</td>
+</tr>
+<tr>
+<td>8</td>
+<td>MindIE verify？</td>
+<td>贪心逐位比对；采样场景收窄后处理；≠ vLLM 默认概率拒绝采样。[文档已有]</td>
+</tr>
+<tr>
+<td>9</td>
+<td>与结构化同开？</td>
+<td><strong>入口硬互斥</strong>（InferParam）；插件未打通；vLLM 有投机×grammar 路径。见 <code>23</code>。[代码核实]</td>
+</tr>
+<tr>
+<td>10</td>
+<td>单 token 延迟公式？</td>
+<td><code>(T_draft+T_verify)/τ</code>。[机制推导]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b4-3">B.4 · 第三层追问 3 连<a class="headerlink" href="#b4-3" title="Permanent link">&para;</a></h3>
+<p><strong>① 高温采样（temperature 高）对 τ 的影响？</strong><br />
+→ p/q 更发散，<code>min(1,p/q)</code> 期望↓ → τ↓，甚至负加速；生产常降 k 或关投机。[机制推导]<br />
+→ <strong>边界</strong>：给不出具体 α(T) 曲线就说「定性：熵↑接受率↓」，不要编百分点。</p>
+<p><strong>② DSpark Markov 头为何几乎不涨 T_draft？</strong><br />
+→ 主干一次并行出 base_logits；头是 <code>V×r</code>/<code>r×V</code> 低秩偏置，每步≈embedding+小 GEMM，不是再跑一层 transformer；可进同一 CUDA Graph。[文档已有·机制推导]<br />
+→ <strong>边界</strong>：rank 具体数值以模型配置为准，未查权重勿报死数。</p>
+<p><strong>③ 为何说「与结构化互斥」时要分层讲？</strong><br />
+→ <strong>Serving 入口**已硬拦（InferParam）；**插件层**仍未联调（无 rollback/多位置 mask）——产品 fail-fast 盖住工程缺口。只 grep Python 会误判「无互斥」。[代码核实·<code>23</code>]<br />
+→ **边界</strong>：勿说「已打通」；打通路径 = vLLM 范式补齐，属设计非现状。</p>
+<hr />
+<h1 id="c">C. 量化决策树<a class="headerlink" href="#c" title="Permanent link">&para;</a></h1>
+<p><strong>深文</strong>：<code>2026-07-10/03</code> Part A。</p>
+<h3 id="c1-60">C.1 · 60 秒电梯稿（可直接背）<a class="headerlink" href="#c1-60" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>量化三角：<strong>显存 / 带宽 / 算力</strong>。小 batch 延迟吃带宽 → 偏 W4A16；大吞吐吃 Tensor Core → FP8/W8A8；极致压缩看 FP4。[文档已有]<br />
+W8A8：权激都 8bit，显存÷2 且可走低精 TC。GPTQ=Hessian 加权重构误差最小；AWQ=保护激活幅度大的通道——LLM 上 AWQ 往往更稳。[文档已有]<br />
+FP8：scale（static/dynamic）+ 粒度（tensor→channel→block）+ <strong>KV FP8</strong> + attention <strong>FP32 累加</strong>。[文档已有]<br />
+验收三层：烟雾 PPL → 标准 bench（数学/代码最敏感）→ 业务 A/B；归因先二分再分项（权/激/KV）。[文档已有]</p>
+</blockquote>
+<h3 id="c2">C.2 · 白板要点<a class="headerlink" href="#c2" title="Permanent link">&para;</a></h3>
+<p><strong>收益来源</strong></p>
+<table>
+<thead>
+<tr>
+<th>收益</th>
+<th>机制</th>
+<th>谁受益</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>显存</td>
+<td>字节变小</td>
+<td>全阶段</td>
+</tr>
+<tr>
+<td>带宽</td>
+<td>HBM 读↓</td>
+<td><strong>decode 小 batch</strong></td>
+</tr>
+<tr>
+<td>算力</td>
+<td>低精 TC 峰值↑</td>
+<td><strong>大 batch prefill</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>决策树（口述版）</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>目标？
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>├─ 延迟敏感、小 batch → W4A16（权压带宽；激仍高精，需反量化算力税）
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>├─ 吞吐 / 大 batch → FP8 或 W8A8（算力+带宽双收）
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>├─ 极致显存 / 新硬件 → FP4/NVFP4（需 block scale；Blackwell 叙事）
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>└─ 权重量化选型 → GPTQ（数学最小误差） vs AWQ（activation-aware，LLM 更稳）
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>KV 单独一支：cache_dtype=fp8；acc 仍 FP32
+</code></pre></div>
+<p><strong>精度验收三层</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>L1 烟雾：PPL / 几条生成目检
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>L2 标准：MMLU / GSM8K / HumanEval（数代最敏感）
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>L3 业务：线上 A/B、影子→金丝雀→可回滚
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>归因：关量化二分 → 分项开权/激/KV → 逐层 KL/余弦找 outlier → 混精剔首尾/norm/router
+</code></pre></div>
+<p><strong>口诀</strong>：小 batch 延迟 → W4A16；大吞吐 → FP8；极致压缩 → FP4。</p>
+<h3 id="c3-8">C.3 · 快问快答（≥8）<a class="headerlink" href="#c3-8" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问</th>
+<th>答要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>三种收益？</td>
+<td>显存、带宽、算力；场景不同主导项不同。[文档已有]</td>
+</tr>
+<tr>
+<td>2</td>
+<td>W8A8 vs W4A16？</td>
+<td>W8A8 双收算力；W4A16 强压权、decode 带宽友好但反量化税。[文档已有]</td>
+</tr>
+<tr>
+<td>3</td>
+<td>GPTQ vs AWQ 一句？</td>
+<td>GPTQ 最小化重构误差；AWQ 护重要通道。[文档已有]</td>
+</tr>
+<tr>
+<td>4</td>
+<td>FP8 四要素？</td>
+<td>scale、粒度、KV dtype、acc=FP32。[文档已有]</td>
+</tr>
+<tr>
+<td>5</td>
+<td>为何 attention 要 FP32 acc？</td>
+<td>低精累加误差爆炸；输出再 clamp。[机制推导+文档已有]</td>
+</tr>
+<tr>
+<td>6</td>
+<td>KV 量化收益在哪？</td>
+<td>长上下文 slot 数↑；decode 带宽。[机制推导]</td>
+</tr>
+<tr>
+<td>7</td>
+<td>验收为何三层？</td>
+<td>PPL 不够业务；bench 抓能力塌；A/B 才是上线闸。[经验量级·工程惯例]</td>
+</tr>
+<tr>
+<td>8</td>
+<td>精度掉了怎么拆？</td>
+<td>二分→分项→逐层→混精排除。[文档已有]</td>
+</tr>
+<tr>
+<td>9</td>
+<td>block scale 直觉？</td>
+<td>128×128 等块级 scale，兼顾动态范围与开销（DeepSeek 甜点叙事）。[文档已有]</td>
+</tr>
+<tr>
+<td>10</td>
+<td>CLI 记忆？</td>
+<td><code>--quantization fp8 --kv-cache-dtype fp8</code>。[文档已有]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="c4-3">C.4 · 第三层追问 3 连<a class="headerlink" href="#c4-3" title="Permanent link">&para;</a></h3>
+<p><strong>① 为何「小 batch 用 W4A16、大 batch 用 FP8」不能反着说？</strong><br />
+→ 小 batch decode 瓶颈是搬权；W4 减流量。大 batch 已 compute-bound，需要低精 TC 吞吐；W4A16 反量化吃算力反而亏。[机制推导]<br />
+→ <strong>边界</strong>：具体 crossover batch 依赖模型/硬件，未测就说「定性决策树，拐点要 profile」。</p>
+<p><strong>② KV FP8 后 prefix cache / PD 传输要注意什么？</strong><br />
+→ dtype/scale 约定一致，否则跨实例命中变假命中或反量化错；PD 传的是量化后字节+scale 元数据。[机制推导]<br />
+→ <strong>边界</strong>：未读过具体 connector 字段时，不编 Mooncake 包格式，只讲「契约一致性」。</p>
+<p><strong>③ 数学任务掉点，优先怀疑权还是 KV？</strong><br />
+→ 先标准 bench 复现 → 分项开关；经验上权/激量化更伤 logits 尖峰，KV 量化更伤长依赖——但仍以分项 A/B 为准。[经验量级]<br />
+→ <strong>边界</strong>：没有本次 run 的分项表就承认「需复测，不拍脑袋定责」。</p>
+<hr />
+<h1 id="d-profiling">D. Profiling<a class="headerlink" href="#d-profiling" title="Permanent link">&para;</a></h1>
+<p><strong>深文</strong>：<code>2026-07-10/05</code>。</p>
+<h3 id="d1-60">D.1 · 60 秒电梯稿（可直接背）<a class="headerlink" href="#d1-60" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>先分层，再抓 profiler</strong>——别无假设直接 nsys。<br />
+L1 服务 metrics → L2 排队/KV 饱和 → L3 引擎 step 形态 → L4 nsys/msprof kernel/通信。[文档已有]<br />
+吞吐上不去：先看 waiting vs running、<code>kv_usage</code>、preemptions；GPU 空是 launch/CPU，GPU 满却慢是 prefill/命中率/通信。[文档已有]<br />
+nsys：大片空隙=CPU/launch；短密 kernel=launch overhead；NCCL/HCCL=TP；H2D=KV/输入。[文档已有]<br />
+Motor TTFT 五段：<code>tokenize + Conductor + queue + prefill + delivery</code>；<strong>−70% 是代表性测算</strong>（高前缀），主因 Δprefill，不是客户原始日志。[文档已有·口径红线]</p>
+</blockquote>
+<h3 id="d2">D.2 · 白板要点<a class="headerlink" href="#d2" title="Permanent link">&para;</a></h3>
+<p><strong>四层框架</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>L1  /metrics（TTFT、TPOT、queue、prefill、hit）
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>L2  waiting / waiting_by_reason / kv_cache_usage_perc / preemptions
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>L3  iteration_tokens、prefix hit、事件 QUEUED→SCHEDULED→NEW_TOKENS
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>L4  nsys/ncu 或 msprof（Host 空隙、H2D、HCCL、Cube/Vector）
+</code></pre></div>
+<p><strong>吞吐上不去决策树</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>TPS 低？
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>├─ waiting≈0, running 小 → 加并发（流量不足）
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>├─ waiting↑, running 顶满
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>│   ├─ kv&gt;0.9 / preempt&gt;0 → utilization / max_seqs / 加卡
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>│   └─ deferred → PD KV / LoRA
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>├─ running 满, GPU util&lt;60%
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>│   ├─ 小步 decode → CUDA Graph / 加大 batch
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>│   ├─ CPU 高 → 异步调度 / 采样 offload
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>│   └─ PD H2D 抖 → PCIe 争用
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>├─ GPU 高, TPS 仍低
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>│   ├─ prefill 重 → chunked / PD / prefix
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>│   ├─ 命中低 → APC + KVA
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>│   └─ 通信长 → 并行策略 / overlap
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>└─ 扫配置：batched_tokens / chunked / prefix / utilization
+</code></pre></div>
+<p><strong>nsys / msprof 口述对照</strong></p>
+<table>
+<thead>
+<tr>
+<th>看见</th>
+<th>判断</th>
+<th>先动手</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPU 大片空隙</td>
+<td>launch/CPU-bound</td>
+<td>Graph、异步；<strong>先别换 FA</strong></td>
+</tr>
+<tr>
+<td>密集短 kernel</td>
+<td>launch overhead</td>
+<td>融合 / Graph</td>
+</tr>
+<tr>
+<td>FA/GEMM 占比高</td>
+<td>prefill 主项</td>
+<td>chunked/PD/量化算力</td>
+</tr>
+<tr>
+<td>NCCL/HCCL 长</td>
+<td>TP 通信</td>
+<td>换并行度 / overlap</td>
+</tr>
+<tr>
+<td>H2D/D2H 长</td>
+<td>KV 传、输入、采样回传</td>
+<td>拓扑/chunk/亲和</td>
+</tr>
+</tbody>
+</table>
+<p><strong>TTFT 五段（Motor）</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>TTFT = T_tokenize + T_conductor + T_queue + T_prefill + T_delivery
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>段</th>
+<th>量级标注</th>
+<th>锚点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tokenize</td>
+<td>4K≈<strong>6ms</strong> [经验量级·文档已有]</td>
+<td>TokenizerManager</td>
+</tr>
+<tr>
+<td>Conductor</td>
+<td>ms 级；超时 <strong>0.2s</strong> [文档已有]</td>
+<td><code>conductor_api_client</code></td>
+</tr>
+<tr>
+<td>queue</td>
+<td>峰时数百 ms [经验量级]</td>
+<td><code>request_queue_time_seconds</code></td>
+</tr>
+<tr>
+<td>prefill</td>
+<td><strong>主项</strong>；命中可省 [机制推导]</td>
+<td><code>prefill_time</code> + <code>cached_tokens</code></td>
+</tr>
+<tr>
+<td>delivery</td>
+<td>ms 级 [经验量级]</td>
+<td>first_token span</td>
+</tr>
+</tbody>
+</table>
+<p><strong>−70% 话术（红线）</strong><br />
+测算例：<code>c0 + L/s·(1−h)</code> → 基线 h=0.10 → 1187ms；亲和 h=0.78 → 351ms ≈ <strong>−70.5%</strong>——<strong>代表性测算</strong>，重复率 80%+ 才接近；20% 缩水；最坏≈LB+tokenize。[文档已有·<code>interview-review/13</code>]<br />
+上场句：<strong>「机制成立；该百分比是测算口径，不是我出示的客户原始日志。」</strong></p>
+<h3 id="d3-8">D.3 · 快问快答（≥8）<a class="headerlink" href="#d3-8" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问</th>
+<th>答要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>吞吐差第一步？</td>
+<td><code>/metrics</code>：waiting vs running、kv、preempt；一半是配置。[文档已有]</td>
+</tr>
+<tr>
+<td>2</td>
+<td>TTFT vs prefill_time？</td>
+<td>TTFT 含 tokenize/前端；prefill_time 引擎内。[文档已有]</td>
+</tr>
+<tr>
+<td>3</td>
+<td>waiting_by_reason？</td>
+<td>capacity=KV/并发；deferred=LoRA/KV transfer。[文档已有]</td>
+</tr>
+<tr>
+<td>4</td>
+<td>命中高 TTFT 不降？</td>
+<td>命中在别实例 / Conductor 超时回退 / 不足 block。[文档已有]</td>
+</tr>
+<tr>
+<td>5</td>
+<td>nsys GPU 空白？</td>
+<td>CPU/launch-bound，先 Graph。[文档已有]</td>
+</tr>
+<tr>
+<td>6</td>
+<td>昇腾怎么 profile？</td>
+<td>msprof；方法论同构换工具名。[文档已有]</td>
+</tr>
+<tr>
+<td>7</td>
+<td>P99 周期尖刺？</td>
+<td>对齐 GC/探针/抢占/CG 重捕获；先 metrics 锁层再 trace。[文档已有]</td>
+</tr>
+<tr>
+<td>8</td>
+<td>−70% 怎么说？</td>
+<td>代表性测算；主因 Δprefill；非原始客户日志。[口径红线]</td>
+</tr>
+<tr>
+<td>9</td>
+<td>结构化 TPOT？</td>
+<td>预热后增量常 <strong>&lt;1%–3%</strong> [经验量级·文档已有]；冷编译 TTFT +100–200ms；缓存口径 <strong>FIFO/100</strong>。[口径红线]</td>
+</tr>
+<tr>
+<td>10</td>
+<td>PromQL TTFT P99？</td>
+<td><code>histogram_quantile(0.99, rate(..._bucket[5m]))</code>。[文档已有]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="d4-3">D.4 · 第三层追问 3 连<a class="headerlink" href="#d4-3" title="Permanent link">&para;</a></h3>
+<p><strong>① 五段里哪段被 KVA 直接砍？</strong><br />
+→ <strong>prefill</strong>（少算 suffix）；queue 间接（同实例更顺）；tokenize/Conductor 是固定税（4K≈6ms + query）。[机制推导+文档已有]<br />
+→ <strong>边界</strong>：说不清 1187/351 假设来源时，退回「只讲五段与主项」，不硬背客户故事。</p>
+<p><strong>② GPU util 90% 但 TPS 低，优先哪条分支？</strong><br />
+→ 「GPU 高仍慢」：查 prefill 占比、prefix hit、通信时间线——不是再加并发。[文档已有]<br />
+→ <strong>边界</strong>：没有当时 dashboard，就讲决策树顺序，不伪造 util 数字。</p>
+<p><strong>③ 编译缓存你怎么报容量？</strong><br />
+→ MindIE：<strong>FIFO / 100</strong>（条）；不是 LRU/128。与 vLLM 字节上限是不同设计。[口径红线·Batch A]<br />
+→ <strong>边界</strong>：若面试官甩旧简历「128」，承认历史口径已订正为代码真相 FIFO/100。</p>
+<hr />
+<h1 id="15">本夜背诵顺序（15 分钟）<a class="headerlink" href="#15" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th>分钟</th>
+<th>内容</th>
+<th>验收</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0–2</td>
+<td><strong>红线</strong>：FIFO/100；TTFT−70%=测算非原始日志</td>
+<td>两句不卡壳</td>
+</tr>
+<tr>
+<td>2–5</td>
+<td><strong>A</strong> 电梯稿 + 白板 cost 公式一遍</td>
+<td>能默写 adjusted_prefill</td>
+</tr>
+<tr>
+<td>5–8</td>
+<td><strong>B</strong> 拒绝采样四步 + EAGLE→MTP→DSpark 箭头 + 结构化边界一句</td>
+<td>无损定义清楚</td>
+</tr>
+<tr>
+<td>8–11</td>
+<td><strong>C</strong> 决策树口诀 + 验收三层 + FP8 四要素</td>
+<td>不混 W4A16/FP8 场景</td>
+</tr>
+<tr>
+<td>11–14</td>
+<td><strong>D</strong> 四层 + 吞吐决策树主干 + TTFT 五段</td>
+<td>能画树到「GPU 空/满」分叉</td>
+</tr>
+<tr>
+<td>14–15</td>
+<td>每节各抽 <strong>1</strong> 道快问 + <strong>1</strong> 道第三层边界句</td>
+<td>边界句带「未测/以代码为准」</td>
+</tr>
+</tbody>
+</table>
+<p><strong>今晚只背这 4 张卡的闭环；原理细节回深文，不在此刻重读长文。</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1874 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/suanzi/07-%E8%B0%83%E5%BA%A6%E4%B8%8E%E7%AE%97%E5%AD%90%E4%BA%A4%E7%95%8C/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>07 · 调度与算子交界（CB / Chunked / PD / SpecDec / Profiling） - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#07-cb-chunked-pd-specdec-profiling" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              07 · 调度与算子交界（CB / Chunked / PD / SpecDec / Profiling）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#l0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L0 · 一张关系图
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="L0 · 一张关系图">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        指标三件套（补定义，原先默认你会）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l1-continuous-batching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L1 · Continuous Batching（连续批处理）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="L1 · Continuous Batching（连续批处理）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        算子层发生了什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        面试怎么答
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l1-chunked-prefill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L1 · Chunked Prefill
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="L1 · Chunked Prefill">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        算子层要点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        面试怎么答
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l1-pd-vs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L1 · PD 分离 vs 混部
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l1-mtp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L1 · 投机解码 / MTP（算子视角）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l2-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L2 · Profiling 分层（算子向排查清单）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l2-logits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L2 · 采样与 Logits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L3 · 交界综合题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自检
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        简历挂钩（林炜）
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="07-cb-chunked-pd-specdec-profiling">07 · 调度与算子交界（CB / Chunked / PD / SpecDec / Profiling）<a class="headerlink" href="#07-cb-chunked-pd-specdec-profiling" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>很多「推理优化题」表面是调度，根因在算子与硬件。本篇把交界题收齐，避免只懂算子名却答不了系统题。</p>
+</blockquote>
+<hr />
+<h2 id="l0">L0 · 一张关系图<a class="headerlink" href="#l0" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart LR
+    sched["调度: ContinuousBatching / PD / 亲和 / SpecDec"] --&gt; shape["决定算子看到的 M、S_q、S_kv、是否混部"]
+    shape --&gt; ops["算子表现: OI / Cube利用率 / 通信占比"]
+    ops --&gt; metric["指标: TTFT / TPOT / 吞吐 / 显存"]
+    metric --&gt; sched</code></pre>
+<p><strong>金句</strong>：调度改的是「喂给算子的 shape 与拓扑」；算子决定「这种 shape 下硬件能不能吃饱」。</p>
+<h3 id="_1">指标三件套（补定义，原先默认你会）<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>全称</th>
+<th>主要反映</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TTFT</strong></td>
+<td>Time To First Token</td>
+<td>Prefill + 排队；首字体验</td>
+</tr>
+<tr>
+<td><strong>TPOT</strong></td>
+<td>Time Per Output Token</td>
+<td>单步 Decode；生成流畅度</td>
+</tr>
+<tr>
+<td><strong>吞吐</strong></td>
+<td>tokens/s 或 req/s</td>
+<td>集群效率；常与 TPOT/batch 权衡</td>
+</tr>
+</tbody>
+</table>
+<p>优化时先问客户要的是哪一个——三者手段不同（见下节 Profiling）。</p>
+<hr />
+<h2 id="l1-continuous-batching">L1 · Continuous Batching（连续批处理）<a class="headerlink" href="#l1-continuous-batching" title="Permanent link">&para;</a></h2>
+<h3 id="_2">是什么<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p>请求不等齐：有的在 Prefill，有的在 Decode，动态组成一个 batch 迭代。</p>
+<h3 id="_3">算子层发生了什么<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FFN Linear</td>
+<td>多请求 token 拼 M → 权重复用，OI↑，Cube↑</td>
+</tr>
+<tr>
+<td>Attention</td>
+<td>**不能**跨请求拼 KV；靠多核并行 + Prefill 混部带飞</td>
+</tr>
+<tr>
+<td>布局</td>
+<td>常用 TND/VarLen packed + <code>actual_seq_*</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_4">面试怎么答<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>CB 的收益首先来自 FFN 从 GEMV 变成更饱的 GEMM；Attention 侧是「别让核空着」，并尽量让 Prefill 大块和 Decode 共享设备。极限受 KV 显存限制——所以要 PagedAttention 和/或 KV 量化。</p>
+</blockquote>
+<hr />
+<h2 id="l1-chunked-prefill">L1 · Chunked Prefill<a class="headerlink" href="#l1-chunked-prefill" title="Permanent link">&para;</a></h2>
+<h3 id="_5">是什么<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p>超长 prompt 切成 chunk（如 2048）分段 Prefill，中间可插 Decode，降低「长 Prefill 饿死 Decode」的尾延迟。</p>
+<h3 id="_6">算子层要点<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>每个 chunk 仍是「较大 M」的 Prefill 算子（PFA），<strong>chunk 内 OI 仍可很高</strong>；</li>
+<li>但每个 chunk 可能**重新搬运一遍权重** → 总权重读取次数 ↑，单 chunk OI 仍高；</li>
+<li><strong>chunk 太小</strong> → M 不够 → Prefill 也会掉向访存密集，且 Cube 不满。</li>
+</ul>
+<h3 id="_7">面试怎么答<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>Chunk 是调度与公平性工具；大小是 OI/延迟的折中。默认量级常在 1K–2K 经验区，要用 profiling 看 TTFT/TPOT 与算子耗时。</p>
+</blockquote>
+<hr />
+<h2 id="l1-pd-vs">L1 · PD 分离 vs 混部<a class="headerlink" href="#l1-pd-vs" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>混部</th>
+<th>分离</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>设备</td>
+<td>Prefill/Decode 同池</td>
+<td>分池</td>
+</tr>
+<tr>
+<td>算子视角</td>
+<td>大块 Prefill 与细粒度 Decode 抢 Cube/带宽</td>
+<td>各自按 OI 选并行与量化</td>
+</tr>
+<tr>
+<td>优点</td>
+<td>部署简单、前缀本地性好</td>
+<td>TTFT/TPOT 更稳、好调参</td>
+</tr>
+<tr>
+<td>代价</td>
+<td>互相干扰</td>
+<td>KV 传输、调度更复杂</td>
+</tr>
+</tbody>
+</table>
+<p><strong>算子层依据（必说）</strong>：Prefill 计算密集 vs Decode 访存密集 → 最优 TP/DP/EP、图模式、量化策略都不同。</p>
+<p>挂简历：Motor 支持 PD 分离与混部双形态调度——能说「调度必须感知阶段差异」。</p>
+<hr />
+<h2 id="l1-mtp">L1 · 投机解码 / MTP（算子视角）<a class="headerlink" href="#l1-mtp" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>框架在做什么</th>
+<th>算子得到什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Speculative Decoding</td>
+<td>草稿模型多提 token，目标模型一次验证</td>
+<td>验证步 M&gt;1，临时更像「小 Prefill」</td>
+</tr>
+<tr>
+<td>MTP</td>
+<td>模型头一次预测多 token</td>
+<td>Decode 步 S_q=4~8，Cube M↑、OI↑</td>
+</tr>
+</tbody>
+</table>
+<p><strong>边界</strong>：主场是算法与调度；算子侧「享受更大的 M」。不要说成自己写了 MTP kernel。</p>
+<p><strong>深挖（验证步、拒绝回滚、接受率、与结构化输出弱连接）</strong>：见 <a href="../17-SpecDec-MTP%E9%AA%8C%E8%AF%81%E6%AD%A5%E4%B8%8E%E7%AE%97%E5%AD%90%E5%83%8F/"><code>17-SpecDec-MTP验证步与算子像.md</code></a>。MLA 翻转条件见 <a href="../19-MLA-Decode-Roofline%E5%8F%AF%E4%BF%A1%E6%91%98%E8%A6%81/"><code>19</code></a>。</p>
+<hr />
+<h2 id="l2-profiling">L2 · Profiling 分层（算子向排查清单）<a class="headerlink" href="#l2-profiling" title="Permanent link">&para;</a></h2>
+<p>遇到「慢」时按层剥：</p>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>看什么</th>
+<th>可能动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 Host</td>
+<td>CPU 占用、下发间隙、Python</td>
+<td>aclgraph/CUDA Graph、减小算子碎片</td>
+</tr>
+<tr>
+<td>2 Kernel</td>
+<td>各算子耗时占比</td>
+<td>融合、换 FA/IFA、量化</td>
+</tr>
+<tr>
+<td>3 带宽</td>
+<td>HBM 吞吐、是否 memory-bound</td>
+<td>量化 W/KV、降精度、查重复搬运</td>
+</tr>
+<tr>
+<td>4 通信</td>
+<td>HCCL/NCCL 耗时</td>
+<td>MC2、调 TP/EP、Flashcomm</td>
+</tr>
+<tr>
+<td>5 显存</td>
+<td>KV 占用、是否降 batch</td>
+<td>Paged、KV 量化、前缀缓存</td>
+</tr>
+<tr>
+<td>6 调度</td>
+<td>队列、抢占、PD 干扰</td>
+<td>CB/chunk/PD/亲和</td>
+</tr>
+</tbody>
+</table>
+<p><strong>口述套路</strong>：先指标（TTFT/TPOT/吞吐）→ 再分层定位 → 再改一处用数据验证。忌「上来就开满量化」。</p>
+<hr />
+<h2 id="l2-logits">L2 · 采样与 Logits<a class="headerlink" href="#l2-logits" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Softmax + temperature/top-p 常在 <strong>图外</strong> 或轻量 kernel；</li>
+<li>结构化输出 bitmask 在采样前改 logits（Vector）；</li>
+<li>Graph 常把 Sampler 留在图外（动态控制流）；</li>
+<li>LM Head / vocab parallel 见 <a href="../18-LMHead%E4%B8%8EVocab%E5%B9%B6%E8%A1%8C/"><code>18</code></a>。</li>
+</ul>
+<p><strong>深入（脚印、异步错位、优化排序）</strong>：<a href="../15-Sampler-Logits-%E7%BA%A6%E6%9D%9F%E8%A7%A3%E7%A0%81%E8%84%9A%E5%8D%B0/"><code>15-Sampler-Logits-约束解码脚印.md</code></a>；特性图：<a href="../11-%E7%89%B9%E6%80%A7%E4%B8%8E%E7%AE%97%E5%AD%90%E4%BA%A4%E7%95%8C%E4%B8%93%E9%A2%98/"><code>11</code></a> §1。</p>
+<p>PD 下「传 KV vs 重算」：<a href="../16-%E8%B7%A8%E8%8A%82%E7%82%B9KV%E4%BC%A0%E8%BE%93%E4%B8%8E%E9%87%8D%E7%AE%97%E8%B4%A6%E6%9C%AC/"><code>16</code></a>。</p>
+<hr />
+<h2 id="l3">L3 · 交界综合题<a class="headerlink" href="#l3" title="Permanent link">&para;</a></h2>
+<p><strong>Q：客户说 Decode 变慢，但 Prefill 很快，你怎么想？</strong>  </p>
+<blockquote>
+<p>符合访存密集画像。查 batch 是否掉下来、KV 是否随上下文涨、是否 Host-bound、权重/KV 是否可量化、通信是否暴露。不要先去「优化 FA 算法公式」。</p>
+</blockquote>
+<p><strong>Q：亲和调度命中率很高，为何吞吐没线性涨？</strong>  </p>
+<blockquote>
+<p>命中省 Prefill；若瓶颈已在 Decode 带宽/采样/调度锁，Prefill 变少不会线性拉吞吐。要看阶段占比。</p>
+</blockquote>
+<p><strong>Q：开了 Graph 反而慢？</strong>  </p>
+<blockquote>
+<p>检查是否频繁 re-capture、padding 过大、attention 参数未更新导致错误重试、或本身已 Device-bound（Graph 省不了 Device）。</p>
+</blockquote>
+<hr />
+<h2 id="_8">自检<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] 能讲 CB 对 FFN vs Attention 的不同影响</li>
+<li>[ ] 能讲 Chunked Prefill 的 OI 折中</li>
+<li>[ ] 能用 OI 论证 PD 分离</li>
+<li>[ ] 能把 SpecDec/MTP 说到「拉大 M」</li>
+<li>[ ] 能按 6 层做 profiling 口述</li>
+</ul>
+<hr />
+<h2 id="_9">简历挂钩（林炜）<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>你的点</th>
+<th>怎么接到本文</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PD 分离/混部</td>
+<td>本文 L1 PD 节 + OI；你是「调度支持双形态」的人</td>
+</tr>
+<tr>
+<td>unified / load_gated</td>
+<td>CB+亲和下的负载与前缀权衡，直接作用 Decode batch 质量</td>
+</tr>
+<tr>
+<td>结构化输出异步错位</td>
+<td>CB/异步引擎下 mask 与步进对齐（见 <a href="../11-%E7%89%B9%E6%80%A7%E4%B8%8E%E7%AE%97%E5%AD%90%E4%BA%A4%E7%95%8C%E4%B8%93%E9%A2%98/"><code>11</code></a> §1）</td>
+</tr>
+<tr>
+<td>TTFT vs E2E</td>
+<td>本文指标三件套；亲和主要动 TTFT；数字卡 <a href="./13"><code>13</code></a>§1.1</td>
+</tr>
+</tbody>
+</table>
+<p>深挖：<a href="./09"><code>09</code></a>、<a href="./10"><code>10</code></a> B/D；口误 <a href="./24"><code>24</code></a>；传 KV <a href="./16"><code>16</code></a>。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

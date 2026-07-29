@@ -1,0 +1,2214 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/topics/speculative-decoding/">
+      
+      
+        <link rel="prev" href="../kv-cache-affinity/">
+      
+      
+        <link rel="next" href="../flash-attention/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>投机推理 - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mtp-dspark" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              投机推理
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 一句话总结
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 核心原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 核心原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 问题背景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 方案概述
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 实现细节
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 实现细节">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 核心模型架构演进
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-dspark-semi-autoregressive-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 DSpark 半自回归草稿（Semi-Autoregressive Generation）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-dspark-confidence-scheduled-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 DSpark 置信度调度验证（Confidence-Scheduled Verification）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 推理框架实现差异
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 框架对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 框架对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-mindie-mtp-vs-vllm-speculative-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 MindIE MTP vs vLLM Speculative Decoding
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 面试要点
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 面试要点">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 常见追问
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1 常见追问">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 投机解码在什么情况下会失效，甚至比不开还慢？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-top-1-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 为什么要用“拒绝采样”而不是直接比较草案和目标模型的 Top-1 Token？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-dspark-eagle-dflash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: DSpark 文章标题里的“半自回归生成”具体是什么？它和自回归（如 EAGLE）、并行（如 DFlash）有什么根本区别？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 口述话术
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 延伸阅读
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 延伸阅读">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 相关主题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 源文件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 一句话总结
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 核心原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 核心原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 问题背景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 方案概述
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 实现细节
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 实现细节">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 核心模型架构演进
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-dspark-semi-autoregressive-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 DSpark 半自回归草稿（Semi-Autoregressive Generation）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-dspark-confidence-scheduled-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 DSpark 置信度调度验证（Confidence-Scheduled Verification）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 推理框架实现差异
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 框架对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 框架对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-mindie-mtp-vs-vllm-speculative-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 MindIE MTP vs vLLM Speculative Decoding
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 面试要点
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 面试要点">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 常见追问
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1 常见追问">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 投机解码在什么情况下会失效，甚至比不开还慢？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-top-1-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 为什么要用“拒绝采样”而不是直接比较草案和目标模型的 Top-1 Token？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-dspark-eagle-dflash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: DSpark 文章标题里的“半自回归生成”具体是什么？它和自回归（如 EAGLE）、并行（如 DFlash）有什么根本区别？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 口述话术
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 延伸阅读
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 延伸阅读">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 相关主题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 源文件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="mtp-dspark">投机推理 (MTP / DSpark)<a class="headerlink" href="#mtp-dspark" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>覆盖 6 个知识点 | 来源 10 个文件 | 更新于 2026-07-28</p>
+</blockquote>
+<h2 id="1">1. 一句话总结<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>投机推理通过让轻量“草案模型”预测多个候选 token，再由目标模型一次性并行验证，将串行逐 token 生成转化为批量验证，从而利用 GPU 闲置算力大幅提升推理吞吐并降低延迟。DSpark 在此基础上引入半自回归草稿与置信度调度验证，在 DeepSeek V4 生产环境实测单用户生成速度提升 60%-85%，同时通过动态按负载裁剪验证长度解决了高并发下验证浪费批处理容量的核心瓶颈，且数学上保持输出分布严格无损。</p>
+<h2 id="2">2. 核心原理<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<h3 id="21">2.1 问题背景<a class="headerlink" href="#21" title="Permanent link">&para;</a></h3>
+<p>大语言模型（LLM）自回归解码每步仅生成 1 个 token，而 GPU/NPU 算力在 decode 阶段往往未饱和，瓶颈主要在于显存带宽（memory-bound）而非浮点运算。具体痛点包括：
+- 每步产出只有 1 个 token，延迟与序列长度线性相关。
+- 小批次解码时，大量算力闲置在等待权重搬运上。
+- 高吞吐、低延迟场景下，利用率严重不足。</p>
+<p>投机推理旨在将“闲置算力”变废为宝，把多次目标模型的前向计算压缩成一次并行验证。</p>
+<h3 id="22">2.2 方案概述<a class="headerlink" href="#22" title="Permanent link">&para;</a></h3>
+<p>投机推理的核心框架是“<strong>草案-验证（draft-verify）+ 拒绝采样</strong>”：
+1. <strong>Draft</strong>：一个轻量且快速的草案模型（或草稿头）自回归或并行地猜出 <code>k</code> 个候选 token，给出每个位置草案的分布 <code>q</code>。
+2. <strong>Verify</strong>：Target 目标模型对“上下文 + k 个候选 token”做一次并行前向，得到每个位置的目标分布 <code>p</code>。
+3. <strong>Accept</strong>：从左到右逐位进行拒绝采样，接受概率为 <code>min(1, p(x) / q(x))</code>。第一个被拒绝的 token 会触发从修正分布 <code>norm(max(0, p − q))</code> 重采样，并丢弃其后的所有草稿。若全部接受，还能白拿一个 bonus token。</p>
+<p><strong>关键性质</strong>：拒绝采样保证最终输出序列的分布与目标模型单独解码完全一致，<strong>数学上无损</strong>。加速收益取决于每轮实际接受的 token 数（接受长度 τ）与草案开销的比值，核心公式为：<code>单 token 延迟 = (起草时间 + 验证时间) / 每轮实际接受的 token 数</code>。</p>
+<h2 id="3">3. 实现细节<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<h3 id="31">3.1 核心模型架构演进<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<p>由于草案质量和生成速度直接决定加速效果，草案模型的架构设计经历了从独立模型到特征级自回归，再到并行生成与半自回归的演进。</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>核心改进</th>
+<th>优势场景</th>
+<th>主要瓶颈</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Vanilla SD</strong> (2023)</td>
+<td>独立小模型做草案 + 拒绝采样验证框架</td>
+<td>已有现成小模型家族，想验证可行性</td>
+<td>分布未对齐，接受率天花板低，需独立部署维护</td>
+</tr>
+<tr>
+<td><strong>Medusa</strong> (2024)</td>
+<td>在 target 顶层 hidden 上加多个并行解码头，去除了独立模型部署</td>
+<td>想要最小改动的加速</td>
+<td>各头独立预测，无序列依赖，接受率有限</td>
+</tr>
+<tr>
+<td><strong>EAGLE系列</strong> (2024-2025)</td>
+<td>在更平滑的**特征层**做自回归，复用 target 的 Embedding 和 LM Head；EAGLE-3 取消了强制特征预测以突破 Scaling 瓶颈</td>
+<td>通用长文本生成、对话，接受率高</td>
+<td>草案仍为严格串行自回归，T_draft ∝ k</td>
+</tr>
+<tr>
+<td><strong>MTP</strong> (DeepSeek, 2024)</td>
+<td>预训练阶段将顺序草案头（MTP 模块）联合训练进主干，推理直接复用</td>
+<td>自研且能控制预训练的厂商，天然对齐</td>
+<td>依赖模型自带权重，层间仍串行</td>
+</tr>
+<tr>
+<td><strong>DFlash</strong> (2026)</td>
+<td>用 <strong>Block Diffusion</strong> 并行去噪一次生成一整块草案，草案延迟与长度近乎解耦，并通过注入 target 特征至 KV Cache 保住接受率</td>
+<td>需要长草案块且大 Batch 高吞吐的部署</td>
+<td>纯并行牺牲了块内 token 间依赖，尾部接受率衰减（suffix decay）</td>
+</tr>
+<tr>
+<td><strong>DSpark</strong> (2026, DeepSeek)</td>
+<td><strong>半自回归</strong>（并行主干 + 轻量 Markov 头修复连贯性） + <strong>置信度调度验证</strong>（按 GPU 实时负载动态裁剪验证长度）</td>
+<td>生产级高并发在线服务</td>
+<td>工程复杂度最高，通用性待更多第三方验证</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-dspark-semi-autoregressive-generation">3.2 DSpark 半自回归草稿（Semi-Autoregressive Generation）<a class="headerlink" href="#32-dspark-semi-autoregressive-generation" title="Permanent link">&para;</a></h3>
+<p>DSpark 解决 DFlash 纯并行方案因缺乏块内依赖导致的“多模态碰撞”与 suffix decay 问题，同时保留了并行生成的低延迟优势。它通过两阶段建模定义块级分布：
+- <strong>并行阶段（Parallel Backbone）</strong>：基于 DFlash 骨干，一次性前向生成全部 <code>γ</code> 个位置的 base logits <code>U</code> 和隐藏状态 <code>h</code>。与 DFlash 不同的是，其将 anchor token 本身作为第一个预测位置，减少了计算量。
+- <strong>串行阶段（Sequential Stage）</strong>：在 base logits 上叠加一个极轻量的、依赖前缀的偏置 <code>B_k</code>，通过自回归因式分解引入局部连贯性：<code>P(X|x0) = Π p_k</code>，其中 <code>p_k(v) = exp(U_k(v) + B_k(x0, x&lt;k, v)) / Σ exp(...)</code>。</p>
+<p>串行偏置 <code>B_k</code> 默认由**马尔可夫头（Markov Head）** 实现，它只依赖前一个 token <code>x_{k-1}</code>，通过一个低秩分解矩阵 <code>B = W1 * W2</code> （rank-256），以极小的计算代价修正 “of problem” 这类组合为“of course”，极大地缓解了 suffix decay。论文实测，引入此头后块长从 4 扩展到 16，额外延迟仅增加 0.2%~1.3%，但接受长度最高提升 30%。</p>
+<h3 id="33-dspark-confidence-scheduled-verification">3.3 DSpark 置信度调度验证（Confidence-Scheduled Verification）<a class="headerlink" href="#33-dspark-confidence-scheduled-verification" title="Permanent link">&para;</a></h3>
+<p>为应对不同域的接受率差异以及高并发时验证无用尾部 token 造成的批处理容量浪费，DSpark 引入了一套闭环调度系统。
+- <strong>置信度头（Confidence Head）</strong>：一个轻量的线性层加 Sigmoid，估计每个位置 <code>k</code> 的 token 在前缀全被接受的前提下，自己能存活的概率 <code>c_k</code>。监督信号是分析接受率 <code>c*_k = 1 - 1/2 * ||p^d_k - p^t_k||_1</code>。由于神经网络天生过度自信，系统会通过**顺序温度缩放（STS）** 进行在线校准，将预期校准误差（ECE）从 3%~8% 降至约 1%，同时保序。
+- <strong>硬件感知前缀调度器</strong>：将验证长度的选择形式化为一个全局吞吐最大化问题 <code>Θ = τ * SPS(B)</code>。调度器按全局存活概率 <code>a_{r,j} = Π c_{r,i}</code> 降序排列所有候选 token，结合预先标定的引擎吞吐量曲线 <code>SPS(B)</code>，贪心地为每个请求动态分配最优验证预算。GPU 空闲时多验，高负载时砍掉低置信尾部 token，保证验证算力的每一份投入都有最高预期回报。在生产环境中为兼容零开销调度（ZOS），它被设计为**异步模式**，利用两步前的历史决策长度与当前的实时置信度排名，在不阻塞 GPU 流水线且严格保证输出分布无损的前提下实现动态截断。</p>
+<h3 id="34">3.4 推理框架实现差异<a class="headerlink" href="#34" title="Permanent link">&para;</a></h3>
+<p><strong>MindIE</strong> 将投机推理抽象为 <code>Plugin</code> 体系：
+- <strong>MTP 插件</strong>：紧耦合 DeepSeek V3 的专属尝试。主模型 <code>forward</code> 后产出 hidden states，MTP 层（Layer 61）以此为输入来生成草稿。验证采用确定性的 <code>verify_greedy_one_batch</code> 逐位贪心比对，在贪心解码下与自回归严格等价，<strong>无损</strong>。
+- <strong>并行解码（Lookahead / Memory Decoding）</strong>：与 MTP 互斥。Lookahead 基于 Jacobi 迭代；Memory Decoding 基于 Trie 树的前后缀检索。两者均不需要额外训练权重。</p>
+<p><strong>vLLM</strong> 建立了一套统一的 <code>SpecDecodeWorker</code> 与 <code>Speculator</code> 类层级：
+- <strong>EAGLE / MTP</strong> 等自回归草案器继承 <code>AutoRegressiveSpeculator</code>，通过 <code>prefill</code> 产生第 1 个 token 后，循环进行 <code>decode</code> 步来生成后续草稿。
+- <strong>DFlash / DSpark</strong> 继承 <code>DFlashSpeculator</code>，一次并行前向生成整块草稿。DSpark 在此之上重写了采样逻辑，在 GPU 上顺序执行轻量 Markov 头修正，所有操作均由单一 CUDA Graph 捕获，极大降低了 Python/CUDA 调度开销。
+- **验证侧**统一由 <code>RejectionSampler</code> 实现，严格遵循概率拒绝采样 <code>min(1, p/q)</code>，支持在采样场景下的**无损**任意解码（区别于 MindIE 的只限于贪心无损）。</p>
+<h2 id="4">4. 框架对比<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="41-mindie-mtp-vs-vllm-speculative-decoding">4.1 MindIE MTP vs vLLM Speculative Decoding<a class="headerlink" href="#41-mindie-mtp-vs-vllm-speculative-decoding" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>MindIE MTP</th>
+<th>vLLM Speculative Decoding</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>整体架构</td>
+<td>Plugin + DecodingPolicy（插件式）</td>
+<td>Worker + Proposer + Scorer + Sampler（独立 Worker 体系）</td>
+</tr>
+<tr>
+<td>草案模型</td>
+<td>内置 MTP 层（DeepSeek V3 专属）</td>
+<td>可插拔（EAGLE, Medusa, NGram, DFlash, DSpark 等）</td>
+</tr>
+<tr>
+<td>验证方式</td>
+<td>贪心比对：<code>verify_greedy_one_batch</code>（贪心解码下无损）</td>
+<td>拒绝采样：<code>RejectionSampler</code>（采样场景下严格无损）</td>
+</tr>
+<tr>
+<td>图编译</td>
+<td>ATB 图（C++ 侧组图，Python 侧负责多轮输入构造与校验）</td>
+<td>CUDA Graph（DSpark 一张图覆盖主干 + Markov 采样全流程）</td>
+</tr>
+<tr>
+<td>精度保证</td>
+<td>对 DeepSeek V3 在贪心场景下的确定性无损</td>
+<td>理论保证目标模型分布完全一致</td>
+</tr>
+<tr>
+<td>扩展性与场景</td>
+<td>紧耦合，针对 DeepSeek，适用于低时延、要求输出绝对一致的生产环境</td>
+<td>松耦合，适用于任意模型、开源生态和多模型通用加速</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5">5. 面试要点<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<h3 id="51">5.1 常见追问<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
+<h4 id="q">Q: 投机解码在什么情况下会失效，甚至比不开还慢？<a class="headerlink" href="#q" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>接受率低</strong>：高温采样或领域不匹配时，草稿大量被拒，高昂的 draft 计算全被浪费。</li>
+<li><strong>大 Batch 高并发下 GPU 已饱和</strong>：当解码从 memory-bound 转为 compute-bound 后，验证 草稿会抢占其他请求的算力，导致系统总吞吐暴跌。这是面试最爱追问的隐藏点，也是 DSpark 动态调度主要解决的问题。</li>
+<li><strong>Draft 自身开销过大</strong>：如果草案模型单步延迟 ≈ 目标模型单步延迟，并行验证带来的收益将被完全侵蚀。</li>
+<li><strong>显存税</strong>：额外的草稿模型权重和草稿 KV Cache 会挤占 KV Cache 池，导致最大并发数下降，间接损失吞吐。</li>
+</ul>
+<h4 id="q-top-1-token">Q: 为什么要用“拒绝采样”而不是直接比较草案和目标模型的 Top-1 Token？<a class="headerlink" href="#q-top-1-token" title="Permanent link">&para;</a></h4>
+<ul>
+<li>朴素的贪心比对（draft[i] == target[i]?）只在两者都做贪心解码且所选 Token 一致时才接受，这忽略了低概率但正确的情况。更重要的是，它只在“贪心解码”这一特定设置下才能保证最终输出与目标模型一致。一旦开启采样（temperature &gt; 0），贪心比对无法恢复目标模型的完整分布 <code>p</code>。</li>
+<li>真正的拒绝采样规则 <code>min(1, p(x)/q(x))</code> 可以在理论上证明，无论温度等采样参数如何设置，最终输出的 token 分布严格等同于目标模型自身采样的分布，这是投机解码“无损”的根本数学保障。</li>
+</ul>
+<h4 id="q-dspark-eagle-dflash">Q: DSpark 文章标题里的“半自回归生成”具体是什么？它和自回归（如 EAGLE）、并行（如 DFlash）有什么根本区别？<a class="headerlink" href="#q-dspark-eagle-dflash" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>自回归（EAGLE/MTP）</strong>：存在一个“计算上的累加”和“依赖上的强制”循环，每一步真实的 <code>transformer forward</code> 都依赖上一步的采样结果，这导致了 <code>T_draft ∝ k</code> 的延迟，使其无法承担太长或太深的 draft 结构。</li>
+<li><strong>并行（DFlash）</strong>：纯粹靠并行主干一次算出所有 token，延迟最低（约 O(1)），但各位置完全独立，缺乏内部依赖，导致越靠后的 token 接受率衰减越严重（suffix decay）。</li>
+<li><strong>半自回归（DSpark）</strong>：核心是 <strong>“并行主干负责速度 + 串行校对负责连贯”</strong>。并行 DFlash 主干一次性产出所有位置的 <strong>基础语义</strong>（的 logits），随后一个极轻量（低秩）的 <strong>Markov 校对头</strong> 从左到右滑过去，仅根据“上一个确定的词”，给“当前候选词”一个极小的逻辑连贯性偏置。这相当于只对一份已有的、几乎完美的答卷（base logits）在校对成本上做修正，它不增加繁重的 transformer 计算。所以它拥有了自回归的连贯性，但保持了并行主干约 O(1) 的核心起草速度。</li>
+</ul>
+<h3 id="52">5.2 口述话术<a class="headerlink" href="#52" title="Permanent link">&para;</a></h3>
+<p>当被要求快速讲透 DSpark 时，可以遵循“<strong>一个公式，两条腿，三根杠杆</strong>”的结构：</p>
+<blockquote>
+<p>LLM 推理加速就看这个公式：<code>单 token 延迟 = (起草时间 + 验证时间) / 接受长度 τ</code>。为了降低这个值，我们有且只有三条路径。
+DSpark 的核心就是同时拉动了这三根杠杆：
+第一，<strong>拉高分母 τ</strong>。通过“半自回归”架构，用并行主干保证速度，再挂上几乎免费的 Markov 校对头，补上了并行草稿块内部的连贯性，让草稿猜得更准，接受长度大幅提升。
+第二，<strong>压低分子的起草时间</strong>。因为主干是一次并行出整块，起草时间几乎与块长无关。
+第三，<strong>防止分子的验证时间在高并发下隐性上涨</strong>。这是 DSpark 工程上的点睛之笔。它训练了一个置信度头来预估每个草稿的存活概率，然后用一个硬件感知调度器，根据实时负载自动裁剪掉那些大概率被拒的尾部草稿。GPU 忙时不多验，拒绝算力浪费，保证了每一步验证的算力都物有所值。
+最终效果是，在 V4 线上部署中，相比之前的 MTP-1 基线，单用户生成速度 Flash 提升了 60% 到 85%，并且由于这套动态调度，它在高并发下避免了性能悬崖，把整个系统的帕累托前沿往外推了一大截。</p>
+</blockquote>
+<h2 id="6">6. 延伸阅读<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<h3 id="61">6.1 相关主题<a class="headerlink" href="#61" title="Permanent link">&para;</a></h3>
+<ul>
+<li>DSpark 论文：<em>DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation</em> (DeepSeek-AI，2026年6月)</li>
+<li>DeepSpec 开源仓库：<a href="https://github.com/deepseek-ai/DeepSpec">https://github.com/deepseek-ai/DeepSpec</a></li>
+<li>脑图拆解：《梁文锋署名的 DSpark，看懂这 10 个点就够了！》</li>
+<li>部署更新：《刚刚，DeepSeek V4 更新 DSpark，推理速度提升 80%》</li>
+<li>竞品：EAGLE-3, DFlash (Block Diffusion)</li>
+<li>框架对比：MindIE-LLM MTP 插件 vs vLLM Speculative Decoding</li>
+</ul>
+<h3 id="62">6.2 源文件<a class="headerlink" href="#62" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>文件路径</th>
+<th>标题</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>wiki/repos/mindie-pyserver/mtp-spec-decode.md</td>
+<td>MTP / Speculative Decoding 投机推理</td>
+<td>技术文档</td>
+</tr>
+<tr>
+<td>wiki/ai/techniques/dspark.md</td>
+<td>DSpark 置信度调度投机解码</td>
+<td>技术文档</td>
+</tr>
+<tr>
+<td>wiki/ai/infrastructure/deepspec.md</td>
+<td>DeepSpec 全栈投机解码训练框架</td>
+<td>技术文档</td>
+</tr>
+<tr>
+<td>wiki/raw/articles/pyserver/mtp_spec_decode_deep_analysis.md</td>
+<td>MTP / 投机推理 — 深度分析</td>
+<td>深度分析</td>
+</tr>
+<tr>
+<td>wiki/raw/articles/deepseek-dspark-qzw-2026.md</td>
+<td>梁文锋署名的DSpark，看懂这10个点就够了！</td>
+<td>科普文章</td>
+</tr>
+<tr>
+<td>wiki/raw/articles/deepseek-dspark-jxz-2026.md</td>
+<td>刚刚，DeepSeek V4更新DSpark，推理速度提升80%</td>
+<td>科技新闻</td>
+</tr>
+<tr>
+<td>wiki/raw/papers/dspark-paper-2026.md</td>
+<td>DSpark 学术论文</td>
+<td>学术论文</td>
+</tr>
+<tr>
+<td>interview/interview-review/02-投机解码专题.md</td>
+<td>专题 02：投机解码——原理、失效场景与方法演进</td>
+<td>面试准备</td>
+</tr>
+<tr>
+<td>interview/2026-07-15/01-P0口述卡-Dynamo投机量化Profiling.md</td>
+<td>P0 口述卡：Dynamo · 投机解码 · 量化 · Profiling</td>
+<td>口述卡</td>
+</tr>
+<tr>
+<td>interview/2026-07-15/23-MTP与结构化互斥深挖卡.md</td>
+<td>23 · MTP 与结构化互斥深挖卡</td>
+<td>口述卡</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

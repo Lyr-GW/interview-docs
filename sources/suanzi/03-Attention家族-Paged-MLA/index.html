@@ -1,0 +1,2363 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/suanzi/03-Attention%E5%AE%B6%E6%97%8F-Paged-MLA/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>03 · Attention 家族 / PagedAttention / MLA（由浅入深） - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#03-attention-pagedattention-mla" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              03 · Attention 家族 / PagedAttention / MLA（由浅入深）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#l0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L0 · 一张选型表（先背这个）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l1-prefill-vs-decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L1 · Prefill vs Decode 算子为何拆开
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="L1 · Prefill vs Decode 算子为何拆开">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#l11-flashattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L1.1 FlashAttention 三招（复习）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#l12-ifa-cube-vector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L1.2 IFA 的 Cube / Vector 切换
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#l13-ifa-reduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L1.3 IFA 为什么必须 Reduce？（原先说得太短）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l2-pagedattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L2 · PagedAttention 在算子层
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="L2 · PagedAttention 在算子层">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 框架概念 → 算子动作
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 和 Graph 的矛盾（必考）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-tnd-varlen-packed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 TND / VarLen packed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-vllm-pagedattention-v2-cuda-kernel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 vLLM PagedAttention V2 CUDA Kernel 源码精读
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-vllm-pagedattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 vLLM PagedAttention 设计文档核心流程
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-mindie-atb-pagedattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 MindIE ATB PagedAttention 源码对照
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27-flash-attention-pagedattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 Flash Attention × PagedAttention 结合点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#28" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.8 面试关键数字速记
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l2-mladeepseek" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L2 · MLA（DeepSeek）只记能防守的深度
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="L2 · MLA（DeepSeek）只记能防守的深度">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 解决什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-preprocess-prolog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 算子链（分清 preprocess / prolog）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 两个易混点（面试加分）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#l3-nsa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L3 · 稀疏 / NSA（知道存在即可）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        面试口述模板
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自检
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        简历挂钩（林炜）
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="03-attention-pagedattention-mla">03 · Attention 家族 / PagedAttention / MLA（由浅入深）<a class="headerlink" href="#03-attention-pagedattention-mla" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Attention 是面试最爱追问的算子族。先选型，再机制，再 MLA/Paged。
+online softmax 公式与源码精读见 <code>算子与图编译学习笔记.md</code>；Roofline 长文见 <code>ops-Q&amp;A.md</code>。</p>
+</blockquote>
+<p>对照：<code>ops-transformer/attention/</code>。</p>
+<hr />
+<h2 id="l0">L0 · 一张选型表（先背这个）<a class="headerlink" href="#l0" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>用哪个</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练 / 通用 FA</td>
+<td><code>flash_attention_score</code> (FAS)</td>
+<td>完整 FA + 常有 grad</td>
+</tr>
+<tr>
+<td>推理 Prefill</td>
+<td><code>prompt_flash_attention</code> (PFA)</td>
+<td>Q 长，切 Q，Cube 满，计算密集</td>
+</tr>
+<tr>
+<td>推理 Decode</td>
+<td><code>incre_flash_attention</code> (IFA)</td>
+<td>Q=1，切 KV，可能 ALL_VEC</td>
+</tr>
+<tr>
+<td>Prefill+Decode 统一</td>
+<td><code>fused_infer_attention_score</code> (FIA)</td>
+<td>一个入口；online softmax 目录最清晰</td>
+</tr>
+<tr>
+<td>DeepSeek MLA</td>
+<td><code>mla_preprocess/prolog</code> + <code>kv_quant_sparse_flash_attention</code> / <code>sparse_flash_mla</code></td>
+<td>压 KV + absorb</td>
+</tr>
+<tr>
+<td>Paged KV 读写</td>
+<td><code>scatter_pa_kv_cache</code> / <code>gather_pa_kv_cache</code></td>
+<td>block_table 散列/聚集</td>
+</tr>
+</tbody>
+</table>
+<p>口诀：<strong>训练 FAS；Prefill PFA；Decode IFA；懒得分就 FIA；DSv3 走 MLA 链。</strong></p>
+<hr />
+<h2 id="l1-prefill-vs-decode">L1 · Prefill vs Decode 算子为何拆开<a class="headerlink" href="#l1-prefill-vs-decode" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Prefill (PFA)</th>
+<th>Decode (IFA)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q 长度</td>
+<td>大（整段 prompt）</td>
+<td>1（+MTP 时 4~8）</td>
+</tr>
+<tr>
+<td>切谁</td>
+<td>切 Q（s1BaseSize≈128）</td>
+<td>切 KV</td>
+</tr>
+<tr>
+<td>Cube M 维</td>
+<td>≈128，满</td>
+<td>≈1（或 GQA/MLA 拼 head）</td>
+</tr>
+<tr>
+<td>多核公式直觉</td>
+<td>∝ Q 块数</td>
+<td>∝ KV 块数 × batch × head</td>
+</tr>
+<tr>
+<td>Reduce</td>
+<td>通常每核独立出自己的 Q 块</td>
+<td>多核局部 softmax 要合并</td>
+</tr>
+<tr>
+<td>OI</td>
+<td>高，计算密集</td>
+<td>低，访存密集</td>
+</tr>
+</tbody>
+</table>
+<p><strong>追问答法</strong>：不是「两个名字」，是两套 tiling 哲学——一个喂饱 Cube，一个在 Q=1 下抢救带宽与多核。</p>
+<h3 id="l11-flashattention">L1.1 FlashAttention 三招（复习）<a class="headerlink" href="#l11-flashattention" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Tiling：不物化完整 S/P；</li>
+<li>融合：块内 QK→softmax→PV，只写 O；</li>
+<li>Online Softmax：running max/sum 增量修正。</li>
+</ol>
+<h3 id="l12-ifa-cube-vector">L1.2 IFA 的 Cube / Vector 切换<a class="headerlink" href="#l12-ifa-cube-vector" title="Permanent link">&para;</a></h3>
+<p>M=1 时 Cube fractal 有效率可低至 1/16。IFA tiling 可能：</p>
+<ul>
+<li><code>CUBE_VIEW_MM</code>：KV 够长仍走 Cube；</li>
+<li><code>ALL_VEC</code>：干脆 Vector 做点积；</li>
+<li><code>CUBE_VIEW_MM_MLA</code>：MLA 专用（M 被 head 拉大）。</li>
+</ul>
+<p>这是「算子承认 decode 喂不饱 Cube」的工程证据。</p>
+<h3 id="l13-ifa-reduce">L1.3 IFA 为什么必须 Reduce？（原先说得太短）<a class="headerlink" href="#l13-ifa-reduce" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>PFA：核0 负责 Q 行块0 → 直接写出 O 行块0
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>     核1 负责 Q 行块1 → 直接写出 O 行块1
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>     （各核互不依赖 softmax 状态）
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>IFA：Q 只有 1 行，KV 被切给多个核
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>     核0：局部 (m0,l0,O0) 只看了 KV 前半
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>     核1：局部 (m1,l1,O1) 只看了 KV 后半
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>     → 必须再合并成全局 (m,l,O)，否则 softmax 分母不对
+</code></pre></div>
+<p>合并规则与 online softmax 相同：用更大的 max 去 scale 另一边的 sum/O。<br />
+一句话：<strong>PFA 切的是「输出行」，IFA 切的是「同一行的输入 KV」——后者才要 reduce。</strong><br />
+详见 <a href="../08-%E6%98%93%E6%B7%B7%E6%B7%86%E6%A6%82%E5%BF%B5%E4%B8%8E%E6%95%B0%E5%80%BC%E7%9B%B4%E8%A7%89/"><code>08</code></a> §7。</p>
+<hr />
+<h2 id="l2-pagedattention">L2 · PagedAttention 在算子层<a class="headerlink" href="#l2-pagedattention" title="Permanent link">&para;</a></h2>
+<h3 id="21">2.1 框架概念 → 算子动作<a class="headerlink" href="#21" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>框架概念</th>
+<th>算子动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>block_table</code></td>
+<td>逻辑 token → 物理 block 的索引表</td>
+</tr>
+<tr>
+<td><code>block_size</code></td>
+<td>每个物理页装多少 token（如 16/128）；太小索引开销大，太大浪费碎片</td>
+</tr>
+<tr>
+<td>写入新 K/V</td>
+<td><code>scatter_pa_kv_cache</code>：按表写到非连续 block（也可融入 <code>*_rope_cache</code>）</td>
+</tr>
+<tr>
+<td>Attention 读 KV</td>
+<td><strong>多数路径：FA/IFA kernel 内部按 block_table 间接寻址</strong>，不一定先 gather</td>
+</tr>
+<tr>
+<td>显式聚集</td>
+<td><code>gather_pa_kv_cache</code>：需要连续 KV 缓冲时才用</td>
+</tr>
+</tbody>
+</table>
+<p>收益：显存按页分配，避免「按 max_len 预留」的浪费；和 Continuous Batching 配套。</p>
+<p><strong>常见误解</strong>：以为每次 Decode 都是 <code>gather → FA → scatter</code>。实际常常是 <strong>scatter 写 + FA 直接读 paged 布局</strong>。澄清见 <a href="../08-%E6%98%93%E6%B7%B7%E6%B7%86%E6%A6%82%E5%BF%B5%E4%B8%8E%E6%95%B0%E5%80%BC%E7%9B%B4%E8%A7%89/"><code>08</code></a> §8。</p>
+<h3 id="22-graph">2.2 和 Graph 的矛盾（必考）<a class="headerlink" href="#22-graph" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Graph/aclgraph 喜欢**固定地址与 shape**；</li>
+<li><code>block_table</code> / <code>seq_lens</code> <strong>每步变</strong>。</li>
+</ul>
+<p>解法对照：</p>
+<table>
+<thead>
+<tr>
+<th>栈</th>
+<th>做法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CUDA Graph</td>
+<td>FULL + 更新 metadata / PIECEWISE / Breakable + padding</td>
+</tr>
+<tr>
+<td>ACL Graph</td>
+<td><code>update_attn_params</code> / TaskUpdate 打补丁</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-tnd-varlen-packed">2.3 TND / VarLen packed<a class="headerlink" href="#23-tnd-varlen-packed" title="Permanent link">&para;</a></h3>
+<p>多请求不同长度拼成一个大 tensor：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>请求A Q=256, 请求B Q=512, 请求C Q=128
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>物理 Q: [896, N, D]
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>actual_seq_qlen = [256, 768, 896]   # 前缀和，不是各请求裸长度列表
+</code></pre></div>
+<p>Prefill 侧让各核持续吃到大 Q 块。这是 Continuous Batching 在 attention **数据布局**上的形态，和「调度层如何组 batch」是两层：调度决定谁进 batch，TND 决定怎么拼成算子输入。</p>
+<h3 id="24-vllm-pagedattention-v2-cuda-kernel">2.4 vLLM PagedAttention V2 CUDA Kernel 源码精读<a class="headerlink" href="#24-vllm-pagedattention-v2-cuda-kernel" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>关键文件：<code>vllm/csrc/attention/paged_attention_v2.cu</code>（196行）</p>
+</blockquote>
+<p><strong>两次 kernel launch</strong>（<code>paged_attention_v2.cu:26-41</code>）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>LAUNCH_PAGED_ATTENTION_V2(HEAD_SIZE) 宏展开：
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  Kernel 1: paged_attention_v2_kernel&lt;T, CACHE_T, HEAD_SIZE, BLOCK_SIZE, NUM_THREADS, ...&gt;
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    grid = (num_heads, num_seqs, max_num_partitions)
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    shared_mem = max(logits_size, outputs_size)
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  Kernel 2: paged_attention_v2_reduce_kernel&lt;T, HEAD_SIZE, NUM_THREADS, ...&gt;
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    reduce_grid = (num_heads, num_seqs)
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    reduce_shared_mem = 2 * max_num_partitions * sizeof(float)
+</code></pre></div>
+<p><strong>分块策略</strong>（<code>paged_attention_v2.cu:82</code>）：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>值</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PARTITION_SIZE</code></td>
+<td>512</td>
+<td>长序列切成 512-token 块，每 partition 独立 softmax</td>
+</tr>
+<tr>
+<td><code>max_num_partitions</code></td>
+<td><code>ceil(max_seq_len / 512)</code></td>
+<td>一个 Q 可能被切成 N 个 partition</td>
+</tr>
+<tr>
+<td><code>NUM_THREADS</code></td>
+<td>128</td>
+<td>每 thread block 的线程数</td>
+</tr>
+<tr>
+<td><code>NUM_WARPS</code></td>
+<td>4 (128/32)</td>
+<td>每 thread block 4 个 warp</td>
+</tr>
+</tbody>
+</table>
+<p><strong>为什么需要两次 kernel</strong>：Partition 策略让超长序列（&gt;512 tokens）的 softmax 分块计算——每个 partition 算出局部 <code>max_logits</code> + <code>exp_sum</code>，再由 reduce kernel 用全局 max/sum rescale 各 partition 的 <code>tmp_out</code> 累加出最终 output。</p>
+<p><strong>Head size 编译期特化</strong>（<code>paged_attention_v2.cu:96-120</code>）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">head_size</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">32</span><span class="p">:</span><span class="w">  </span><span class="n">LAUNCH_PAGED_ATTENTION_V2</span><span class="p">(</span><span class="mi">32</span><span class="p">);</span><span class="w">  </span><span class="k">break</span><span class="p">;</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">64</span><span class="p">:</span><span class="w">  </span><span class="n">LAUNCH_PAGED_ATTENTION_V2</span><span class="p">(</span><span class="mi">64</span><span class="p">);</span><span class="w">  </span><span class="k">break</span><span class="p">;</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">80</span><span class="p">:</span><span class="w">  </span><span class="n">LAUNCH_PAGED_ATTENTION_V2</span><span class="p">(</span><span class="mi">80</span><span class="p">);</span><span class="w">  </span><span class="k">break</span><span class="p">;</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">96</span><span class="p">:</span><span class="w">  </span><span class="n">LAUNCH_PAGED_ATTENTION_V2</span><span class="p">(</span><span class="mi">96</span><span class="p">);</span><span class="w">  </span><span class="k">break</span><span class="p">;</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">112</span><span class="p">:</span><span class="w"> </span><span class="n">LAUNCH_PAGED_ATTENTION_V2</span><span class="p">(</span><span class="mi">112</span><span class="p">);</span><span class="w"> </span><span class="k">break</span><span class="p">;</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">120</span><span class="p">:</span><span class="w"> </span><span class="n">LAUNCH_PAGED_ATTENTION_V2</span><span class="p">(</span><span class="mi">120</span><span class="p">);</span><span class="w"> </span><span class="k">break</span><span class="p">;</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">128</span><span class="p">:</span><span class="w"> </span><span class="n">LAUNCH_PAGED_ATTENTION_V2</span><span class="p">(</span><span class="mi">128</span><span class="p">);</span><span class="w"> </span><span class="k">break</span><span class="p">;</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="c1">// ...</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">}</span>
+</code></pre></div>
+<blockquote>
+<p>只编译 head_size 为 16 倍数的版本以减少编译时间。常见模型 head_size=128（Llama/Qwen）命中 case 128。</p>
+</blockquote>
+<p><strong>Grid 形状</strong>：<code>(num_heads, num_seqs, max_num_partitions)</code> — 三维 grid 的含义是每个 thread block 只处理 <strong>(1 head, 1 sequence, 1 partition)</strong>。</p>
+<h3 id="25-vllm-pagedattention">2.5 vLLM PagedAttention 设计文档核心流程<a class="headerlink" href="#25-vllm-pagedattention" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>设计文档：<code>vllm/docs/design/paged_attention.md</code>（498行）— 虽然是历史文档但仍精确描述 kernel 逻辑。</p>
+</blockquote>
+<p><strong>数据流五阶段</strong>（对应 paged_attention.md §Query→Key→QK→Softmax→Value→Output）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Q 全局内存 ──→ q_vecs (shared memory)     ← 阶段1：每 warp 读同一 Q token
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>                                           ← Thread Group (2 threads) 协同取一个 token
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>K cache ────→ k_vecs (register)            ← 阶段2：逐 block 迭代，warp 级并行
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>  │ k_ptr = k_cache + block_number * kv_block_stride
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  │       + kv_head_idx * kv_head_stride + block_offset * x
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>  │
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>q_vecs × k_vecs → qk (warp reduce)        ← 阶段3：QK dot，跨 thread group reduction
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>  │
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>qk → logits[token_idx] (shared memory)    ← 阶段4：online softmax
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>  │  qk_max = warp reduce → block reduce
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>  │  exp_sum = block reduce
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>  │  logits[i] = exp(qk - qk_max) / exp_sum
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>  │
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>logits × V → accs[NUM_ROWS_PER_THREAD]    ← 阶段5：V 列优先读取
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>  │  warp reduce → cross-warp reduce
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>  │
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>accs → out_ptr (全局内存)                  ← 写回 output
+</code></pre></div>
+<p><strong>内存层次分配</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>数据结构</th>
+<th>内存类型</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>q_vecs</code></td>
+<td>Shared Memory</td>
+<td>多线程反复读取</td>
+</tr>
+<tr>
+<td><code>k_vecs</code></td>
+<td>Register</td>
+<td>每线程仅用一次</td>
+</tr>
+<tr>
+<td><code>logits</code></td>
+<td>Shared Memory</td>
+<td>跨 warp softmax 需要</td>
+</tr>
+<tr>
+<td><code>red_smem</code></td>
+<td>Shared Memory</td>
+<td>warp/block 级 reduction</td>
+</tr>
+<tr>
+<td><code>accs</code></td>
+<td>Register</td>
+<td>每线程独立累加</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key 寻址的 block_table 穿透</strong>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// paged_attention.md:176-178</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">k_ptr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">k_cache</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">physical_block_number</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">kv_block_stride</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">      </span><span class="o">+</span><span class="w"> </span><span class="n">kv_head_idx</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">kv_head_stride</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">      </span><span class="o">+</span><span class="w"> </span><span class="n">physical_block_offset</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+</code></pre></div>
+<p><code>physical_block_number</code> 来自 <code>block_tables[seq_idx][logical_block_idx]</code> — 这是 PagedAttention 的核心：<strong>逻辑块号 → 物理块号的间接寻址发生在 kernel 内部的每次 K/V 读取</strong>，不是提前 gather。</p>
+<p><strong>Thread/Warp 并行粒度</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>粒度</th>
+<th>负责</th>
+<th>并行策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Thread Group (2 threads)</td>
+<td>1 Q token × 1 K token</td>
+<td>协同取数 + 局部 dot</td>
+</tr>
+<tr>
+<td>Warp (32 threads)</td>
+<td>1 Q token × 1 KV block</td>
+<td>多 thread group 并行处理同 block</td>
+</tr>
+<tr>
+<td>Thread Block (4 warps)</td>
+<td>1 Q token × 所有 KV blocks</td>
+<td>warp 间轮询分配 block</td>
+</tr>
+<tr>
+<td>Grid</td>
+<td>所有 (head, seq, partition)</td>
+<td>三维并行</td>
+</tr>
+</tbody>
+</table>
+<h3 id="26-mindie-atb-pagedattention">2.6 MindIE ATB PagedAttention 源码对照<a class="headerlink" href="#26-mindie-atb-pagedattention" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>关键文件：
+- <code>examples/atb_models/atb_llm/nn/functional/attention/paged_attention.py</code>（143行）
+- <code>examples/atb_models/atb_llm/common_op_builders/attention/paged_attention_common_op_builder.py</code>（99行）</p>
+</blockquote>
+<p><strong>Prefill/Decode 判定</strong>（<code>paged_attention.py:36-52</code>）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">PREFILL_KV_NOT_NONE</span>    <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>   <span class="c1"># k, v 非空；k_cache, v_cache 空</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">DECODE_KV_CACHE_NOT_NONE</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">]</span>  <span class="c1"># 反过来</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">check_attention_type</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k_cache</span><span class="p">,</span> <span class="n">v_cache</span><span class="p">):</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="c1"># Prefill: 直接用连续 k/v tensor</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="c1"># Decode:  只用 k_cache/v_cache (paged 布局)</span>
+</code></pre></div>
+<p><strong>ATB Graph 节点构建流程</strong>（<code>paged_attention_common_op_builder.py:69-99</code>）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>输入 Q/K/V ──→ [可选: KV 量化(Elewise per-channel quant)] 
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>              │
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>              ├──→ ReshapeAndCache 节点
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>              │    op_type=&quot;ReshapeAndCache&quot;
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>              │    输入: k, v, k_cache, v_cache, slots
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>              │    输出: k_cache, v_cache (原地更新 paged cache)
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>              │
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>              └──→ PagedAttention 节点  
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>                   op_type=&quot;PagedAttention&quot; (decode)
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>                   或 &quot;SelfAttention&quot; (prefill)
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>                   输入: q, k_cache, v_cache, block_tables, seq_len
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>                   输出: attention_out
+</code></pre></div>
+<p><strong>ATB 与 CUDA 的关键差异</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>vLLM CUDA</th>
+<th>MindIE ATB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>实现层</td>
+<td>手写 CUDA kernel (C++)</td>
+<td>ATB Graph 算子组合 (Python + CANN)</td>
+</tr>
+<tr>
+<td>Block size</td>
+<td>编译期模板参数 <code>BLOCK_SIZE</code></td>
+<td><code>kvCacheCfg</code> 配置</td>
+</tr>
+<tr>
+<td>KV 写入</td>
+<td><code>reshape_and_cache_flash</code></td>
+<td><code>ReshapeAndCache</code> 图节点</td>
+</tr>
+<tr>
+<td>分块策略</td>
+<td>partition (512) + reduce merge</td>
+<td>ATB 后端自动决定</td>
+</tr>
+<tr>
+<td>量化</td>
+<td>FP8 KV (per-tensor/token-head)</td>
+<td>per-channel quant (Elewise 节点)</td>
+</tr>
+<tr>
+<td>精度</td>
+<td>fp16/bf16/fp32</td>
+<td>含 <code>HIGH_PRECISION</code> 模式</td>
+</tr>
+</tbody>
+</table>
+<h3 id="27-flash-attention-pagedattention">2.7 Flash Attention × PagedAttention 结合点<a class="headerlink" href="#27-flash-attention-pagedattention" title="Permanent link">&para;</a></h3>
+<p>两者不是二选一，而是 <strong>组合使用</strong>。具体结合形态因系统而异：</p>
+<table>
+<thead>
+<tr>
+<th>系统</th>
+<th>Prefill 路径</th>
+<th>Decode 路径</th>
+<th>Paged KV 如何穿透</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>vLLM FA2/FA3</strong></td>
+<td><code>flash_attn_varlen_func(block_table, seqused_k)</code></td>
+<td><code>flash_attn_with_kvcache</code></td>
+<td>FA3 内建 <code>scheduler_metadata</code> 直接支持 paged KV；FA2 用 block_table 间接寻址</td>
+</tr>
+<tr>
+<td><strong>vLLM Triton Unified</strong></td>
+<td>同一 kernel，page_size=1 的 tiling</td>
+<td>← 同一 kernel</td>
+<td><code>block_table</code> 作为 kernel 参数，每次 K/V 加载时 <code>tl.load(K_cache + block_table[...])</code></td>
+</tr>
+<tr>
+<td><strong>MindIE FIA</strong></td>
+<td><code>npu_fused_infer_attention_score</code> TND layout</td>
+<td>同一算子 BSH layout</td>
+<td><code>block_tables</code> 传入 FIA 算子，NPU 内部按表寻址</td>
+</tr>
+</tbody>
+</table>
+<p><strong>FA3 的 paged KV 支持（核心突破口）</strong>：</p>
+<p>FA3 引入了 <code>scheduler_metadata</code> 概念——将 <code>block_table</code> 映射信息编码为 attention kernel 能直接消费的格式，避免了 FA2 中每次 K/V 块加载都要查表。这是 FA3 相比 FA2 在 serving 场景最大的架构升级之一。</p>
+<p><strong>FIA 的 block_table 穿透路径</strong>（<code>fia_attention.py:67-69</code>）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">FiaAttentionMetadata</span><span class="p">(</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">seq_lens</span><span class="o">=...</span><span class="p">,</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">slot_mapping</span><span class="o">=...</span><span class="p">,</span>    <span class="c1"># token → cache slot 映射</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">block_tables</span><span class="o">=...</span><span class="p">,</span>    <span class="c1"># 分页表</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="o">...</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="p">)</span>
+</code></pre></div>
+<p>FIA 算子内部直接消费 <code>block_tables</code>，不先 gather 成连续 KV。这与 vLLM 的 FA2 路径等价——<strong>kernel 内部间接寻址，省掉 gather 的 HBM 往返</strong>。</p>
+<h3 id="28">2.8 面试关键数字速记<a class="headerlink" href="#28" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>值</th>
+<th>来源</th>
+<th>面试一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BLOCK_SIZE</code></td>
+<td>16（默认）</td>
+<td>paged_attention_v2.cu 模板参数</td>
+<td>每页 16 tokens；太小索引开销大，太大浪费碎片</td>
+</tr>
+<tr>
+<td><code>PARTITION_SIZE</code></td>
+<td>512</td>
+<td>paged_attention_v2.cu:44</td>
+<td>长序列切成 512 块分算 softmax，最后 reduce 合并</td>
+</tr>
+<tr>
+<td><code>THREAD_GROUP_SIZE</code></td>
+<td>2</td>
+<td>paged_attention.md:96</td>
+<td>2 线程协同取一个 Q/K token</td>
+</tr>
+<tr>
+<td><code>NUM_WARPS</code></td>
+<td>4</td>
+<td>paged_attention_v2.cu:81</td>
+<td>每 block 4 个 warp 分担不同 KV block</td>
+</tr>
+<tr>
+<td><code>NUM_THREADS</code></td>
+<td>128</td>
+<td>paged_attention_v2.cu:45</td>
+<td>每 thread block 128 线程</td>
+</tr>
+<tr>
+<td><code>head_size</code></td>
+<td>32~128 (16倍数)</td>
+<td>paged_attention_v2.cu:96-120</td>
+<td>编译期 switch-case 特化</td>
+</tr>
+<tr>
+<td><strong>Grid shape</strong></td>
+<td><code>(num_heads, num_seqs, max_num_partitions)</code></td>
+<td>paged_attention_v2.cu:87</td>
+<td>三维并行：1 block = 1 head × 1 seq × 1 partition</td>
+</tr>
+<tr>
+<td><code>VEC_SIZE</code></td>
+<td><code>16 / sizeof(scalar_t)</code></td>
+<td>paged_attention.md:89</td>
+<td>每 thread 每次取 16 bytes</td>
+</tr>
+<tr>
+<td><code>WARP_SIZE</code></td>
+<td>32</td>
+<td>CUDA 硬件定义</td>
+<td>每 warp 处理 1 Q × 1 KV block</td>
+</tr>
+</tbody>
+</table>
+<p><strong>口述模板</strong>：</p>
+<blockquote>
+<p>PagedAttention 的核心是 block_table 间接寻址——KV cache 按 16-token 的 page 分配，attention kernel 内部每次读 K/V 时通过 <code>block_tables[seq][logical_block]</code> 查到物理块号，而不是先把不连续的 KV gather 到一起。vLLM 在 CUDA 上用手写 kernel（<code>paged_attention_v2.cu</code>），长序列用 partition=512 拆分 + reduce 合并；MindIE 在 NPU 上用 FIA 融合算子 + ATB Graph，block_table 穿透到 FIA 内部，ATB 侧通过 ReshapeAndCache → PagedAttention 图节点完成写读分离。</p>
+</blockquote>
+<hr />
+<h2 id="l2-mladeepseek">L2 · MLA（DeepSeek）只记能防守的深度<a class="headerlink" href="#l2-mladeepseek" title="Permanent link">&para;</a></h2>
+<h3 id="24">2.4 解决什么<a class="headerlink" href="#24" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>架构</th>
+<th>每 token KV 量级</th>
+<th>Decode OI 特征</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MHA</td>
+<td>很大（多 head×D×2）</td>
+<td>OI 近似恒定且低</td>
+</tr>
+<tr>
+<td>GQA</td>
+<td>中等</td>
+<td>仍偏低</td>
+</tr>
+<tr>
+<td><strong>MLA absorb</strong></td>
+<td><strong>~576 维 latent</strong></td>
+<td>KV 极省；OI 可随 S_kv 爬升</td>
+</tr>
+</tbody>
+</table>
+<h3 id="25-preprocess-prolog">2.5 算子链（分清 preprocess / prolog）<a class="headerlink" href="#25-preprocess-prolog" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>算子</th>
+<th>干什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prefill 编码</td>
+<td><code>mla_preprocess(_v2)</code></td>
+<td>hidden → latent(+rope) <strong>写入</strong> KV/latent cache</td>
+</tr>
+<tr>
+<td>Decode 前处理</td>
+<td><code>mla_prolog(_v2/v3)</code></td>
+<td>从 cache/当前 token 准备 Q'、K 侧输入</td>
+</tr>
+<tr>
+<td>Decode Attn</td>
+<td><code>kv_quant_sparse_flash_attention</code>（常强制 absorb）或 <code>sparse_flash_mla</code></td>
+<td>真正算注意力</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Prefill：mla_preprocess →（写 latent）→ 标准/稀疏 FA
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>Decode ：mla_prolog → absorb/sparse MLA attention
+</code></pre></div>
+<p>不要把 preprocess 和 prolog 说成同一个东西：一个偏 <strong>Prefill 写入</strong>，一个偏 <strong>Decode 准备</strong>。</p>
+<h3 id="26">2.6 两个易混点（面试加分）<a class="headerlink" href="#26" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Cube fractal M=128 满载 ≠ 整步计算密集</strong><br />
+   MLA 可把 128 head 拼进 M；但短 S_kv 时 <strong>W_absorb ~200MB/步</strong> 仍可主导搬运 → 仍访存密集。长上下文 + MTP 才更可能翻转。<br />
+<strong>面试默认口径</strong>：<a href="../19-MLA-Decode-Roofline%E5%8F%AF%E4%BF%A1%E6%91%98%E8%A6%81/"><code>19-MLA-Decode-Roofline可信摘要.md</code></a>（勿直接背 <code>ops-Q&amp;A</code> 可疑长文绝对化结论）。</p>
+</li>
+<li>
+<p><strong>线性层靠 batching 拉 M；Attention 不能跨请求拼 KV</strong><br />
+   Attention 要靠 GQA/MLA（head 维）+ MTP（token 维）。</p>
+</li>
+</ol>
+<p>细节推导放在 <code>ops-Q&amp;A.md</code>，口述用上面两句即可。</p>
+<hr />
+<h2 id="l3-nsa">L3 · 稀疏 / NSA（知道存在即可）<a class="headerlink" href="#l3-nsa" title="Permanent link">&para;</a></h2>
+<p>长序列为降 Attention 计算：</p>
+<ul>
+<li><code>sparse_flash_attention</code> / <code>sparse_flash_mla</code>：只算选中 KV；</li>
+<li><code>block_sparse_attention</code>：块稀疏；</li>
+<li><code>nsa_*</code>：compress + selected（Native Sparse Attention 一族）。</li>
+</ul>
+<p>加分项，不阻塞主线。</p>
+<hr />
+<h2 id="_1">面试口述模板<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p><strong>Q：FA 和 PagedAttention 关系？</strong>  </p>
+<blockquote>
+<p>FA 解决「怎么算 attention 少访存」；Paged 解决「KV 怎么存」。常组合：paged 布局 + FA/IFA kernel 直接吃 <code>block_table</code>。</p>
+</blockquote>
+<p><strong>Q：PagedAttention V2 kernel 怎么工作的？</strong>  </p>
+<blockquote>
+<p>两次 kernel launch——主 kernel <code>paged_attention_v2_kernel</code> 按 partition=512 分块算 partial softmax，reduce kernel 用全局 max/sum rescale 合并。grid 是三维 <code>(num_heads, num_seqs, max_num_partitions)</code>。K/V 读取时 block_table 间接寻址——<code>k_ptr = k_cache + block_tables[seq][logical_block] * kv_block_stride + ...</code>。</p>
+</blockquote>
+<p><strong>Q：为什么 partition=512？</strong>  </p>
+<blockquote>
+<p>平衡 shared memory 用量和并行度。partition 太小（&lt;256）reduce kernel 开销占比大，太大（&gt;1024）shared memory 不够。512 是经验的 sweet spot，对应 512×sizeof(float)=2KB 的 logits buffer。</p>
+</blockquote>
+<p><strong>Q：vLLM 和 MindIE 在 PagedAttention 上有什么不同？</strong>  </p>
+<blockquote>
+<p>vLLM 手写 CUDA kernel（C++），thread group / warp / block 三级并行；MindIE 走 ATB Graph（Python + CANN），ReshapeAndCache → PagedAttention 图节点，后端自动调度。前者精细控制并行，后者图级优化。</p>
+</blockquote>
+<p><strong>Q：为什么说你「读过 online softmax 源码」？</strong>  </p>
+<blockquote>
+<p>FIA 的 <code>.../online_softmax/fused_block_epilogue_online_softmax_softmax.inc.hpp</code>：<code>hm=max(lm,gm)</code>，<code>dm=exp(gm-hm)</code>，<code>gl=dm*gl+ll</code>，与增量公式一一对应。</p>
+</blockquote>
+<hr />
+<h2 id="_2">自检<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] 能不看表说出 PFA/IFA/FIA/MLA 选型</li>
+<li>[ ] 能讲切 Q vs 切 KV、为何 IFA 要 reduce</li>
+<li>[ ] 能讲 Paged scatter/gather + Graph 矛盾</li>
+<li>[ ] 能讲清 MLA「省 KV」与「短上下文仍可能访存密集」</li>
+<li>[ ] 能说出 PagedAttention V2 的两次 kernel + partition=512</li>
+<li>[ ] 能画出五阶段数据流（Q→q_vecs→K→k_vecs→QK→logits→V→accs→out）</li>
+<li>[ ] 能对比 vLLM CUDA vs MindIE ATB 的 PagedAttention 实现</li>
+<li>[ ] 能讲 FA3 scheduler_metadata 如何支持 paged KV</li>
+</ul>
+<hr />
+<h2 id="_3">简历挂钩（林炜）<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>你的点</th>
+<th>怎么接到本文</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KV 亲和</td>
+<td>命中 → 少跑 <strong>PFA</strong>；未命中 → 满量 PFA。TTFT 故事的算子主角是 Prefill Attention+Linear</td>
+</tr>
+<tr>
+<td>token 级匹配</td>
+<td>保证复用的 KV 与 Paged/IFA 读到的历史一致，避免假前缀</td>
+</tr>
+<tr>
+<td>PD 分离</td>
+<td>P 池 PFA，D 池 IFA；路由与索引要匹配部署形态</td>
+</tr>
+<tr>
+<td>DeepSeek 客户</td>
+<td>可谈 MLA 选型（<code>03</code> L2），但边界是「懂链路」不是「写过 mla_prolog」</td>
+</tr>
+<tr>
+<td><strong>PagedAttention 源码</strong></td>
+<td>§2.4-2.8：能讲 V2 kernel 双 launch + partition=512 + 五阶段数据流 + 与 ATB 对比</td>
+</tr>
+<tr>
+<td><strong>FA×Paged 组合</strong></td>
+<td>§2.7：FA3 scheduler_metadata / FIA block_table 穿透 / Triton page_size=1</td>
+</tr>
+</tbody>
+</table>
+<p>深挖：<a href="./09"><code>09</code></a> §3、<a href="./11"><code>11</code></a> §2、<a href="./14"><code>14</code></a>；MLA 口径 <a href="./19"><code>19</code></a>；口误 <a href="./24"><code>24</code></a>。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

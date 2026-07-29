@@ -1,0 +1,2696 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/topics/k8s-infra/">
+      
+      
+        <link rel="prev" href="../profiling/">
+      
+      
+        <link rel="next" href="../attention-techniques/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>K8s 与基础设施 - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#k8s" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              K8s 与基础设施
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 一句话总结
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 核心原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 核心原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 问题背景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 方案概述
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 实现细节
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 实现细节">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-k8s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 K8s 控制平面与探针三兄弟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 K8s 控制平面与探针三兄弟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        控制平面组件职责
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        三探针的先后与语义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        调参关键坑位
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-mindie-pymotor-exec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 MindIE-PyMotor 的 exec 探针封装
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 MindIE-PyMotor 的 exec 探针封装">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        关键代码路径
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据流
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Pod 生命周期与优雅停机
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-ras-faultmanager-k8s-k8s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 RAS 三层：FaultManager 如何利用 K8s 做“K8s 管不了的事”
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 RAS 三层：FaultManager 如何利用 K8s 做“K8s 管不了的事”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#layer-2-k8s-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 2 与 K8s API 的交互方式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-3ras_monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 3：ras_monitor 的设计哲学
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-owner-ras-crd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 单一 Owner 原则：RAS 与 CRD 部署模式互斥
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.5 单一 Owner 原则：RAS 与 CRD 部署模式互斥">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        冲突机制
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 框架对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 框架对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-crd-vs-yaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 CRD 部署 vs 原生多 YAML 部署
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 三种探针探测方式对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 面试要点
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 面试要点">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 常见追问
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1 常见追问">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 三探针各管什么，失败动作分别是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 没配 Startup 探针会有什么问题？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-k8s-restartpolicy-always-faultmanager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: K8s 探针有 restartPolicy: Always 了，为什么还需要 FaultManager？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-faultmanager-k8s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: FaultManager 怎么拿到硬件故障信号？是等 K8s 通知吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-ras_monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 为什么还要有一层看起来简陋的 ras_monitor？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-crd-ras" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: CRD 部署模式为什么暂不支持 RAS？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 口述话术
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 延伸阅读
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 延伸阅读">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 相关主题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 源文件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 一句话总结
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 核心原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 核心原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 问题背景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 方案概述
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 实现细节
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 实现细节">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-k8s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 K8s 控制平面与探针三兄弟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 K8s 控制平面与探针三兄弟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        控制平面组件职责
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        三探针的先后与语义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        调参关键坑位
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-mindie-pymotor-exec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 MindIE-PyMotor 的 exec 探针封装
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 MindIE-PyMotor 的 exec 探针封装">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        关键代码路径
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据流
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Pod 生命周期与优雅停机
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-ras-faultmanager-k8s-k8s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 RAS 三层：FaultManager 如何利用 K8s 做“K8s 管不了的事”
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 RAS 三层：FaultManager 如何利用 K8s 做“K8s 管不了的事”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#layer-2-k8s-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 2 与 K8s API 的交互方式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-3ras_monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 3：ras_monitor 的设计哲学
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-owner-ras-crd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 单一 Owner 原则：RAS 与 CRD 部署模式互斥
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.5 单一 Owner 原则：RAS 与 CRD 部署模式互斥">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        冲突机制
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 框架对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 框架对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-crd-vs-yaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 CRD 部署 vs 原生多 YAML 部署
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 三种探针探测方式对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 面试要点
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 面试要点">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 常见追问
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1 常见追问">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 三探针各管什么，失败动作分别是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 没配 Startup 探针会有什么问题？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-k8s-restartpolicy-always-faultmanager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: K8s 探针有 restartPolicy: Always 了，为什么还需要 FaultManager？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-faultmanager-k8s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: FaultManager 怎么拿到硬件故障信号？是等 K8s 通知吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-ras_monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: 为什么还要有一层看起来简陋的 ras_monitor？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q-crd-ras" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q: CRD 部署模式为什么暂不支持 RAS？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 口述话术
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 延伸阅读
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 延伸阅读">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 相关主题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 源文件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="k8s">K8s 与基础设施<a class="headerlink" href="#k8s" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>覆盖 14 个知识点 | 来源 3 个文件 | 更新于 2026-07-15</p>
+</blockquote>
+<h2 id="1">1. 一句话总结<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>K8s 是声明式容器编排系统，Pod 是其最小调度单元；探针（Startup/Readiness/Liveness）是 kubelet 判断 Pod 生命周期的三种手段；MindIE-PyMotor 的 RAS（可靠性/可用性/可服务性）能力并非重复造轮子，而是在 K8s 原生进程级自愈之上叠加了业务感知的硬件故障分级、跨实例资源置换（ScaleP2D）和外部看门狗三层递进式防护，核心边界在于**单一 owner 原则**——CRD 模式与 FaultManager 的命令式操作存在调谐权冲突，因此 RAS 目前钉在 <code>multi_deployment</code> 模式。</p>
+<h2 id="2">2. 核心原理<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<h3 id="21">2.1 问题背景<a class="headerlink" href="#21" title="Permanent link">&para;</a></h3>
+<p>大模型分布式推理对基础设施提出三重特殊挑战：
+- <strong>启动慢</strong>：权重加载和 NPU 显存初始化可能耗时数十分钟，传统 K8s 探针在启动阶段易误判为僵死并触发重启，陷入“加载被杀 → 重新加载”的死循环。
+- <strong>故障粒度细</strong>：K8s 原生探针只能感知“容器进程是否存活”这个二元信号，无法检测 NPU 卡瞬时链路抖动（故障等级 L2）这类硬件微故障，也不懂 Decode 实例因资源不足需要跨实例置换（缩 Prefill 保 Decode）这类业务语义。
+- <strong>恢复需优雅</strong>：推理引擎正在处理的请求不能被 <code>SIGKILL</code> 粗暴打断，需有完整的优雅下线流程（通知 Coordinator 停止调度新请求、在途请求处理完、显存中 KV Cache 不用丢失）。</p>
+<h3 id="22">2.2 方案概述<a class="headerlink" href="#22" title="Permanent link">&para;</a></h3>
+<p>MindIE-PyMotor 的可靠性方案是三层递进式防护，能力递增、代价也递增：</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph L1["Layer 1：K8s 原生自愈（进程级，最快最轻）"]
+        A1["kubelet: restartPolicy + 探针"]
+        A2["StatefulSet controller：副本数不够就补"]
+    end
+    subgraph L2["Layer 2：Motor FaultManager（实例级，业务感知）"]
+        B1["主动 Watch Node/ConfigMap 感知 NPU 硬件故障分级 L1~L6"]
+        B2["FaultManager 隔离/恢复决策"]
+        B3["ScaleP2D / Token 重推 策略"]
+    end
+    subgraph L3["Layer 3：ras_monitor 外部看护（黑盒，最慢最重）"]
+        C1["kubectl get pods 轮询"]
+        C2["虚拟推理请求 + metrics 阈值判定挂死"]
+        C3["deploy.py 整体重建"]
+    end
+    L1 --&gt;|"容器级故障已覆盖"| Stop1((Done))
+    L2 --&gt; B2 --&gt; B3
+    B3 --&gt;|"L2~L6 故障在此层闭环"| Stop2((Done))
+    L2 -.-&gt;|"FaultManager 自身失效等极端场景"| C1
+    C1 --&gt; C2 --&gt; C3</code></pre>
+<p>核心思路：<strong>K8s 负责把进程重新跑起来，Motor 负责让新进程变回集群中正确的那个角色</strong>。K8s 是通用地基，Motor RAS 是在其上叠加的业务调度智能。</p>
+<h2 id="3">3. 实现细节<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<h3 id="31-k8s">3.1 K8s 控制平面与探针三兄弟<a class="headerlink" href="#31-k8s" title="Permanent link">&para;</a></h3>
+<h4 id="_1">控制平面组件职责<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<p>K8s 的声明式核心：用户提交期望状态（YAML 的 <code>spec</code>），控制面组件持续让实际状态（<code>status</code>）向它收敛。</p>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>位置</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kube-apiserver</code></td>
+<td>控制平面</td>
+<td>集群统一入口，认证/鉴权/准入控制</td>
+</tr>
+<tr>
+<td><code>etcd</code></td>
+<td>控制平面</td>
+<td>分布式 KV 存储，集群状态唯一持久化来源</td>
+</tr>
+<tr>
+<td><code>kube-scheduler</code></td>
+<td>控制平面</td>
+<td>为新 Pod 选择合适 Node（只决策不执行）</td>
+</tr>
+<tr>
+<td><code>kube-controller-manager</code></td>
+<td>控制平面</td>
+<td>多控制器集合，每个跑“期望 vs 实际”的 reconcile 循环</td>
+</tr>
+<tr>
+<td><code>kubelet</code></td>
+<td>每个 Node</td>
+<td>调用容器运行时启停容器，本地执行探针探测</td>
+</tr>
+<tr>
+<td><code>kube-proxy</code></td>
+<td>每个 Node</td>
+<td>维护 iptables/IPVS 规则实现 Service 流量转发</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_2">三探针的先后与语义<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h4>
+<p>这是最容易被问倒的细节：<strong>Startup 成功前 Liveness 不生效；Startup 成功后永久停止，Readiness 和 Liveness 才真正开始工作。</strong></p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant K as kubelet
+    participant C as 容器进程
+    Note over K,C: 容器刚启动
+    loop 直到成功或达到 failureThreshold
+        K-&gt;&gt;C: Startup Probe
+    end
+    Note over K: Startup 成功一次后永久停止
+    par Readiness 持续探测
+        loop periodSeconds 周期
+            K-&gt;&gt;C: Readiness Probe
+            C--&gt;&gt;K: 失败 → 从 Service Endpoints 摘除（不重启）
+        end
+    and Liveness 持续探测
+        loop periodSeconds 周期
+            K-&gt;&gt;C: Liveness Probe
+            C--&gt;&gt;K: 达到 failureThreshold → kill 并重建
+        end
+    end</code></pre>
+<table>
+<thead>
+<tr>
+<th>探针</th>
+<th>解决的问题</th>
+<th>失败后果</th>
+<th>何时运行</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Startup</strong></td>
+<td>启动完成否？（大模型权重加载慢）</td>
+<td>失败达阈值 → 重启容器</td>
+<td>容器创建后立即，成功一次后**永久停止**</td>
+</tr>
+<tr>
+<td><strong>Readiness</strong></td>
+<td>能收流量吗？（业务忙/依赖未就绪）</td>
+<td>仅从 Service Endpoints 摘除，<strong>不重启</strong></td>
+<td>Startup 成功后贯穿 Running 阶段</td>
+</tr>
+<tr>
+<td><strong>Liveness</strong></td>
+<td>进程僵死了吗？</td>
+<td>失败达阈值 → kubelet 杀掉容器重建</td>
+<td><strong>Startup 通过后才开始</strong></td>
+</tr>
+</tbody>
+</table>
+<p>口述铁律：<strong>没配 Startup 时 Liveness 的 initialDelay 扛不住大模型加载；有 Startup 时启动窗内别指望 Liveness 救场——它根本还没上岗。</strong></p>
+<h4 id="_3">调参关键坑位<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>坑</th>
+<th>正确做法</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无 Startup + Liveness 阈值短</td>
+<td>必须配 Startup，<code>failureThreshold</code> 给足权重加载时间预算（例：<code>periodSeconds: 10</code> × <code>failureThreshold: 100</code> ≈ 1000s）</td>
+<td>防止“加载中被杀 → 重新加载 → 又被杀”死循环</td>
+</tr>
+<tr>
+<td>Liveness <code>failureThreshold=1</code></td>
+<td>至少设为 3~5</td>
+<td>一次超时就杀容器代价极大（清空缓存、权重全部重载），宁可漏杀不可误杀</td>
+</tr>
+<tr>
+<td>探活打业务大端口且 timeout 太短</td>
+<td>探活走管理面轻量端口，<code>timeoutSeconds</code> 设 30s 防止高 batch 时健康检查被排队误判</td>
+<td></td>
+</tr>
+<tr>
+<td>Readiness 与 Liveness 探同一重路径</td>
+<td>分离：Readiness 可能因业务忙摘流但不应导致重启</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-mindie-pymotor-exec">3.2 MindIE-PyMotor 的 exec 探针封装<a class="headerlink" href="#32-mindie-pymotor-exec" title="Permanent link">&para;</a></h3>
+<p>项目选择了 <code>exec</code> 而非原生 <code>httpGet</code> 探针，原因：端口是运行时从 <code>user_config.json</code> 动态读取的，且 MindIE 支持 mTLS 需要证书握手——<code>exec</code> 将灵活性下沉到脚本，YAML 保持角色无关。</p>
+<p>Coordinator 探针片段：
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">startupProbe</span><span class="p">:</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">exec</span><span class="p">:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bash -c &quot;$CONFIGMAP_PATH/probe.sh startup&quot;</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">periodSeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">failureThreshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w">   </span><span class="c1"># 最多容忍 1000s 启动时间</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="nt">readinessProbe</span><span class="p">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">exec</span><span class="p">:</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bash -c &quot;$CONFIGMAP_PATH/probe.sh readiness&quot;</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span><span class="nt">periodSeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">  </span><span class="nt">timeoutSeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w">      </span><span class="c1"># 防止高负载时误判</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">  </span><span class="nt">failureThreshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span><span class="w">     </span><span class="c1"># 容忍偶发抖动</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="nt">livenessProbe</span><span class="p">:</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">  </span><span class="nt">exec</span><span class="p">:</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bash -c &quot;$CONFIGMAP_PATH/probe.sh liveness&quot;</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">  </span><span class="nt">periodSeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">  </span><span class="nt">timeoutSeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">  </span><span class="nt">failureThreshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</code></pre></div></p>
+<h4 id="_4">关键代码路径<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>MindIE-PyMotor/examples/deployer/probe/probe.sh</code>：薄封装层，按位置参数将 probe 类型和角色传给 Python。</li>
+<li><code>MindIE-PyMotor/examples/deployer/probe/probe.py</code>：真正探测逻辑——按角色查配置文件的端口，拼出 <code>http(s)://&lt;PodIP&gt;:&lt;port&gt;/{startup|readiness|liveness}</code>，发 HTTP GET，200 则 <code>exit 0</code>，否则 <code>exit 1</code>。包括角色收敛设计（prefill/decode/union 统一映射为 <code>node_manager</code> 查端口）。</li>
+</ul>
+<h4 id="_5">数据流<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
+<p>kubelet exec probe.sh → probe.sh 转发 probe.py role probe_type
+  → probe.py 读 env POD_IP (来自 Downward API) + 解析 user_config.json 取端口
+  → HTTP GET 推理引擎管理端口
+  → 退出码 0（成功）/ 1（失败） → kubelet 按阈值和动作采取行动</p>
+<h3 id="33-pod">3.3 Pod 生命周期与优雅停机<a class="headerlink" href="#33-pod" title="Permanent link">&para;</a></h3>
+<p>Lifecycle 钩子和探针是同一生命周期的两面：
+- <strong>PreStop 钩子</strong>：收到删除请求后先跑 <code>prestop.sh</code>，做业务层下线通知（通知 Coordinator 停止调度新请求、等在途请求完成），再对 NodeManager 进程发 SIGTERM。
+- <strong>terminationGracePeriodSeconds</strong>（默认 30s）：给优雅退出留够时窗，超时才 SIGKILL。
+- <strong>Pod 状态机</strong>：Pending（等待调度/拉镜像）→ Running → Terminating（收到删除，跑 preStop 等宽限期）→ 移除。</p>
+<h3 id="34-ras-faultmanager-k8s-k8s">3.4 RAS 三层：FaultManager 如何利用 K8s 做“K8s 管不了的事”<a class="headerlink" href="#34-ras-faultmanager-k8s-k8s" title="Permanent link">&para;</a></h3>
+<h4 id="layer-2-k8s-api">Layer 2 与 K8s API 的交互方式<a class="headerlink" href="#layer-2-k8s-api" title="Permanent link">&para;</a></h4>
+<p>FaultManager 并非被动等 K8s 通知，而是**主动** Watch K8s 资源作为硬件故障信号的入口：</p>
+<table>
+<thead>
+<tr>
+<th>K8s 能力</th>
+<th>对应代码模块</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Node Watch API</strong></td>
+<td><code>resource_monitor.py: _monitor_node()</code></td>
+<td>监听 Node Ready Condition；变 NotReady 时注入 NODE_REBOOT 故障(L6)</td>
+</tr>
+<tr>
+<td><strong>ConfigMap Watch API</strong></td>
+<td><code>resource_monitor.py: _monitor_configmap()</code></td>
+<td>监听 <code>mindx-dl-deviceinfo-{node}</code> ConfigMap（硬件监控组件 MindX DL 写入），解析 NPU 卡故障/网络故障</td>
+</tr>
+<tr>
+<td><strong>Pod 反查 Node</strong></td>
+<td><code>k8s_client.py: get_node_hostname_by_pod_ip()</code></td>
+<td>按 <code>field_selector=status.podIP=xxx</code> 查询 Pod 所在 Node，用于故障定位和 ScaleP2D 里的节点所有权交换</td>
+</tr>
+</tbody>
+</table>
+<p>Watch 连接的健壮性设计（生产级 K8s Watch 客户端范例）：
+1. <strong>先 List 再 Watch，立即处理一次当前状态</strong>——避免漏掉 Watch 建立前已存在的故障。
+2. <strong>HTTP 410 Gone 专门处理</strong>——这是 etcd 历史版本窗口过期的正常协议行为，需重新 List 拿到新 <code>resourceVersion</code>，不能当普通异常无脑重试。
+3. <strong>指数退避 + 重连成功后重置计数</strong>——防止 apiserver 抖动时客户端惊群。</p>
+<h4 id="layer-3ras_monitor">Layer 3：ras_monitor 的设计哲学<a class="headerlink" href="#layer-3ras_monitor" title="Permanent link">&para;</a></h4>
+<p>完全独立于 Motor 进程的外部脚本，只依赖 <code>kubectl</code> + HTTP 虚拟推理请求。设计原则：<strong>看门狗要比被看对象更简单、更独立</strong>，防止 Controller 自身卡死时一切失效而不自知。代价是检测周期约 20 分钟、恢复手段最重（<code>deploy.py</code> 整体重建整个服务）。</p>
+<h3 id="35-owner-ras-crd">3.5 单一 Owner 原则：RAS 与 CRD 部署模式互斥<a class="headerlink" href="#35-owner-ras-crd" title="Permanent link">&para;</a></h3>
+<h4 id="_6">冲突机制<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>multi_deployment 模式</strong>：Motor 的 <code>deploy.py</code> 直接管理原生 Deployment/StatefulSet YAML，拥有完整控制权。FaultManager 可通过 HTTP 协议让 Pod 内进程自行优雅退出，不受干涉。</li>
+<li><strong>infer_service_set（CRD，默认模式）</strong>：<code>InferServiceSet</code> 的 <code>spec.replicas</code> 由 infer-operator 的 reconcile 循环持续纠正。如果 FaultManager 命令式绕过它直接让某个 Prefill 实例的进程退出，Operator 仍认为 replicas 数达标，会立即重新拉起一个新 Pod——两个控制回路抢同一资源，违反 K8s 声明式系统的 single writer 原则。</li>
+</ul>
+<p>解法方向（架构层面，非现状）：将 ScaleP2D 等动作改为修改 <code>InferServiceSet.spec</code>，把恢复动作也纳入 CRD 的声明式语义。目前文档明确记录“CRD 方式尚未完成 RAS 能力适配验证”。</p>
+<h2 id="4">4. 框架对比<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="41-crd-vs-yaml">4.1 CRD 部署 vs 原生多 YAML 部署<a class="headerlink" href="#41-crd-vs-yaml" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th><code>infer_service_set</code>（CRD 方式，默认）</th>
+<th><code>multi_deployment</code>（原生多 YAML）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>apply 对象</td>
+<td>1 个 <code>InferServiceSet</code> + RBAC</td>
+<td>N 个独立 Deployment/StatefulSet/Service YAML</td>
+</tr>
+<tr>
+<td>Pod 创建方</td>
+<td>infer-operator（自定义控制器）</td>
+<td><code>kubectl apply</code> 直接创建</td>
+</tr>
+<tr>
+<td>前置依赖</td>
+<td>集群需预装 infer-operator CRD</td>
+<td>无额外依赖，原生 K8s 即可</td>
+</tr>
+<tr>
+<td>扩缩容方式</td>
+<td>改 CR spec 里 role 的 replicas 再 apply</td>
+<td>对新增/删除的 engine yaml 分别 apply/delete</td>
+</tr>
+<tr>
+<td>多角色约束收敛</td>
+<td>Operator 内部保证语义一致性</td>
+<td>由 deploy.py 脚本编排保证</td>
+</tr>
+<tr>
+<td><strong>RAS 能力支持</strong></td>
+<td><strong>尚未适配</strong>（单一 owner 冲突）</td>
+<td><strong>完整支持</strong></td>
+</tr>
+</tbody>
+</table>
+<p>选用原则：当同一批资源存在跨对象的业务约束、且这些约束值得平台层收敛时，用 CRD；否则原生资源 + 脚本编排依赖更少、更简单。</p>
+<h3 id="42">4.2 三种探针探测方式对比<a class="headerlink" href="#42" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>适用场景</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>httpGet</code></td>
+<td>端口/路径固定，无复杂鉴权</td>
+<td>配置简洁，K8s 原生支持</td>
+<td>协议固定，无法动态选端口或 mTLS</td>
+</tr>
+<tr>
+<td><code>exec</code></td>
+<td>需脚本级灵活性（动态端口、mTLS、自定义判定逻辑）</td>
+<td>灵活性高，探测逻辑可在 ConfigMap 中热更新</td>
+<td>依赖镜像内解释器，增加一次进程 fork 开销</td>
+</tr>
+<tr>
+<td><code>tcpSocket</code></td>
+<td>仅需确认端口可达</td>
+<td>开销最小</td>
+<td>无法确认服务是否真正处理请求</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5">5. 面试要点<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<h3 id="51">5.1 常见追问<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
+<h4 id="q">Q: 三探针各管什么，失败动作分别是什么？<a class="headerlink" href="#q" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Startup</strong>：启动完成否？失败等同 Liveness → 重启容器。成功一次后永久停止。</li>
+<li><strong>Readiness</strong>：能收流量否？失败仅从 Endpoints 摘除，<strong>不重启</strong>。</li>
+<li><strong>Liveness</strong>：僵死了吗？<strong>Startup 通过后才开始</strong>；失败 → kill 并按策略重建。</li>
+</ul>
+<h4 id="q-startup">Q: 没配 Startup 探针会有什么问题？<a class="headerlink" href="#q-startup" title="Permanent link">&para;</a></h4>
+<p>大模型权重加载耗时长（分钟级），Liveness 的 initialDelay 很难找准一个既能快速发现真僵死、又不会在启动期误杀的值。没有 Startup 时极易进入“加载中被杀→重启后又重新加载→又被杀”的循环。</p>
+<h4 id="q-k8s-restartpolicy-always-faultmanager">Q: K8s 探针有 <code>restartPolicy: Always</code> 了，为什么还需要 FaultManager？<a class="headerlink" href="#q-k8s-restartpolicy-always-faultmanager" title="Permanent link">&para;</a></h4>
+<p>K8s 只感知容器存活二元信号。NPU 卡 L2 级瞬时抖动（进程仍绿，无感）、Decode 资源不足需跨实例缩 P 保 D、跨 Pod 组成的推理实例整体恢复——这些都是业务语义，K8s 设计上就不该管。</p>
+<h4 id="q-faultmanager-k8s">Q: FaultManager 怎么拿到硬件故障信号？是等 K8s 通知吗？<a class="headerlink" href="#q-faultmanager-k8s" title="Permanent link">&para;</a></h4>
+<p>不是被动等。Motor Controller 内 <code>ResourceMonitor</code> 线程主动 Watch K8s API：监听 Node 的 Ready Condition 变 NotReady（节点故障）、Watch <code>mindx-dl-deviceinfo-{node}</code> ConfigMap（由华为 MindX DL 硬件监控组件写入）获取 NPU 卡/交换机故障分级码。</p>
+<h4 id="q-ras_monitor">Q: 为什么还要有一层看起来简陋的 ras_monitor？<a class="headerlink" href="#q-ras_monitor" title="Permanent link">&para;</a></h4>
+<p>FaultManager 依赖硬件驱动/ZMQ 上报感知故障，且自身运行在 Controller 内。如果 Controller 自身卡死、或故障模式驱动层感知不到（纯软件死锁），Layer 2 完全失效且不自知。ras_monitor 设计为完全独立的外部看门狗，故意只依赖 kubectl + HTTP，代价是检测慢（20 分钟级）但极端场景下最可靠。</p>
+<h4 id="q-crd-ras">Q: CRD 部署模式为什么暂不支持 RAS？<a class="headerlink" href="#q-crd-ras" title="Permanent link">&para;</a></h4>
+<p>违反 single writer 原则。CRD 模式下 infer-operator 持续以 <code>spec.replicas</code> 为期望状态 reconcile。FaultManager 若命令式绕过它直接让 Pod 进程优雅退出，Operator 仍认为 replicas 数达标会立即拉起新 Pod，两个控制回路冲突。RAS 目前钉在 Motor 拥有完全控制权的 <code>multi_deployment</code> 模式。</p>
+<h3 id="52">5.2 口述话术<a class="headerlink" href="#52" title="Permanent link">&para;</a></h3>
+<p><strong>60 秒电梯稿：</strong></p>
+<blockquote>
+<p>“K8s 探针三兄弟服务三个问题：Startup——权重加载完没？成功一次后永久停，期间 Liveness 不生效，避免加载中被杀死的循环。Readiness——能不能收流量？失败只摘 Endpoints，不重启。Liveness——进程僵死没？失败才 kill 加重建，阈值要松，因为误杀代价是清空缓存再加载几分钟。</p>
+<p>但探针只能看见容器活/死。NPU 瞬时抖动、Decode 卡要隔离、P 到 D 资源置换，K8s 设计上管不了。Motor RAS 叠三层：K8s 自愈管进程级重启地基；FaultManager 主动 Watch Node/ConfigMap 做硬件分级加隔离/重推/ScaleP2D；ras_monitor 外部 kubectl 加虚拟推理，约 20 分钟级黑盒兜底整服务重拉。</p>
+<p>关键原则：单一 owner。CRD 模式下 infer-operator 拥有 replicas 调谐权，FaultManager 若命令式停进程会和 reconcile 打架，所以 RAS 目前钉在 multi_deployment。”</p>
+</blockquote>
+<h2 id="6">6. 延伸阅读<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<h3 id="61">6.1 相关主题<a class="headerlink" href="#61" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>K8s 基础与探针/Pod 详细 YAML 落地</strong>：<a href="12-K8s基础探针与Pod专题.md">专题 12</a></li>
+<li><strong>MindIE 并行策略与调度调优</strong>（实例内视角，与本篇实例间高可用互补）：<a href="09-MindIE并行策略与调度调优专题.md">专题 09</a></li>
+<li><strong>FaultManager 设计文档</strong>：<code>MindIE-PyMotor/docs/zh/design/fault_tolerance/fault_manager.md</code></li>
+<li><strong>ScaleP2D 特性文档</strong>：<code>MindIE-PyMotor/docs/zh/design/fault_tolerance/scale_p2d.md</code></li>
+</ul>
+<h3 id="62">6.2 源文件<a class="headerlink" href="#62" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>文件路径</th>
+<th>标题</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>interview/k8s/12-K8s基础探针与Pod专题.md</code></td>
+<td>K8s 基础知识 × 探针 × Pod 专题</td>
+<td>面试模拟问答</td>
+</tr>
+<tr>
+<td><code>interview/k8s/13-MindIE-PyMotor的RAS能力与K8s关系专题.md</code></td>
+<td>MindIE-PyMotor 的 RAS 能力与 K8s 关系</td>
+<td>面试模拟问答</td>
+</tr>
+<tr>
+<td><code>interview/2026-07-15/22-K8s探针与RAS口述卡.md</code></td>
+<td>K8s 探针与 RAS 口述卡（可背）</td>
+<td>口述卡/速查</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

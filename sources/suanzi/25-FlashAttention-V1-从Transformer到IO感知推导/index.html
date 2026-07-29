@@ -1,0 +1,2257 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/suanzi/25-FlashAttention-V1-%E4%BB%8ETransformer%E5%88%B0IO%E6%84%9F%E7%9F%A5%E6%8E%A8%E5%AF%BC/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>25 · FlashAttention V1：从 Transformer 的 X/Q/K/V 到 IO 感知 Attention - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#25-flashattention-v1-transformer-xqkv-io-attention" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              25 · FlashAttention V1：从 Transformer 的 X/Q/K/V 到 IO 感知 Attention
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 先定位：它在 Transformer 的哪里
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. 先定位：它在 Transformer 的哪里">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 记号与形状
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-x-qkv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 输入 X 如何变成 Q、K、V
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 输入 X 如何变成 Q、K、V">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-token-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 从 token 到 X
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 三组可学习投影
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-qkv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Q、K、V 的语义直觉
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-rope-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 RoPE 与 mask 在什么位置
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-scaled-dot-product-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 标准 Scaled Dot-Product Attention 到底算了什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 标准 Scaled Dot-Product Attention 到底算了什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 三个显式中间量
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-flops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 为什么普通实现慢：不是只看 FLOPs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-softmax-online-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Softmax 的数值稳定性与 Online Softmax
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Softmax 的数值稳定性与 Online Softmax">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-safe-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Safe Softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 能合并的统计量
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 为什么它是精确的
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-4-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 一个 4 个分数、2 个块的数值例子
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-flashattention-v1-tile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. FlashAttention V1 前向：tile 如何流动
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. FlashAttention V1 前向：tile 如何流动">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 分块与片上工作集
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 V1 的循环顺序
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-q_i-k_j-v_j-tile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 单个 (Q_i, K_j, V_j) tile 内发生的事
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 面向学习的伪代码
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 它究竟优化了什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 反向传播为什么还能省内存
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-pagedattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 与推理系统、PagedAttention 和当前项目的边界
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 与推理系统、PagedAttention 和当前项目的边界">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-prefill-decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Prefill 与 Decode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-flashattention-pagedattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 FlashAttention 与 PagedAttention 不冲突
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 与 KV 亲和调度的因果链
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-cuda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 读源码/写 CUDA 时应观察什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 面试高频问答
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. 面试高频问答">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1flashattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：FlashAttention 为什么快？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2online-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：Online Softmax 是近似吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3-sp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：既然不保存 S/P，怎么得到正确输出？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4flashattention-pagedattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：FlashAttention 与 PagedAttention 的关系？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5-decode-prefill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：为什么 Decode 不能直接照搬 Prefill 的高吞吐？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考资料
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="25-flashattention-v1-transformer-xqkv-io-attention">25 · FlashAttention V1：从 Transformer 的 X/Q/K/V 到 IO 感知 Attention<a class="headerlink" href="#25-flashattention-v1-transformer-xqkv-io-attention" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>目标：把 <code>输入 X → Q/K/V → S → Softmax → O</code> 的理论计算，和 FlashAttention V1 的分块、Online Softmax、GPU 存储层级串成一条完整链路。</p>
+<p>结论先行：<strong>FlashAttention 是精确 Attention，不改变 <code>O(N²d)</code> 的主计算量；它通过 tiling 与 Online Softmax 不物化 <code>N×N</code> 的 <code>S/P</code> 矩阵，减少 HBM↔片上 SRAM 的读写，因此降低显存占用并通常加速。</strong></p>
+</blockquote>
+<hr />
+<h2 id="1-transformer">1. 先定位：它在 Transformer 的哪里<a class="headerlink" href="#1-transformer" title="Permanent link">&para;</a></h2>
+<p>以 decoder-only LLM 的一个 Transformer block 为例，注意力子层位于 FFN 之前（省略残差的细节）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>@startuml
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>top to bottom direction
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>skinparam shadowing false
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>rectangle &quot;Token IDs&quot; as ids
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>rectangle &quot;Embedding + position\nX: (B, N, d_model)&quot; as x
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>rectangle &quot;RMSNorm / LayerNorm&quot; as norm
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>rectangle &quot;Fused QKV projection\nXW_qkv + b&quot; as qkvproj
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>rectangle &quot;reshape / RoPE&quot; as rope
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>rectangle &quot;Q, K, V\n(B, H, N, d_h)&quot; as qkv
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>rectangle &quot;Attention\nFlashAttention can replace\nstandard attention here&quot; as attn
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>rectangle &quot;O projection + residual&quot; as out
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>rectangle &quot;FFN / MoE&quot; as ffn
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>ids --&gt; x
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>x --&gt; norm
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>norm --&gt; qkvproj
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>qkvproj --&gt; rope
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>rope --&gt; qkv
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>qkv --&gt; attn
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>attn --&gt; out
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>out --&gt; ffn
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>@enduml
+</code></pre></div>
+<p>FlashAttention 只重排图中的 <strong>Attention</strong> 计算；它不负责 tokenizer、Embedding、QKV Linear、RoPE、FFN 或调度。</p>
+<h3 id="11">1.1 记号与形状<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<p>下文先讨论单层、单个 batch 样本、一个 attention head；多 batch、多 head 只是并行复制。</p>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>形状</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>B</code></td>
+<td>标量</td>
+<td>batch size</td>
+</tr>
+<tr>
+<td><code>N</code></td>
+<td>标量</td>
+<td>当前序列长度；训练/Prefill 时常很大</td>
+</tr>
+<tr>
+<td><code>d_model</code></td>
+<td>标量</td>
+<td>模型隐藏维度</td>
+</tr>
+<tr>
+<td><code>H</code></td>
+<td>标量</td>
+<td>query head 数</td>
+</tr>
+<tr>
+<td><code>d_h</code></td>
+<td>标量</td>
+<td>单 head 维度，通常 <code>d_model / H</code></td>
+</tr>
+<tr>
+<td><code>X</code></td>
+<td><code>[B, N, d_model]</code></td>
+<td>进入注意力子层的 hidden states</td>
+</tr>
+<tr>
+<td><code>Q/K/V</code></td>
+<td><code>[B, H, N, d_h]</code></td>
+<td>Query、Key、Value</td>
+</tr>
+<tr>
+<td><code>S</code></td>
+<td><code>[B, H, N, N]</code></td>
+<td>softmax 前的 attention logits</td>
+</tr>
+<tr>
+<td><code>P</code></td>
+<td><code>[B, H, N, N]</code></td>
+<td>softmax 后的 attention probabilities</td>
+</tr>
+<tr>
+<td><code>O</code></td>
+<td><code>[B, H, N, d_h]</code></td>
+<td>每个 head 的 attention 输出</td>
+</tr>
+</tbody>
+</table>
+<p>为减少符号噪音，后续省去 <code>B,H</code>，把单 head 的 <code>Q,K,V</code> 写成 <code>[N, d]</code>，其中 <code>d=d_h</code>。</p>
+<hr />
+<h2 id="2-x-qkv">2. 输入 X 如何变成 Q、K、V<a class="headerlink" href="#2-x-qkv" title="Permanent link">&para;</a></h2>
+<h3 id="21-token-x">2.1 从 token 到 X<a class="headerlink" href="#21-token-x" title="Permanent link">&para;</a></h3>
+<p>输入 token IDs 先查 embedding 表，得到每个位置的向量；decoder-only LLM 随后叠加或通过 RoPE 注入位置信息。经过前一层 block 后，注意力层接到：</p>
+<div class="arithmatex">\[
+X \in \mathbb{R}^{N \times d_{model}}
+\]</div>
+<p>实际模型通常先做 RMSNorm/LayerNorm，记为 <span class="arithmatex">\(\hat X\)</span>。它只改变数值尺度，不改变本节的核心形状。</p>
+<h3 id="22">2.2 三组可学习投影<a class="headerlink" href="#22" title="Permanent link">&para;</a></h3>
+<p>每个 token 的同一份 hidden state 要扮演三种角色，因此用三组权重投影：</p>
+<div class="arithmatex">\[
+Q = \hat XW_Q + b_Q,\quad K = \hat XW_K + b_K,\quad V = \hat XW_V + b_V
+\]</div>
+<p>在普通 multi-head attention（MHA）中：</p>
+<div class="arithmatex">\[
+W_Q,W_K,W_V \in \mathbb{R}^{d_{model}\times d_{model}}
+\]</div>
+<p>工程实现往往把它们拼成一次大的 GEMM：</p>
+<div class="arithmatex">\[
+[Q'\;K'\;V'] = \hat XW_{QKV},\quad
+W_{QKV}\in\mathbb{R}^{d_{model}\times 3d_{model}}
+\]</div>
+<p>再把每个 <code>[N, d_model]</code> reshape 为 <code>[H, N, d_h]</code>。这样减少三次独立 kernel launch 和中间读写；<strong>QKV projection 是 GEMM/Linear 优化问题，不是 FlashAttention 本体。</strong></p>
+<h3 id="23-qkv">2.3 Q、K、V 的语义直觉<a class="headerlink" href="#23-qkv" title="Permanent link">&para;</a></h3>
+<p>对位置 <span class="arithmatex">\(t\)</span> 的 token：</p>
+<ul>
+<li><span class="arithmatex">\(q_t\)</span>：当前位置“要查询什么”；</li>
+<li><span class="arithmatex">\(k_j\)</span>：位置 <span class="arithmatex">\(j\)</span>“可被匹配的索引”；</li>
+<li><span class="arithmatex">\(v_j\)</span>：位置 <span class="arithmatex">\(j\)</span>“真正被取回的内容”。</li>
+</ul>
+<p>点积 <span class="arithmatex">\(q_tk_j^\top\)</span> 是相似度；softmax 将所有候选位置变成权重；最后对 <span class="arithmatex">\(v_j\)</span> 加权求和。</p>
+<h3 id="24-rope-mask">2.4 RoPE 与 mask 在什么位置<a class="headerlink" href="#24-rope-mask" title="Permanent link">&para;</a></h3>
+<p>RoPE 通常应用在 <span class="arithmatex">\(Q,K\)</span> 上而不作用于 <span class="arithmatex">\(V\)</span>，随后才进入 Attention。decoder 的因果约束通过 mask 实现：当 key 的位置 <span class="arithmatex">\(j\)</span> 在 query 位置 <span class="arithmatex">\(i\)</span> 之后时，设：</p>
+<div class="arithmatex">\[
+S_{ij}=-\infty,\quad j&gt;i
+\]</div>
+<p>因此这些未来 token 的 softmax 概率为零。padding mask 也是同一原则：无效位置的 logit 置为 <span class="arithmatex">\(-\infty\)</span>。</p>
+<blockquote>
+<p>GQA/MQA 只改变 Q head 和 KV head 的共享关系，不改变单个 Q-head 对一组 K/V 做 Attention 的 FlashAttention 核心推导。</p>
+</blockquote>
+<hr />
+<h2 id="3-scaled-dot-product-attention">3. 标准 Scaled Dot-Product Attention 到底算了什么<a class="headerlink" href="#3-scaled-dot-product-attention" title="Permanent link">&para;</a></h2>
+<h3 id="31">3.1 三个显式中间量<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<p>给定单 head 的 <span class="arithmatex">\(Q,K,V\in\mathbb{R}^{N\times d}\)</span>：</p>
+<div class="arithmatex">\[
+S = \frac{QK^\top}{\sqrt d}\in\mathbb{R}^{N\times N}
+\]</div>
+<div class="arithmatex">\[
+P = \operatorname{softmax}_{row}(S)\in\mathbb{R}^{N\times N}
+\]</div>
+<div class="arithmatex">\[
+O = PV\in\mathbb{R}^{N\times d}
+\]</div>
+<p>对输出第 <span class="arithmatex">\(i\)</span> 行，更直观的标量形式为：</p>
+<div class="arithmatex">\[
+o_i=\sum_{j=1}^{N}\frac{\exp(q_i k_j^\top/\sqrt d)}{\sum_{t=1}^{N}\exp(q_i k_t^\top/\sqrt d)}v_j
+\]</div>
+<h3 id="32-flops">3.2 为什么普通实现慢：不是只看 FLOPs<a class="headerlink" href="#32-flops" title="Permanent link">&para;</a></h3>
+<p>标准 Attention 的两次矩阵乘法仍然需要 <span class="arithmatex">\(O(N^2d)\)</span> FLOPs。问题在于常见分解实现会：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Q,K,V (HBM)
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  → QKᵀ
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  → S [N,N] 写回 HBM
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  → 读 S，softmax
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  → P [N,N] 写回 HBM
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  → 读 P、读 V，计算 PV
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  → O 写回 HBM
+</code></pre></div>
+<p><code>S</code> 和 <code>P</code> 均为 <span class="arithmatex">\(N\times N\)</span>。例如 <code>N=4096</code>、FP16 时，<strong>单 head 的一个 <code>N×N</code> 矩阵约 32 MiB</strong>；多头、batch 和反向传播会放大这一代价。GPU 的 HBM 容量大但相对片上 SRAM 慢，反复落盘的大矩阵会让 Attention 受内存带宽限制。</p>
+<p>注意两个常见误解：</p>
+<ol>
+<li>FlashAttention **没有**把全量 Attention 的二次计算变成线性计算；长序列的精确 Attention 仍是 <span class="arithmatex">\(O(N^2d)\)</span> FLOPs。</li>
+<li>“不存 <code>S/P</code>”不等于完全没有局部 score。kernel 仍会在片上暂存一个 tile 的局部 score；区别是它不写回 HBM，也不保留完整全局矩阵。</li>
+</ol>
+<hr />
+<h2 id="4-softmax-online-softmax">4. Softmax 的数值稳定性与 Online Softmax<a class="headerlink" href="#4-softmax-online-softmax" title="Permanent link">&para;</a></h2>
+<h3 id="41-safe-softmax">4.1 Safe Softmax<a class="headerlink" href="#41-safe-softmax" title="Permanent link">&para;</a></h3>
+<p>直接算 <span class="arithmatex">\(e^{s_j}\)</span> 容易溢出。对一行 logits <span class="arithmatex">\(s\)</span>，标准稳定写法先减去行最大值：</p>
+<div class="arithmatex">\[
+m=\max_j s_j,\qquad l=\sum_j e^{s_j-m},\qquad
+\operatorname{softmax}(s_j)=\frac{e^{s_j-m}}{l}
+\]</div>
+<p>传统实现需要先知道整行的 <span class="arithmatex">\(m\)</span>，再得到整行的 <span class="arithmatex">\(l\)</span>，这看似要求完整 <code>S</code> 都已存在，和“逐 KV 块处理”冲突。</p>
+<h3 id="42">4.2 能合并的统计量<a class="headerlink" href="#42" title="Permanent link">&para;</a></h3>
+<p>假设一行已经处理过若干 KV 块，维护：</p>
+<div class="arithmatex">\[
+m^{old}=\max(\text{已处理 logits}),\quad
+l^{old}=\sum e^{s-m^{old}},\quad
+u^{old}=\sum e^{s-m^{old}}v
+\]</div>
+<p>新到一个 score block <span class="arithmatex">\(S^{blk}\)</span> 和对应 value block <span class="arithmatex">\(V^{blk}\)</span> 后，逐行计算：</p>
+<div class="arithmatex">\[
+m^{blk}=\operatorname{rowmax}(S^{blk})
+\]</div>
+<div class="arithmatex">\[
+m^{new}=\max(m^{old},m^{blk})
+\]</div>
+<div class="arithmatex">\[
+\alpha=e^{m^{old}-m^{new}}
+\]</div>
+<div class="arithmatex">\[
+l^{new}=\alpha l^{old}+\operatorname{rowsum}\left(e^{S^{blk}-m^{new}}\right)
+\]</div>
+<div class="arithmatex">\[
+u^{new}=\alpha u^{old}+e^{S^{blk}-m^{new}}V^{blk}
+\]</div>
+<p>全部 KV block 处理完成后：</p>
+<div class="arithmatex">\[
+O=\operatorname{diag}(l)^{-1}u
+\]</div>
+<p>初值是 <span class="arithmatex">\(m=-\infty,l=0,u=0\)</span>。由于 <span class="arithmatex">\(m^{new}\ge m^{old}\)</span>，修正项 <span class="arithmatex">\(\alpha\le1\)</span>；所有指数的指数部分不大于零，数值稳定性保持。</p>
+<h3 id="43">4.3 为什么它是精确的<a class="headerlink" href="#43" title="Permanent link">&para;</a></h3>
+<p>旧块的每一项都只是换了一个基准最大值：</p>
+<div class="arithmatex">\[
+e^{s-m^{new}}=e^{s-m^{old}}e^{m^{old}-m^{new}}
+\]</div>
+<p>所以只要把旧的分母累加量 <span class="arithmatex">\(l\)</span> 与未归一化输出 <span class="arithmatex">\(u\)</span> 同时乘以 <span class="arithmatex">\(\alpha\)</span>，新旧块就处在同一个尺度上。最终结果与整行一次性 safe softmax 数学等价；差异只可能来自浮点加法顺序带来的微小舍入误差，而非算法近似。</p>
+<h3 id="44-4-2">4.4 一个 4 个分数、2 个块的数值例子<a class="headerlink" href="#44-4-2" title="Permanent link">&para;</a></h3>
+<p>先只看一行 attention score，按两个 KV block 到达：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>第 1 块：scores = [2, 1]，对应 values = [v1, v2]
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>第 2 块：scores = [3, 0]，对应 values = [v3, v4]
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>完整行： scores = [2, 1, 3, 0]
+</code></pre></div>
+<p>如果一开始就拿到完整行，safe softmax 的全局最大值是 <code>3</code>，分母为：</p>
+<div class="arithmatex">\[
+e^{2-3}+e^{1-3}+e^{3-3}+e^{0-3}
+=e^{-1}+e^{-2}+1+e^{-3}
+\]</div>
+<p>现在假设第 2 块还没来。处理第 1 块后：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>m_old = max(2, 1) = 2
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>l_old = exp(2 - 2) + exp(1 - 2) = 1 + e⁻¹
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>u_old = 1 · v1 + e⁻¹ · v2
+</code></pre></div>
+<p>这里的 <code>u_old</code> 是**尚未除分母的加权 value 和**；若现在就输出，才会计算 <code>O_old = u_old / l_old</code>。</p>
+<p>第 2 块 <code>[3, 0]</code> 到来后，最大值从 <code>2</code> 提升到 <code>3</code>。第 1 块以前的指数项原本以 <code>2</code> 为基准，现在必须换成以 <code>3</code> 为基准：</p>
+<div class="arithmatex">\[
+\alpha=e^{m_{old}-m_{new}}=e^{2-3}=e^{-1}
+\]</div>
+<p>因此第 1 块的旧权重全部乘 <code>e⁻¹</code>，第 2 块在新基准下的权重是 <code>[1, e⁻³]</code>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>l_new = e⁻¹ · (1 + e⁻¹) + 1 + e⁻³
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>      = e⁻¹ + e⁻² + 1 + e⁻³
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>u_new = e⁻¹ · (v1 + e⁻¹ · v2) + 1 · v3 + e⁻³ · v4
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>      = e⁻¹v1 + e⁻²v2 + v3 + e⁻³v4
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>O = u_new / l_new
+</code></pre></div>
+<p>这正是完整行直接做 safe softmax 的分子和分母。核心不是“把两块各自 softmax 后再平均”；而是**当新块出现更大的最大值时，把旧块的统计量重缩放到新的共同基准**。</p>
+<p>可以把三个状态记成一句话：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>m：当前见过的最大 score，负责数值稳定；
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>l：以 m 为基准的未归一化权重和，最终是分母；
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>u：以 m 为基准的「权重 × V」之和，最终是分子。
+</code></pre></div>
+<hr />
+<h2 id="5-flashattention-v1-tile">5. FlashAttention V1 前向：tile 如何流动<a class="headerlink" href="#5-flashattention-v1-tile" title="Permanent link">&para;</a></h2>
+<h3 id="51">5.1 分块与片上工作集<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
+<p>把 sequence 维切为：</p>
+<div class="arithmatex">\[
+Q_i\in\mathbb{R}^{B_r\times d},\quad
+K_j,V_j\in\mathbb{R}^{B_c\times d}
+\]</div>
+<p>片上 SRAM（CUDA 中主要是 shared memory + register）一次至少需要容纳：<span class="arithmatex">\(Q_i,K_j,V_j\)</span>、局部 score <span class="arithmatex">\(S_{ij}\)</span>、输出累加量及每行的 <span class="arithmatex">\(m,l\)</span>。块大小不能只追求大，而要受 shared memory、寄存器、occupancy 和 tensor core tile 形状共同约束。</p>
+<h3 id="52-v1">5.2 V1 的循环顺序<a class="headerlink" href="#52-v1" title="Permanent link">&para;</a></h3>
+<p>论文 V1 的抽象算法以 K/V block 为外循环：一个 <span class="arithmatex">\(K_j,V_j\)</span> 读入 SRAM 后，复用给全部 <span class="arithmatex">\(Q_i\)</span>。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>初始化 HBM 中 O=0, m=-∞, l=0
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>for every KV block (K_j, V_j):
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    从 HBM 加载 K_j, V_j 到 SRAM
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    for every Q block Q_i:
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        从 HBM 加载 Q_i，以及当前 O_i, m_i, l_i
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        S_ij = Q_i K_jᵀ / √d，并在 tile 内应用 causal/padding mask
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        用 Online Softmax 合并 (m_i, l_i, O_i) 与当前 block
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        将更新后的 O_i, m_i, l_i 写回 HBM
+</code></pre></div>
+<p>这和“每个输出行独立”的数学定义完全一致。V1 的代价是同一个 <code>Q_i/O_i</code> 会随不同 KV block 多次读写；FA2 改善了并行工作划分和循环顺序，但那是后续版本问题，不能混入 V1 的核心定义。</p>
+<h3 id="53-q_i-k_j-v_j-tile">5.3 单个 <code>(Q_i, K_j, V_j)</code> tile 内发生的事<a class="headerlink" href="#53-q_i-k_j-v_j-tile" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>@startuml
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>skinparam shadowing false
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>rectangle &quot;HBM\nQ_i, K_j, V_j\nO_i, m_i, l_i&quot; as hbm
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>rectangle &quot;SRAM / registers\n1. Q_i K_jᵀ / √d\n2. add causal/padding mask\n3. rowmax + exp\n4. Online merge\n5. local P_ij V_j&quot; as sram
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>rectangle &quot;HBM\nupdated O_i, m_i, l_i\n(no global S or P)&quot; as out
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>hbm --&gt; sram : load tiles
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>sram --&gt; out : write small state
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>@enduml
+</code></pre></div>
+<p>局部概率 <span class="arithmatex">\(P_{ij}=\exp(S_{ij}-m_i^{new})\)</span> 仅在 tile 内存活：它立刻与 <span class="arithmatex">\(V_j\)</span> 相乘并并入 <span class="arithmatex">\(u/O\)</span>，不会以完整全局矩阵形式落到 HBM。</p>
+<h3 id="54">5.4 面向学习的伪代码<a class="headerlink" href="#54" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># 单 head，省略 batch/head 维；这是算法伪代码，不是高性能 CUDA 实现。</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">q_blocks</span><span class="p">:</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">inf</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">kv_blocks</span><span class="p">:</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">Kj</span><span class="p">,</span> <span class="n">Vj</span> <span class="o">=</span> <span class="n">load_to_sram</span><span class="p">(</span><span class="n">K</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">V</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">q_blocks</span><span class="p">:</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>        <span class="n">Qi</span> <span class="o">=</span> <span class="n">load_to_sram</span><span class="p">(</span><span class="n">Q</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>        <span class="n">S</span> <span class="o">=</span> <span class="n">Qi</span> <span class="o">@</span> <span class="n">Kj</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">scale</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>        <span class="n">S</span> <span class="o">=</span> <span class="n">apply_causal_and_padding_mask</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>        <span class="n">block_m</span> <span class="o">=</span> <span class="n">rowmax</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>        <span class="n">new_m</span> <span class="o">=</span> <span class="n">maximum</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">block_m</span><span class="p">)</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>        <span class="n">alpha</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">new_m</span><span class="p">)</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>        <span class="n">P_unnorm</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">S</span> <span class="o">-</span> <span class="n">new_m</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>        <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">rowsum</span><span class="p">(</span><span class="n">P_unnorm</span><span class="p">)</span>
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>        <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">P_unnorm</span> <span class="o">@</span> <span class="n">Vj</span>
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>        <span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_m</span>
+<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>
+<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="n">O</span> <span class="o">=</span> <span class="n">u</span> <span class="o">/</span> <span class="n">l</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+</code></pre></div>
+<p>实际 CUDA kernel 会把上面的矩阵块、row reduction、mask、exp 和乘 <span class="arithmatex">\(V\)</span> 映射到 warp、shared memory、register 与 tensor core 指令；伪代码的重点是数据依赖，不是 launch 配置。</p>
+<hr />
+<h2 id="6">6. 它究竟优化了什么<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>标准分解 Attention</th>
+<th>FlashAttention V1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数学结果</td>
+<td>exact</td>
+<td>exact</td>
+</tr>
+<tr>
+<td>主 FLOPs</td>
+<td><span class="arithmatex">\(O(N^2d)\)</span></td>
+<td><span class="arithmatex">\(O(N^2d)\)</span>，可有重计算</td>
+</tr>
+<tr>
+<td><code>S/P</code> 的全局物化</td>
+<td>写入/读回 HBM</td>
+<td>不物化完整矩阵</td>
+</tr>
+<tr>
+<td>中间激活存储</td>
+<td>训练时显著受 <span class="arithmatex">\(N^2\)</span> 影响</td>
+<td>前向主要保存 <span class="arithmatex">\(O,m,l\)</span> 等 <span class="arithmatex">\(O(N)\)</span> 状态</td>
+</tr>
+<tr>
+<td>优化核心</td>
+<td>常按算子边界拆开</td>
+<td>tile 内融合，减少 IO</td>
+</tr>
+<tr>
+<td>瓶颈视角</td>
+<td>容易被 HBM 往返拖慢</td>
+<td>IO-aware：尽量用 SRAM 做完再写回</td>
+</tr>
+</tbody>
+</table>
+<p>因此应把它称作：<strong>重排计算与数据流的 fused attention algorithm</strong>，而不只是“更快的 softmax”。</p>
+<hr />
+<h2 id="7">7. 反向传播为什么还能省内存<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<p>训练反向需要 attention 概率及相关梯度；若保存完整 <span class="arithmatex">\(S/P\)</span>，前向的显存节省会失效。FA1 前向保留 <span class="arithmatex">\(Q,K,V,O\)</span> 和每行统计量 <span class="arithmatex">\(m,l\)</span>，反向时按相同分块重新计算局部 <span class="arithmatex">\(S_{ij}\)</span> 和：</p>
+<div class="arithmatex">\[
+P_{ij}=e^{S_{ij}-m_i}/l_i
+\]</div>
+<p>用额外 FLOPs 换回大规模 HBM/显存节省。这符合 GPU 的现实：在许多长序列设置中，额外计算比保存、读回巨大的 <code>N×N</code> 中间矩阵更便宜。</p>
+<p>对于当前推理学习，优先掌握前向即可；反向的重点结论是“<strong>重计算不是失败，而是 IO-aware 的有意取舍</strong>”。</p>
+<hr />
+<h2 id="8-pagedattention">8. 与推理系统、PagedAttention 和当前项目的边界<a class="headerlink" href="#8-pagedattention" title="Permanent link">&para;</a></h2>
+<h3 id="81-prefill-decode">8.1 Prefill 与 Decode<a class="headerlink" href="#81-prefill-decode" title="Permanent link">&para;</a></h3>
+<p>FlashAttention 的前向推导最贴近 <strong>Prefill</strong>：Q 的长度接近 prompt 长度，<code>QKᵀ</code> 是大矩阵乘，tiling 能有效提高计算利用率并避免 <code>N²</code> 中间矩阵。</p>
+<p>Decode 时每条序列的新 Q 常只有一行（<code>q_len≈1</code>），主矛盾转为读取大量历史 KV、权重以及 kernel launch 开销，通常更偏 memory-bound。此时仍会使用 online softmax 分块归并，但 tile、并行划分和 reduce 方式不同；不能把 Prefill 的 FA 性能直觉机械套到 Decode。</p>
+<h3 id="82-flashattention-pagedattention">8.2 FlashAttention 与 PagedAttention 不冲突<a class="headerlink" href="#82-flashattention-pagedattention" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>回答的问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FlashAttention</td>
+<td>Attention <strong>怎么算</strong>：tile、online softmax、少 HBM 中间量</td>
+</tr>
+<tr>
+<td>PagedAttention</td>
+<td>KV <strong>怎么存/怎么索引</strong>：block table、分页分配、前缀共享</td>
+</tr>
+</tbody>
+</table>
+<p>工程中可由一个 attention kernel 按 <code>block_table</code> 直接读取非连续 paged KV，然后用 FlashAttention/online-softmax 思路完成计算；并非必须 <code>gather → FlashAttention → scatter</code>。</p>
+<h3 id="83-kv">8.3 与 KV 亲和调度的因果链<a class="headerlink" href="#83-kv" title="Permanent link">&para;</a></h3>
+<p>你的 KV 亲和不是“让 FlashAttention 算得更快”，而是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>前缀 KV 命中
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  → 跳过已命中 token 的 Prefill
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>  → 少执行 QKV Linear、Attention（可由 FA/PFA 实现）、FFN
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>  → TTFT 下降
+</code></pre></div>
+<p>FlashAttention 解释的是“未命中的 Prefill 如何高效执行”；KV 亲和解释的是“为何可以少执行它”。二者互补、层次不同。</p>
+<hr />
+<h2 id="9-cuda">9. 读源码/写 CUDA 时应观察什么<a class="headerlink" href="#9-cuda" title="Permanent link">&para;</a></h2>
+<p>若后续手写 Softmax 或教学版 Attention，不要试图第一周复刻工业 FA。按这个阶梯学习：</p>
+<ol>
+<li><strong>Row Softmax</strong>：safe softmax，掌握 row max 与 row sum reduce；</li>
+<li><strong>Online Softmax</strong>：让两个 score chunk 的 <code>(m,l)</code> 正确合并；</li>
+<li><strong>块化 attention 的 CPU/PyTorch 参考实现</strong>：验证输出与标准 attention 一致；</li>
+<li><strong>CUDA tile 实验</strong>：shared memory 加载 <code>K/V</code> tile、warp 规约、观察访存和寄存器压力；</li>
+<li><strong>再读 FA kernel</strong>：重点问“这块数据在 HBM、shared memory 还是 register？何时写回？”</li>
+</ol>
+<p>每一步都做三项验收：输出与 PyTorch <code>scaled_dot_product_attention</code> 对齐、不同序列长度/causal mask 正确、记录耗时与峰值显存。没有真实 benchmark 时，不把未经测量的倍数写进简历。</p>
+<hr />
+<h2 id="10">10. 面试高频问答<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<h3 id="q1flashattention">Q1：FlashAttention 为什么快？<a class="headerlink" href="#q1flashattention" title="Permanent link">&para;</a></h3>
+<p>不是因为把 <span class="arithmatex">\(N²\)</span> 计算变成线性，而是把 <code>QKᵀ → softmax → PV</code> 融进片上 tile，避免完整 <code>S/P</code> 在 HBM 的反复读写；长序列时带宽和显存收益显著。</p>
+<h3 id="q2online-softmax">Q2：Online Softmax 是近似吗？<a class="headerlink" href="#q2online-softmax" title="Permanent link">&para;</a></h3>
+<p>不是。新块让最大值变化时，用 <span class="arithmatex">\(e^{m^{old}-m^{new}}\)</span> 重缩放旧的指数和与未归一化输出；它与 safe softmax 数学等价，仅有浮点求和顺序差异。</p>
+<h3 id="q3-sp">Q3：既然不保存 S/P，怎么得到正确输出？<a class="headerlink" href="#q3-sp" title="Permanent link">&para;</a></h3>
+<p>每一行保留三个足够统计量：running max <code>m</code>、running exponential sum <code>l</code>、running unnormalized weighted sum <code>u</code>。每个 KV tile 到来都更新三者，最后 <code>O=u/l</code>。</p>
+<h3 id="q4flashattention-pagedattention">Q4：FlashAttention 与 PagedAttention 的关系？<a class="headerlink" href="#q4flashattention-pagedattention" title="Permanent link">&para;</a></h3>
+<p>前者优化计算和 IO，后者优化 KV 的内存管理；前者可以在读取 paged KV 时工作，两者正交。</p>
+<h3 id="q5-decode-prefill">Q5：为什么 Decode 不能直接照搬 Prefill 的高吞吐？<a class="headerlink" href="#q5-decode-prefill" title="Permanent link">&para;</a></h3>
+<p>Decode 的 Q 长度通常为 1，矩阵乘 M 维很小，历史 KV/权重读取相对主导；需要针对 KV 分块、批处理、图重放和带宽重新 tiling 与调度。</p>
+<hr />
+<h2 id="_1">参考资料<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Tri Dao et al., <a href="https://arxiv.org/abs/2205.14135">FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness</a>, NeurIPS 2022.</li>
+<li>AIInfraGuide, <a href="https://caomaolufei.github.io/AIInfraGuide/cuda/%E6%A8%A1%E5%9D%97%E4%BA%8C-cuda%E7%BC%96%E7%A8%8B%E4%B8%8E%E7%AE%97%E5%AD%90%E4%BC%98%E5%8C%96/61-flashattention-v1%E8%AF%A6%E8%A7%A3/">FlashAttention V1 详解</a>.</li>
+<li>本仓关联：<a href="../03-Attention%E5%AE%B6%E6%97%8F-Paged-MLA/">Attention 家族 / PagedAttention / MLA</a>、<a href="../01-Linear-FFN-MatMul-SwiGLU/">Linear / FFN / MatMul / SwiGLU</a>、<a href="../00-%E6%8E%A8%E7%90%86%E7%AE%97%E5%AD%90%E5%AD%A6%E4%B9%A0%E7%B4%A2%E5%BC%95%E4%B8%8E%E8%A6%86%E7%9B%96%E6%B8%85%E5%8D%95/">推理算子学习索引</a>。</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

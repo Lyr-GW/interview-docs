@@ -1,0 +1,2374 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/interview-review/01-%E9%9D%A2%E8%AF%95%E5%A4%8D%E7%9B%98%E6%80%BB%E7%BB%93/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>平安二面复盘总结（大模型推理加速方向） - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              平安二面复盘总结（大模型推理加速方向）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一、面试流程还原（清洗版问答）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="一、面试流程还原（清洗版问答）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q0-00010337" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q0 自我介绍（00:01–03:37）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q1-0337" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1 做推理加速是自己选的还是组织安排？（03:37）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-0354" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2 为什么现在想看机会？（03:54）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3-0424" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3 你觉得自己在推理加速里最擅长哪一块？（04:24）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-kv-cache-0443" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4 KV cache 亲和这块怎么体现你的价值 / 证明工作有效性？（04:43）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5-0542" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5 具体做了什么达到这个效果？（05:42）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q6-mooncake0721" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q6 你怎么理解 Mooncake？它具体是什么东西？（07:21）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q7-mooncake-0751" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q7 Mooncake 底层大概怎么实现的？为什么它能做到？（07:51）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q8-kv-0808" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q8 你的 KV 亲和工作是配置化的，还是修改了底层代码？（08:08）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q9-tokenizer-0952" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q9 不同模型 tokenizer 不一样，上层怎么保证和底下一致？（09:52）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q10-vllm-router-1048" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q10 vLLM Router 有语义匹配分发——按任务难度分给强模型/弱模型，你了解它怎么做的吗？（10:48）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q11-1134" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q11 平时会学习哪些推理加速技术？（11:34）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q12-deepseek-1152" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q12 投机采样这周/前几天 DeepSeek 发了一个新论文，你能讲一下吗？（11:52）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q13-sota-1210" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q13 投机采样除了这篇，再往前还有哪些 SOTA 方法？（12:10）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q14-dflash-eagle-1232" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q14 DFlash 大概怎么做的？为什么能比 EAGLE 效果更好？（12:32）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q15-eagle-1316" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q15 EAGLE 为什么能比之前的方法更好？（13:16）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q16-vllm-1339" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q16 你对推理加速还有哪些技术栈？vLLM 那些配置不了解吗？（13:39）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q17-vllm-1404" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q17 有哪些 vLLM 配置印象深刻、能起到加速效果？（14:04）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q18-github-1436" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q18 你有技术博客或 GitHub 吗？（14:36）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q19-8-1507" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q19 你去年 8 月才入职，几个月就跳槽，很奇怪？（15:07）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q20-1543" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q20 你们部门具体做什么、解决什么场景？（15:43）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q21-vllm-vllm-1650" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q21 华为对 vLLM 上游有贡献，你自己有 vLLM 社区贡献吗？（16:50）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q22-mindie-1721" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q22 MindIE 为什么不维护了 / 为什么客户不满意？（17:21）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q23-1839" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q23 你们部门的人都去了哪里？（18:39）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q24-deepseek-eagle-1908" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q24 前面几个问题你答得不好（DeepSeek 新论文没看、EAGLE 没答出来），你还有什么能证明实力的？（19:08）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q25-xgrammar2005" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q25 讲讲结构化输出，包括 xgrammar，按你的认知讲（20:05）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q26-vllm-python-mindie-2104" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q26 现在大模型很强了，能不能直接把 vLLM 相关的 Python 代码转成（MindIE 的）实现？你是怎么做的？（21:04）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q27-2157" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q27 放在哪个仓？（21:57）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q28-claude-2218" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q28 华为怎么能用 Claude 这些外部模型？（22:18）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q29-2239" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q29 迁移过程中碰到什么难点？（22:39）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q30-2354" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q30 基础问题：结构化输出的原理是什么？为什么能约束模型输出？（23:54）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q31-2443" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q31 打开结构化输出有什么副作用？（24:43）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q32-2505" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q32 加了结构化输出后整个推理速度会下降吗？（25:05）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q33-2553" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q33 缓存存在哪里？怎么保证内存不会随时间爆掉？（25:53）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q34-2631" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q34 缓存用什么技术实现？（26:31）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q35-2709" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q35 投机采样的基本原理？为什么更快？什么场景会失效？（27:09）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q36-2807" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q36 追问：除了接受率低，还有哪些情况没效果甚至负收益？（28:07）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q37-2841" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q37 怎么设计草稿模型让接受率更高？（28:41）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2925" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        反问环节（29:25）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        二、逐题分析与理想回答
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="二、逐题分析与理想回答">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        详细逐题点评（重点题）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="详细逐题点评（重点题）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2 跳槽动机 ❌
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q6q7-mooncake" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q6–Q7 Mooncake 底层原理 ❌
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q8q9-token-vs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q8–Q9 token 级 vs 字符级前缀匹配 ✅（全场亮点）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q10 语义路由/强弱模型分发 ❌
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q12q14q15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q12/Q14/Q15 投机解码三连 ❌❌⚠️
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q17-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q17 vLLM 加速配置 ❌（最严重失分）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q31q34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q31–Q34 结构化输出副作用与缓存 ⚠️→✅
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q35q37" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q35–Q37 投机采样失效场景 ⚠️
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q37" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q37 提高接受率 ⚠️
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        三、明显失分点汇总
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        四、亮点汇总
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        五、软性问题复盘
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="五、软性问题复盘">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 为何跳槽 / 入职不到一年就看机会
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 没有技术博客 / GitHub / 上游贡献
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-q24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. "你还有什么能证明实力的？"（压力问题 Q24）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        六、改进行动清单
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="_1">平安二面复盘总结（大模型推理加速方向）<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>面试时间：2026 年 7 月初 · 时长约 31 分钟 · 形式：线上
+候选人背景：华为昇腾计算产品线，MindIE 推理框架（结构化输出、KV cache 亲和调度、tool call/reasoning 解析）
+原始转写：<code>平安二面_original.txt</code>（语音转写质量差，本文已全部纠错清洗）</p>
+</blockquote>
+<hr />
+<h2 id="_2">一、面试流程还原（清洗版问答）<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>以下把语音转写错误全部纠正为可读版本，并给每个问题编号，便于后文逐题分析。</p>
+<h3 id="q0-00010337">Q0 自我介绍（00:01–03:37）<a class="headerlink" href="#q0-00010337" title="Permanent link">&para;</a></h3>
+<p><strong>候选人回答要点：</strong>
+- 现在在华为昇腾计算产品线做推理，之前学校为复旦大学计算机技术专业（硕），本科福州大学软件工程。
+- 工作一：<strong>MindIE 支持结构化输出（structured output）</strong>，从 0 到 1 打通"用户输入 JSON Schema → xgrammar 约束解码后端 → bitmask 约束大模型输出 token → 输出合法 JSON"的链路；并做了 schema 编译缓存优化，避免相同请求反复编译。
+- 工作二：<strong>KV cache 亲和性调度</strong>。在 MindIE Motor（多实例调度层）上设计 KV cache 亲和调度：让有相同最长前缀的请求在负载均衡的同时持续调度到已有相关缓存的节点，降低重复 prefill 开销。用 Mooncake Conductor 维护最长前缀状态，把 tokenize 前置到 coordinator 层拿到真实 token ID，再用 Mooncake 做最长前缀查找。客户场景 TTFT 降 70%、（另一延迟指标）降 50%。
+- 工作三：<strong>tool call / reasoning 解析</strong>，实现 Qwen、DeepSeek 等模型的 tool call parser。
+- 工作四：遗留代码重构，把 Server HTTP 代码中的领域代码通过抽象基类干掉，优化约 1 万行并保证功能正确。
+- 学校科研：一篇一作 C 类会议论文，几篇合作二区期刊。</p>
+<h3 id="q1-0337">Q1 做推理加速是自己选的还是组织安排？（03:37）<a class="headerlink" href="#q1-0337" title="Permanent link">&para;</a></h3>
+<p>答：组织分配，AI 工程师岗位比较宽泛，推理加速算在里面。</p>
+<h3 id="q2-0354">Q2 为什么现在想看机会？（03:54）<a class="headerlink" href="#q2-0354" title="Permanent link">&para;</a></h3>
+<p>答：觉得外面行情还可以，想出来看看能不能涨点薪；另外华为的工作氛围不太喜欢，加班、周末加班比较多。</p>
+<h3 id="q3-0424">Q3 你觉得自己在推理加速里最擅长哪一块？（04:24）<a class="headerlink" href="#q3-0424" title="Permanent link">&para;</a></h3>
+<p>答：做得不算多，KV cache 亲和这块做过一点，相对擅长一些。</p>
+<h3 id="q4-kv-cache-0443">Q4 KV cache 亲和这块怎么体现你的价值 / 证明工作有效性？（04:43）<a class="headerlink" href="#q4-kv-cache-0443" title="Permanent link">&para;</a></h3>
+<p>答：实现后在客户场景测试：长序列（约 4K 上下文）、请求前缀重复率高的场景下 TTFT 优化约 70%，证明确实降低了 prefill 代价、提升吞吐和延迟。</p>
+<h3 id="q5-0542">Q5 具体做了什么达到这个效果？（05:42）<a class="headerlink" href="#q5-0542" title="Permanent link">&para;</a></h3>
+<p>答：介绍 Motor 架构——Motor 是多实例调度层，负责拉起底下多个 vLLM 引擎并做负载均衡与 KV 亲和调度。请求进来后，把之前请求的 KV 前缀状态存到 Mooncake Conductor；新请求经 coordinator 的 tokenize 转成 token ID 后，查询哪个实例上有最长可复用前缀，再结合负载均衡与前缀收益选出最合适的实例，省掉重复 prefill。</p>
+<h3 id="q6-mooncake0721">Q6 你怎么理解 Mooncake？它具体是什么东西？（07:21）<a class="headerlink" href="#q6-mooncake0721" title="Permanent link">&para;</a></h3>
+<p>答：理解它维护了 KV cache 的状态，能提供各节点当前 KV cache 的状态并提供接口查询、管理 KV cache。</p>
+<h3 id="q7-mooncake-0751">Q7 Mooncake 底层大概怎么实现的？为什么它能做到？（07:51）<a class="headerlink" href="#q7-mooncake-0751" title="Permanent link">&para;</a></h3>
+<p>答：<strong>"Mooncake 的底层我可能不是特别了解。"</strong>（没答上）</p>
+<h3 id="q8-kv-0808">Q8 你的 KV 亲和工作是配置化的，还是修改了底层代码？（08:08）<a class="headerlink" href="#q8-kv-0808" title="Permanent link">&para;</a></h3>
+<p>答：没有修改 Mooncake 底层代码，主要是使用它；修改在 Motor 层——计算请求最长匹配前缀所在实例的算法是自己实现的。对标竞品是 vLLM Router：vLLM Router 只做**字符级**匹配，我们做的是 **token 级**匹配。字符级匹配的问题是字符串前缀重叠长度不一定与 tokenizer 切出来的 token ID 一致（会受 system prompt、tools 等影响），所以我们把 tokenize 前置到 Motor/coordinator 层，保证与下层引擎的 token 化一致，最大程度利用缓存。</p>
+<h3 id="q9-tokenizer-0952">Q9 不同模型 tokenizer 不一样，上层怎么保证和底下一致？（09:52）<a class="headerlink" href="#q9-tokenizer-0952" title="Permanent link">&para;</a></h3>
+<p>答：拉起实例时把下层模型的 tokenizer（词表）读上来，在上层同样做 tokenize，是动态加载的过程。（这一题答得可以，面试官认可）</p>
+<h3 id="q10-vllm-router-1048">Q10 vLLM Router 有语义匹配分发——按任务难度分给强模型/弱模型，你了解它怎么做的吗？（10:48）<a class="headerlink" href="#q10-vllm-router-1048" title="Permanent link">&para;</a></h3>
+<p>答：<strong>"这块我们可能还没有关注到，还不太清楚。"</strong>（没答上）</p>
+<h3 id="q11-1134">Q11 平时会学习哪些推理加速技术？（11:34）<a class="headerlink" href="#q11-1134" title="Permanent link">&para;</a></h3>
+<p>答：主要是业务上的，额外看了一些投机推理（speculative decoding）相关的。</p>
+<h3 id="q12-deepseek-1152">Q12 投机采样这周/前几天 DeepSeek 发了一个新论文，你能讲一下吗？（11:52）<a class="headerlink" href="#q12-deepseek-1152" title="Permanent link">&para;</a></h3>
+<p>答：<strong>"还没来得及看，看到了新闻，但还没了解实现原理。"</strong>（没答上；查证：这篇是 DeepSeek 2026-06-27 发布的 <strong>DSpark</strong>，详见专题 02）</p>
+<h3 id="q13-sota-1210">Q13 投机采样除了这篇，再往前还有哪些 SOTA 方法？（12:10）<a class="headerlink" href="#q13-sota-1210" title="Permanent link">&para;</a></h3>
+<p>答：DeepSeek-V3 的 MTP、EAGLE 系列、还有 DFlash 相关的。</p>
+<h3 id="q14-dflash-eagle-1232">Q14 DFlash 大概怎么做的？为什么能比 EAGLE 效果更好？（12:32）<a class="headerlink" href="#q14-dflash-eagle-1232" title="Permanent link">&para;</a></h3>
+<p>答：了解得不是特别清楚，好像用的是 diffusion 模型。MTP 和 EAGLE 的草稿模型是一个一个 token 预测的，DFlash 一次预测一批，草稿阶段只需一次前向，能优化草稿模型推理时间。（方向对但只有一句话深度）</p>
+<h3 id="q15-eagle-1316">Q15 EAGLE 为什么能比之前的方法更好？（13:16）<a class="headerlink" href="#q15-eagle-1316" title="Permanent link">&para;</a></h3>
+<p>答：<strong>"EAGLE 我有点忘记了。"</strong>（没答上）</p>
+<h3 id="q16-vllm-1339">Q16 你对推理加速还有哪些技术栈？vLLM 那些配置不了解吗？（13:39）<a class="headerlink" href="#q16-vllm-1339" title="Permanent link">&para;</a></h3>
+<p>答：vLLM 的配置平常有用一些，因为 Motor 经常搭配 vLLM 使用。</p>
+<h3 id="q17-vllm-1404">Q17 有哪些 vLLM 配置印象深刻、能起到加速效果？（14:04）<a class="headerlink" href="#q17-vllm-1404" title="Permanent link">&para;</a></h3>
+<p>答：<strong>"一下子想不到。"</strong>（完全没答上——重点失分题，详见专题 05）</p>
+<h3 id="q18-github-1436">Q18 你有技术博客或 GitHub 吗？（14:36）<a class="headerlink" href="#q18-github-1436" title="Permanent link">&para;</a></h3>
+<p>答：还没有。</p>
+<h3 id="q19-8-1507">Q19 你去年 8 月才入职，几个月就跳槽，很奇怪？（15:07）<a class="headerlink" href="#q19-8-1507" title="Permanent link">&para;</a></h3>
+<p>答：我们部门比较特殊，普遍一两年大家就会往外看。追问为什么：行情好，出去都有不错涨幅，能拿到挺多 offer。</p>
+<h3 id="q20-1543">Q20 你们部门具体做什么、解决什么场景？（15:43）<a class="headerlink" href="#q20-1543" title="Permanent link">&para;</a></h3>
+<p>答：部门做昇腾 NPU 卡配套的 MindIE 推理框架；后来 MindIE（自研引擎路线）不再主推，转向 vLLM + vllm-ascend 跑在 NPU 上提供推理服务；Motor 叠在 vLLM 之上，主要做高可靠（故障快速恢复、调度到其他节点）和 KV 亲和调度。</p>
+<h3 id="q21-vllm-vllm-1650">Q21 华为对 vLLM 上游有贡献，你自己有 vLLM 社区贡献吗？（16:50）<a class="headerlink" href="#q21-vllm-vllm-1650" title="Permanent link">&para;</a></h3>
+<p>答：还没有在 vLLM 上游提交，代码主要提交在 MindIE Motor 和 MindIE-LLM 仓库（也是开源的）。</p>
+<h3 id="q22-mindie-1721">Q22 MindIE 为什么不维护了 / 为什么客户不满意？（17:21）<a class="headerlink" href="#q22-mindie-1721" title="Permanent link">&para;</a></h3>
+<p>答：MindIE 是和 vLLM 对标的推理引擎，最初技术栈是 C++，维护成本高（需要编译出包交付），开发难度比 Python 大，容易出内存泄漏等 bug，后期易用性不好、客户反馈差，上层决策转向 vLLM。</p>
+<h3 id="q23-1839">Q23 你们部门的人都去了哪里？（18:39）<a class="headerlink" href="#q23-1839" title="Permanent link">&para;</a></h3>
+<p>答：互联网大厂（阿里、腾讯），也有模型厂（字节、MiniMax、智谱）。</p>
+<h3 id="q24-deepseek-eagle-1908">Q24 前面几个问题你答得不好（DeepSeek 新论文没看、EAGLE 没答出来），你还有什么能证明实力的？（19:08）<a class="headerlink" href="#q24-deepseek-eagle-1908" title="Permanent link">&para;</a></h3>
+<p>答：结构化输出这个大特性是我独立实现的。当时 MindIE 没有这个能力，对标 vLLM 实现，个人提交了 5000–6000 行代码打通功能。</p>
+<h3 id="q25-xgrammar2005">Q25 讲讲结构化输出，包括 xgrammar，按你的认知讲（20:05）<a class="headerlink" href="#q25-xgrammar2005" title="Permanent link">&para;</a></h3>
+<p>答：当时基于 xgrammar 实现（也考虑过支持多后端如 guidance，但人力只有自己一人，优先实现了 xgrammar）。xgrammar 约束解码后端负责把 JSON Schema 转成其内部的有限状态机（实为下推自动机），生成 bitmask 来约束模型采样过程。</p>
+<h3 id="q26-vllm-python-mindie-2104">Q26 现在大模型很强了，能不能直接把 vLLM 相关的 Python 代码转成（MindIE 的）实现？你是怎么做的？（21:04）<a class="headerlink" href="#q26-vllm-python-mindie-2104" title="Permanent link">&para;</a></h3>
+<p>答：今年 Q1（2–3 月）做的。考虑过直接转 C++ 代码但效果不好（当时用 Claude Opus 4.6 左右的模型）。实际做法：先让 AI 工具分析 vLLM 的架构，把架构迁移设计到 MindIE，再结合 Python 实现一遍。</p>
+<h3 id="q27-2157">Q27 放在哪个仓？（21:57）<a class="headerlink" href="#q27-2157" title="Permanent link">&para;</a></h3>
+<p>答：MindIE-LLM 仓。MindIE 比较复杂，大量 C++ 代码，部分地方也用 Python。</p>
+<h3 id="q28-claude-2218">Q28 华为怎么能用 Claude 这些外部模型？（22:18）<a class="headerlink" href="#q28-claude-2218" title="Permanent link">&para;</a></h3>
+<p>答：这两个代码仓已开源，所以可以在自己电脑上用这些模型辅助生成业务代码。</p>
+<h3 id="q29-2239">Q29 迁移过程中碰到什么难点？（22:39）<a class="headerlink" href="#q29-2239" title="Permanent link">&para;</a></h3>
+<p>答：难点在前期设计，模型的设计有时需要调整；细节上，异步调度叠加结构化输出的场景 AI 不熟悉 MindIE 的异步调度，出了一个 bug 定位了很久——AI 对代码仓的理解（或我的提示词）不够，没看到异步输出相关代码，需要把异步调度逻辑喂给它才能打通。</p>
+<h3 id="q30-2354">Q30 基础问题：结构化输出的原理是什么？为什么能约束模型输出？（23:54）<a class="headerlink" href="#q30-2354" title="Permanent link">&para;</a></h3>
+<p>答：用 xgrammar 生成的有限状态机控制每一步允许生成哪些 token，产生一个允许 token 范围的 bitmask，应用在大模型采样器过程中，限制只输出允许范围内的 token，从而输出合法 JSON。</p>
+<h3 id="q31-2443">Q31 打开结构化输出有什么副作用？（24:43）<a class="headerlink" href="#q31-2443" title="Permanent link">&para;</a></h3>
+<p>答：编译过程有耗时，约束解码本身"应该也会有一些耗时吧"。（只答了表层）</p>
+<h3 id="q32-2505">Q32 加了结构化输出后整个推理速度会下降吗？（25:05）<a class="headerlink" href="#q32-2505" title="Permanent link">&para;</a></h3>
+<p>答：会下降一些，但当时没实测数据，只大概分析过：编译跑在 CPU 上约一两百毫秒耗时。为此做了优化：相同 JSON Schema 输入时命中缓存，不用重复编译。</p>
+<h3 id="q33-2553">Q33 缓存存在哪里？怎么保证内存不会随时间爆掉？（25:53）<a class="headerlink" href="#q33-2553" title="Permanent link">&para;</a></h3>
+<p>答：缓存在内存里；设置了长度上限（约 128 条）。</p>
+<blockquote>
+<p>⚠ <strong>历史口述</strong>（当日答法）。<strong>现行代码口径</strong>：默认 <strong>100</strong> 条，<strong>FIFO</strong>（命中不调序）。见 <code>03</code> / <code>2026-07-15/03</code>。</p>
+</blockquote>
+<h3 id="q34-2631">Q34 缓存用什么技术实现？（26:31）<a class="headerlink" href="#q34-2631" title="Permanent link">&para;</a></h3>
+<p>答：对 schema 做 SHA-256 哈希作为 key 存起来，超出容量用 LRU 置换。（面试官认可："可以"）</p>
+<blockquote>
+<p>⚠ <strong>历史口述</strong>（当日答法，面试官未翻仓）。<strong>上场改口</strong>：SHA-256 + <strong>FIFO/100</strong>，不是 LRU/128。</p>
+</blockquote>
+<h3 id="q35-2709">Q35 投机采样的基本原理？为什么更快？什么场景会失效？（27:09）<a class="headerlink" href="#q35-2709" title="Permanent link">&para;</a></h3>
+<p>答：大模型 + 小模型，小模型快速多推几个 token，大模型一次验证；验证通过就直接接收，不符合就拒绝。失效场景："不太懂，但我理解可能是小模型推得不准的时候，需要大模型频繁验证重推，就失效了。"</p>
+<h3 id="q36-2807">Q36 追问：除了接受率低，还有哪些情况没效果甚至负收益？（28:07）<a class="headerlink" href="#q36-2807" title="Permanent link">&para;</a></h3>
+<p>答：<strong>"这方面可能不太了解。"</strong>（只答出一半，详见专题 02）</p>
+<h3 id="q37-2841">Q37 怎么设计草稿模型让接受率更高？（28:41）<a class="headerlink" href="#q37-2841" title="Permanent link">&para;</a></h3>
+<p>答："记得好像可以拿大模型中间的几层/最后几层出来作为草稿模型，接受率会更高一点。"（方向沾边——EAGLE 复用 target 的 top-layer feature，但表述不准，面试官让回去确认）</p>
+<h3 id="2925">反问环节（29:25）<a class="headerlink" href="#2925" title="Permanent link">&para;</a></h3>
+<ul>
+<li>候选人问：你们真实业务场景里推理加速效果最好的是什么技术？
+  面试官答：目前主要**通过配置的方式**做推理加速，比如 PD 分离、（调整并行/批处理参数）等；还没有专门的人去做深度定制优化。招这个岗位就是希望有人能修改框架、做算子优化、引入新的投机采样方法等，把吞吐和速度做上去。</li>
+<li>候选人问：你们当前用的框架是 vLLM、SGLang 之类的吗？
+  面试官答：对，主要是 SGLang 之类的。</li>
+</ul>
+<hr />
+<h2 id="_3">二、逐题分析与理想回答<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>评分维度：✅ 答得好 | ⚠️ 答了一半 / 有硬伤 | ❌ 没答上</p>
+<table>
+<thead>
+<tr>
+<th>题号</th>
+<th>主题</th>
+<th>评价</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q0</td>
+<td>自我介绍</td>
+<td>⚠️ 内容扎实但表达散、口头语多</td>
+</tr>
+<tr>
+<td>Q2</td>
+<td>跳槽动机</td>
+<td>❌ 回答欠妥（抱怨加班 + 想涨薪）</td>
+</tr>
+<tr>
+<td>Q3</td>
+<td>最擅长的方向</td>
+<td>⚠️ "做得不多"自我贬低</td>
+</tr>
+<tr>
+<td>Q4–Q5</td>
+<td>KV 亲和价值证明</td>
+<td>✅ 有量化数据（TTFT -70%）</td>
+</tr>
+<tr>
+<td>Q6–Q7</td>
+<td>Mooncake 原理</td>
+<td>❌ 底层原理完全没答上</td>
+</tr>
+<tr>
+<td>Q8–Q9</td>
+<td>token 级 vs 字符级匹配</td>
+<td>✅ 全场最亮的技术点</td>
+</tr>
+<tr>
+<td>Q10</td>
+<td>vLLM 语义路由/强弱模型分发</td>
+<td>❌ 没答上</td>
+</tr>
+<tr>
+<td>Q12</td>
+<td>DeepSeek 新论文（DSpark）</td>
+<td>❌ 只看到新闻没看内容</td>
+</tr>
+<tr>
+<td>Q14</td>
+<td>DFlash 原理</td>
+<td>⚠️ 方向对但只有一句话</td>
+</tr>
+<tr>
+<td>Q15</td>
+<td>EAGLE 为什么好</td>
+<td>❌ "忘记了"</td>
+</tr>
+<tr>
+<td>Q17</td>
+<td>vLLM 加速配置</td>
+<td>❌ 一个都没说出来（最严重失分）</td>
+</tr>
+<tr>
+<td>Q25/Q30</td>
+<td>xgrammar/结构化输出原理</td>
+<td>✅ 链路清楚</td>
+</tr>
+<tr>
+<td>Q31–Q34</td>
+<td>副作用与编译缓存</td>
+<td>⚠️ 缓存设计答得好，副作用只答表层、无实测数据</td>
+</tr>
+<tr>
+<td>Q35–Q36</td>
+<td>投机采样失效场景</td>
+<td>⚠️ 只答出"接受率低"一种</td>
+</tr>
+<tr>
+<td>Q37</td>
+<td>提高草稿接受率</td>
+<td>⚠️ 沾边但表述不准</td>
+</tr>
+<tr>
+<td>Q18/Q19</td>
+<td>博客/GitHub、入职即跳槽</td>
+<td>❌ 软性问题双双减分</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_4">详细逐题点评（重点题）<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<h4 id="q2">Q2 跳槽动机 ❌<a class="headerlink" href="#q2" title="Permanent link">&para;</a></h4>
+<p><strong>答了什么：**行情好想涨薪 + 不喜欢华为加班文化。
+**问题：**两个理由都是"推力/利益导向"，没有任何"拉力/成长导向"。配合 Q19（入职 11 个月就跳）会让面试官担心稳定性：为了钱来的人也会为了钱走；抱怨前东家加班在任何面试里都是减分项（平安金融行业同样强度不低）。
+**理想回答（可直接背）：</strong></p>
+<blockquote>
+<p>"主要有两方面考虑。第一是业务方向：我在 MindIE 上做了结构化输出、多实例 KV 亲和调度这些工作后，越来越确定自己想在推理服务系统这个方向深耕。但我们团队的定位是配套昇腾硬件生态，引擎本身已转向拥抱 vLLM，留给框架层深度优化的空间在收窄；我希望找一个推理加速本身就是核心业务的团队，能接触更大流量、更贴近 SOTA 的场景。第二是我看到贵司在真实业务里做大规模推理部署，这正好和我做过的多实例调度、TTFT 优化经验互补——我能带来的是从 0 到 1 交付大特性的工程能力，我想获得的是更深的系统优化实践。"</p>
+</blockquote>
+<h4 id="q6q7-mooncake">Q6–Q7 Mooncake 底层原理 ❌<a class="headerlink" href="#q6q7-mooncake" title="Permanent link">&para;</a></h4>
+<p><strong>问题：**项目里核心依赖 Mooncake，却只知道"它维护 KV cache 状态、提供查询接口"。面试官连问两次原理，直接暴露"只会用、不懂底层"。这是技术深度上最伤的一题之一——自己简历上的项目依赖必须懂到底层。
+**理想回答：</strong></p>
+<blockquote>
+<p>"Mooncake 是月之暗面 Kimi 的推理平台，FAST'25 最佳论文，核心思想是'以 KV cache 为中心的分离式架构'（KVCache-centric disaggregation）——用更多存储换更少计算。它有三个核心组件：① <strong>Transfer Engine</strong>：高性能传输引擎，统一抽象 RDMA/TCP/NVMe-oF 等后端，做拓扑感知的多网卡路径选择，实现 GPU 显存/DRAM/SSD 之间的零拷贝 KV 传输；② <strong>Mooncake Store</strong>：把 GPU 集群里闲置的 CPU、DRAM、SSD 组成分布式 KV cache 池，提供对象级 Put/Get/复制接口，带租约和淘汰机制；③ <strong>Conductor</strong>：全局调度器，跟踪每个节点上 KV cache 块的分布（block 按前缀链哈希标识），请求进来后综合'前缀命中长度、实例负载、KV 迁移代价'选出 prefill/decode 实例对，还会做热点 block 的主动复制。我们在 Motor 里用的正是 Conductor 这层元数据能力：它按 token block 的前缀哈希记录各实例的缓存分布，所以能回答'哪个实例有最长可复用前缀'这个查询。"</p>
+</blockquote>
+<h4 id="q8q9-token-vs">Q8–Q9 token 级 vs 字符级前缀匹配 ✅（全场亮点）<a class="headerlink" href="#q8q9-token-vs" title="Permanent link">&para;</a></h4>
+<p>**好在哪里：**有竞品对比（vLLM production-stack router 的字符/chunk 级 hash-trie 匹配）、指出了字符级匹配与引擎内部 token 化不一致的真实痛点（chat template、system prompt、tools 注入都会改变 token 序列）、并给出自己的解法（tokenize 前置 + 动态加载下层模型 tokenizer 保证一致性）。面试官追问 tokenizer 一致性也接住了。
+**可以更好：**再往下讲一层会更漂亮——vLLM 内部 prefix caching 是按 block（如 16 token）粒度哈希的，token 级匹配才能精确对齐 block 边界估算真实命中率；还可以提负载均衡与亲和的权衡公式（命中收益 vs 排队时间）。</p>
+<h4 id="q10">Q10 语义路由/强弱模型分发 ❌<a class="headerlink" href="#q10" title="Permanent link">&para;</a></h4>
+<p>**理想回答见专题 06。**至少应该能说出："这属于 model routing，业界有 vllm-project/semantic-router：用轻量分类器/embedding 对请求做意图和难度分类（如对比 hard/easy 例句集的余弦相似度差），简单问题走小模型、复杂推理走大模型，是准确率和成本的权衡；RouteLLM 等也是类似思路。"</p>
+<h4 id="q12q14q15">Q12/Q14/Q15 投机解码三连 ❌❌⚠️<a class="headerlink" href="#q12q14q15" title="Permanent link">&para;</a></h4>
+<p>这是本场面试的**主战场失守**：候选人自称"额外看了一些投机推理"，随后三个递进问题全部露怯。
+- Q12 DeepSeek 新论文：即 <strong>DSpark</strong>（2026-06-27），半自回归草稿 + 置信度调度验证，生产环境比 MTP-1 快 57–85%，随 DeepSpec 训练库开源。哪怕只读过新闻，也应能说出"半自回归 draft + 根据 GPU 负载动态调整验证长度"两个关键词。
+- Q14 DFlash：候选人只说对了"diffusion、一次出一批"。完整版：用轻量 <strong>block diffusion</strong> 草稿模型，一次前向并行去噪出整块草稿 token；把 target 模型多层 hidden feature 注入草稿模型每层的 KV 中以保证草稿质量；6× 无损加速、比 EAGLE-3 快约 2.5×。
+- Q15 EAGLE：完全可以准备好的题。要点：<strong>特征级自回归</strong>（预测 target 模型 top-layer feature 而非直接预测 token，特征序列比 token 序列更"规整"、不确定性低，同时把上一步采样出的 token 也喂进去消除采样歧义）+ <strong>树形草稿 + tree attention 并行验证</strong>；EAGLE-2 加**动态草稿树**（用草稿模型置信度近似接受率，动态扩展/剪枝）；EAGLE-3 放弃特征预测改为**直接预测 token + 多层特征融合（training-time test）**，从而能吃下更大训练数据，速度比最高 6.5×。
+详细内容见专题 02。</p>
+<h4 id="q17-vllm">Q17 vLLM 加速配置 ❌（最严重失分）<a class="headerlink" href="#q17-vllm" title="Permanent link">&para;</a></h4>
+<p>自称"Motor 经常搭配 vLLM 使用"，却一个加速配置都说不出，直接击穿可信度。哪怕只说出三个也及格：</p>
+<blockquote>
+<p>"<code>--enable-prefix-caching</code> 自动前缀缓存降 TTFT；<code>--enable-chunked-prefill</code> 把长 prefill 切块和 decode 混批，稳住 TBT 同时提吞吐；<code>gpu-memory-utilization</code> 调高给 KV cache 留更多空间；<code>max-num-seqs</code> / <code>max-num-batched-tokens</code> 控制并发批的大小，是吞吐-延迟权衡的主旋钮；<code>tensor-parallel-size</code> 大模型切卡；量化（FP8/AWQ/GPTQ）降显存提吞吐；CUDA graph（compilation config / cudagraph mode）消 CPU 启动开销降 decode 延迟；<code>speculative-config</code> 挂 EAGLE/ngram 草稿；PD 分离用 <code>kv-transfer-config</code> 配 KV connector（如 MooncakeConnector/NIXL）。"
+完整清单与解释见专题 05。</p>
+</blockquote>
+<h4 id="q31q34">Q31–Q34 结构化输出副作用与缓存 ⚠️→✅<a class="headerlink" href="#q31q34" title="Permanent link">&para;</a></h4>
+<p>缓存设计在当日口述为「SHA-256 key + LRU + 容量 128」且被认可——<strong>这是历史加分叙事</strong>；<strong>现行代码口径**是 SHA-256 + **FIFO / 默认 100</strong>（命中不调序），上场勿再把 LRU/128 当现行设计。但两处欠缺：
+1. 副作用只答了"编译耗时"：完整答案还应包括**每步解码时 mask 生成与 apply_bitmask 的 per-token 开销**（xgrammar 通过预计算 context-independent token 的 adaptive token mask cache + 与 GPU 计算 overlap 把它压到很低）、约束贪心地"逼"模型走低概率路径可能**损害输出质量**、复杂 grammar（深递归 schema）下 context-dependent token 检查变贵、以及与投机解码/异步调度组合时的正确性复杂度。
+2. "没实测数据"：自己交付的特性必须有性能数字。理想说法："实测打开结构化输出后 TPOT 增加 x%，首 token 因编译增加 y ms，命中编译缓存后 y→0。"</p>
+<h4 id="q35q37">Q35–Q37 投机采样失效场景 ⚠️<a class="headerlink" href="#q35q37" title="Permanent link">&para;</a></h4>
+<p>只答出"接受率低"。完整失效场景（详见专题 02）：
+1. <strong>接受率低</strong>（草稿与 target 分布差异大：领域不匹配、高温采样、多语言/代码混合）——草稿开销白花还多了验证浪费；
+2. <strong>大 batch / 高并发下 GPU 已经算力饱和</strong>：投机解码本质是"用闲置算力换延迟"，decode 阶段 memory-bound 才有免费午餐；batch 大了 GPU 忙不过来，验证草稿挤占正常请求的算力，吞吐反而下降（这正是 DSpark 置信度调度要解决的问题）;
+3. <strong>草稿模型本身开销过大</strong>：draft 延迟 × 步数接近 target 一步的时间，收益被吃光；
+4. <strong>输出本来就短或强不可预测</strong>（创意写作、高熵输出），推测长度收益低；
+5. 显存开销：草稿模型/额外 KV 占显存，挤压 batch 上限间接降吞吐。</p>
+<h4 id="q37">Q37 提高接受率 ⚠️<a class="headerlink" href="#q37" title="Permanent link">&para;</a></h4>
+<p>候选人说"拿大模型中间几层/最后几层做草稿模型"——混淆了。准确说法：EAGLE 的草稿头复用 target 的 <strong>embedding 层与 LM head</strong>，草稿网络吃 target 的 <strong>top-layer feature（EAGLE-3 为多层融合特征）</strong> 做特征级自回归，本质是"草稿模型看到 target 的内部表征"所以接受率高。其他手段：用 target 蒸馏数据训练 draft（分布对齐）、MTP 与主模型联合训练、动态树（EAGLE-2）、DFlash 的 KV 注入等。</p>
+<hr />
+<h2 id="_5">三、明显失分点汇总<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>投机解码专题系统性失守</strong>（Q12/Q14/Q15/Q36/Q37）：自称关注的方向被连续击穿——新论文（DSpark）没看、EAGLE 原理"忘了"、失效场景只答一半、接受率优化表述不准。面试官在 Q24 直接点破"好几个问题你没答好，我现在感知不到你的实力"。</li>
+<li><strong>vLLM 加速配置零输出</strong>（Q17）：天天搭配 vLLM 干活却说不出一个加速配置，与自我介绍矛盾，杀伤力最大。</li>
+<li><strong>核心依赖 Mooncake 只会用不懂原理</strong>（Q7）：自己项目的支柱组件答不出底层机制。</li>
+<li><strong>vLLM Router 语义/强弱模型分发不了解</strong>（Q10）：作为做路由/调度的人，对竞品的进阶特性没有跟踪。</li>
+<li><strong>跳槽动机回答欠妥</strong>（Q2/Q19）：涨薪 + 抱怨加班 + 入职 11 个月就跳 + "部门里大家都跳"，稳定性疑虑拉满。</li>
+<li><strong>无技术博客/GitHub/上游社区贡献</strong>（Q18/Q21）：无法提供公司业绩之外的能力外证。</li>
+<li><strong>自我介绍与表达</strong>：口头语多（"呃、然后、可能"）、把"最擅长"说成"做得不多"（Q3）、关键特性没有实测数据支撑（Q32）。</li>
+</ol>
+<h2 id="_6">四、亮点汇总<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>xgrammar 结构化输出从 0 到 1</strong>：独立交付 5000–6000 行，链路表述清楚（JSON Schema → PDA/FSM → bitmask → 采样器），还包含 AI 辅助跨框架迁移（vLLM → MindIE）的踩坑故事（异步调度 bug），真实可信。</li>
+<li><strong>schema 编译缓存设计</strong>：SHA-256 哈希 key + 容量受控缓存，面试官现场认可。<strong>现行代码口径</strong>：默认 100 条、FIFO（命中不调序）；勿再说 LRU/128。</li>
+<li><strong>token 级 vs 字符级前缀匹配</strong>：对 vLLM production-stack router 的竞品分析 + tokenize 前置的独到设计 + tokenizer 一致性追问也接住了，是全场最能体现工程判断力的段落。</li>
+<li><strong>量化收益表达</strong>：客户场景 TTFT -70%、延迟 -50%，用数字证明价值（Q4）。</li>
+<li><strong>反问环节问得务实</strong>：问真实业务里最有效的加速技术、问对方技术栈，拿到了有效信息（对方靠配置调优、用 SGLang、期望候选人能做框架级和算子级优化）。</li>
+</ol>
+<h2 id="_7">五、软性问题复盘<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<h3 id="1">1. 为何跳槽 / 入职不到一年就看机会<a class="headerlink" href="#1" title="Permanent link">&para;</a></h3>
+<p><strong>错误示范（本场）：</strong>"行情好想涨薪" + "华为加班多" + "我们部门大家都是一两年就往外看"。
+**正确框架：**拉力 &gt; 推力；方向 &gt; 待遇；个人决策 &gt; 随大流。</p>
+<blockquote>
+<p>"不是随大流看机会，而是我对自己方向想清楚了：我要做推理服务系统。目前团队的战略是配套硬件生态、自研引擎转向 vLLM，我判断未来一两年这里框架层深度工作会减少；与其等方向进一步收窄，不如在我刚完成两个完整特性交付、势能最好的时候，去一个把推理加速当核心竞争力的团队。我不是待不满一年的人——只要方向对，我会沉下来长期做。"</p>
+</blockquote>
+<h3 id="2-github">2. 没有技术博客 / GitHub / 上游贡献<a class="headerlink" href="#2-github" title="Permanent link">&para;</a></h3>
+<p><strong>错误示范：</strong>"这方面还没有。"（句号，把话聊死）
+**正确回答：**承认 + 解释 + 给替代证据 + 表行动：</p>
+<blockquote>
+<p>"确实还没有公开博客，这是我今年在补的短板。不过有两点可以佐证：一是 MindIE-LLM 和 Motor 两个仓是开源的，我的提交记录可以直接看到，结构化输出特性 5000+ 行是我独立提交的；二是我内部写过 xgrammar 集成和 KV 亲和调度的设计文档。我已经在整理把脱敏后的设计思路发到博客，也计划把我们 token 级前缀匹配的经验回馈给 vLLM router 社区提个 RFC。"
+（说完这段，回去必须真的做——下次面试就有实物。）</p>
+</blockquote>
+<h3 id="3-q24">3. "你还有什么能证明实力的？"（压力问题 Q24）<a class="headerlink" href="#3-q24" title="Permanent link">&para;</a></h3>
+<p>本场处理其实不差（立刻切换到结构化输出并给出代码量），但更好的姿态是**先接住批评再反打**：</p>
+<blockquote>
+<p>"您说得对，投机解码这块我确实只停留在读过概念的层面，这暴露了我跟踪前沿不够系统，我记下来了。但工程交付能力我很有信心，可以展开讲两个从 0 到 1 的特性……"</p>
+</blockquote>
+<h2 id="_8">六、改进行动清单<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<p><strong>一周内（下场面试前必须完成）：</strong>
+- [ ] 精读并背熟投机解码演进线：vanilla SD → Medusa → EAGLE-1/2/3 → MTP → DFlash → DSpark，每个方法能讲"动机 → 做法 → 为什么比前者好"（用专题 02 复习）。
+- [ ] 背熟 vLLM 加速配置清单（专题 05），每个配置能说出"做什么、什么场景开、代价是什么"。
+- [ ] 读 Mooncake FAST'25 论文第 3、4 节，能白板画出 Conductor/Store/Transfer Engine 架构（专题 04）。
+- [ ] 准备跳槽动机、稳定性、无博客三个软性问题的 60 秒标准答案并演练。
+- [ ] 给结构化输出特性补一组实测数据（开/关约束下 TPOT、首 token 编译耗时、缓存命中收益），形成可背的数字。</p>
+<p><strong>一个月内：</strong>
+- [ ] 浏览 vllm-project/semantic-router 与 production-stack router 源码，理解 kvaware/prefixaware/session 各路由策略（专题 03、06）。
+- [ ] 跑通一次 vLLM speculative decoding（EAGLE-3 或 ngram），记录不同 batch size 下加速比曲线，亲手验证"大 batch 失效"。
+- [ ] 开技术博客：第一篇写"token 级 vs 字符级前缀匹配"，第二篇写"xgrammar 在 MindIE 的落地与编译缓存"。
+- [ ] 在 vLLM / Mooncake 社区提一个小 PR 或 issue（文档、bugfix 均可），建立上游贡献记录。</p>
+<p><strong>长期：</strong>
+- [ ] 建立论文跟踪习惯：每周扫 arXiv cs.CL/cs.DC 推理加速关键词 + vLLM/SGLang release notes + LMSYS/DeepSeek 博客，重大发布 48 小时内读完摘要级内容。
+- [ ] 把"我做得不多"类自贬表达从口头禅里删掉；量化数字常备嘴边。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

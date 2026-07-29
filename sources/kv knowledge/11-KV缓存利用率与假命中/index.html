@@ -1,0 +1,2555 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/kv%20knowledge/11-KV%E7%BC%93%E5%AD%98%E5%88%A9%E7%94%A8%E7%8E%87%E4%B8%8E%E5%81%87%E5%91%BD%E4%B8%AD/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>11 · KV cache utilization 与假命中（驱逐 / 事件空窗） - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#11-kv-cache-utilization" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              11 · KV cache utilization 与假命中（驱逐 / 事件空窗）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        名词约定
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30 秒结论
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 问题定义
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. 问题定义">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-kv-cache-utilization_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 KV cache utilization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 两类假命中
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 总览矩阵
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 分框架实现细节
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 分框架实现细节">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-llm-depp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 llm-d（EPP）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 llm-d（EPP）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kv-cache-utilization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KV cache utilization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驱逐 / 空窗
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-nvidia-dynamodynamolibkv-router" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 NVIDIA Dynamo（dynamo/lib/kv-router/）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 NVIDIA Dynamo（dynamo/lib/kv-router/）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kv-cache-utilization_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KV cache utilization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驱逐 / 空窗
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-aibrixaibrixpkg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 AIBrix（aibrix/pkg/）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3 AIBrix（aibrix/pkg/）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kv-cache-utilization_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KV cache utilization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驱逐 / 空窗
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-sglang-model-gatewaysglangsgl-model-gateway" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 SGLang Model Gateway（sglang/sgl-model-gateway/）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 SGLang Model Gateway（sglang/sgl-model-gateway/）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kv-cache-utilization_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KV cache utilization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驱逐 / 空窗
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-vllm-routerrouter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 vLLM Router（router/）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-mooncake-conductor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 Mooncake Conductor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-mindie-pymotor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 MindIE-PyMotor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#38-lmcache-production-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.8 LMCache / production-stack（补充）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 实现手法对照（怎么做的）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 实现手法对照（怎么做的）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 利用率的三种用法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 假命中三类缓解
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 耦合：为何要一起看
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-motor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 对 Motor / 自研的启示（落地优先级）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 源码 / 文档索引
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-40" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 面试口述（约 40 秒）
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="11-kv-cache-utilization">11 · KV cache utilization 与假命中（驱逐 / 事件空窗）<a class="headerlink" href="#11-kv-cache-utilization" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>专题：亲和调度里两个常被「一阶补丁」对待、却决定高负载稳定性的因素。<br />
+关联：<a href="../00-%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%88%86%E5%B1%82%E6%A8%A1%E5%9E%8B/">00 §5.1</a>（事件空窗）、<a href="../07-%E4%BA%B2%E5%92%8C%E4%B8%8E%E4%B8%89%E7%BA%A7%E6%B1%A0%E5%8C%96%E4%BA%A4%E4%BA%92/">07</a>、<a href="../09-ZMQ-KV-Events%E8%AF%A6%E8%A7%A3/">09</a><br />
+工作区：<code>llm-d/</code>、<code>dynamo/</code>、<code>aibrix/</code>、<code>sglang/</code>、<code>router/</code>、<code>Mooncake/</code>、<code>MindIE-PyMotor/</code></p>
+</blockquote>
+<h2 id="_1">名词约定<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>说法</th>
+<th>用法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KV cache utilization</strong>（<strong>KV 缓存利用率</strong>）</td>
+<td>调度/文档正式名；llm-d 插件名含 <code>utilization</code></td>
+</tr>
+<tr>
+<td><strong>KV cache usage（percent）</strong></td>
+<td>监控/指标字段语感；如 vLLM <code>kv_cache_usage_perc</code>、端点属性 <code>KVCacheUsagePercent</code></td>
+</tr>
+<tr>
+<td><strong>GPU cache usage</strong></td>
+<td>强调 device 池占用（相对 CPU offload）</td>
+</tr>
+<tr>
+<td><strong>block occupancy</strong> / used-blocks ratio</td>
+<td>按块门控时（Dynamo <code>kv_used_blocks / num_gpu_blocks</code>）</td>
+</tr>
+<tr>
+<td>本文简称</td>
+<td>首次后多用「<strong>利用率</strong>」；公式里写 <span class="arithmatex">\(u_{\mathrm{kv}}\)</span> 或 <code>kv_usage</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>不是：</strong> prefix hit rate / match rate（命中率）、waiting queue depth（排队深度）。<br />
+利用率是 <strong>memory pressure（缓存压力）</strong> 信号，不等于「前缀还在」。</p>
+<hr />
+<h2 id="30">30 秒结论<a class="headerlink" href="#30" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>KV cache utilization</strong> 度量的是显存/块池压力，不是「你的前缀还在」；完整用法应是 <strong>接纳风险 + 驱逐先验</strong>，多数框架只做到线性偏好低占用或硬踢超载机。</li>
+<li><strong>假命中</strong> 分两类：<strong>驱逐滞后（假阳性）</strong> 与 <strong>事件空窗（多为假阴性；speculative 则是可控假阳性）</strong>——对策不同，不可混为一谈。</li>
+<li>开源覆盖度：<strong>llm-d / Dynamo</strong> 最完整（utilization scorer 或 busy 门控 + Removed + speculative/predicted）；<strong>AIBrix</strong> 有 Event Sync 但 Cleared 空实现、默认路径不用利用率；<strong>SGLang/vLLM Router</strong> 近似树系统性不知驱逐；<strong>Motor</strong> 经 Conductor 可跟 Removed，但 <strong>利用率与 speculative 均未进分</strong>。</li>
+</ol>
+<hr />
+<h2 id="1">1. 问题定义<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<h3 id="11-kv-cache-utilization_1">1.1 KV cache utilization<a class="headerlink" href="#11-kv-cache-utilization_1" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>kv_usage = u_kv ≈ used_kv_blocks / capacity
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>高利用率暗示</th>
+<th>不直接等于</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>难接纳大请求、易排队</td>
+<td>某前缀一定还在</td>
+</tr>
+<tr>
+<td>即将或正在 LRU 驱逐</td>
+<td>命中在 L1 还是 L2/L3</td>
+</tr>
+<tr>
+<td>亲和热机会自我拆台</td>
+<td>waiting 深度</td>
+</tr>
+</tbody>
+</table>
+<p>亲和会把同前缀打到同一台 → 该机利用率升高 → 驱逐 → <strong>高 <span class="arithmatex">\(M\)</span> 自我失效</strong>。故利用率是亲和的 <strong>稳定性约束</strong>，不是普通负载装饰项。</p>
+<h3 id="12">1.2 两类假命中<a class="headerlink" href="#12" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>类型 A · 驱逐滞后（Eviction lag）——假阳性
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  索引仍写「W 有前缀 S」，引擎已 BlockRemoved
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  → 按高 M 打到 W → 实际全量/大部重算
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>类型 B · 事件空窗（Decision-before-metadata）
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  路由已决策，BlockStored 尚未进索引
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  → 多为假阴性（兄弟请求看不见新缓存，打散）
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  → 若开 speculative：TTL 内可控假阳性（假定会写入）
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>类型 A</th>
+<th>类型 B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主因</td>
+<td>未订 Removed / 丢事件 / Cleared 未实现 / approx 不知驱逐</td>
+<td>决策领先元数据</td>
+</tr>
+<tr>
+<td>高利用率时</td>
+<td>Removed 风暴，更严重</td>
+<td>写入更密，空窗更密</td>
+</tr>
+<tr>
+<td>解药</td>
+<td>Removed+Cleared+replay</td>
+<td>speculative/predicted TTL</td>
+</tr>
+</tbody>
+</table>
+<p>二者与利用率 <strong>正反馈耦合</strong>：满 → 驱逐多 → 假命中多 → 更满。</p>
+<hr />
+<h2 id="2">2. 总览矩阵<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>框架</th>
+<th>利用率进调度？</th>
+<th>Removed</th>
+<th>Cleared</th>
+<th>Speculative / Predicted</th>
+<th>默认路径假命中风险</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>llm-d precise</strong></td>
+<td>✅ <code>kv-cache-utilization-scorer</code> 权重 2.0</td>
+<td>✅</td>
+<td>✅ AllBlocksCleared</td>
+<td>✅ <code>speculativeIndexing</code> ~2s</td>
+<td>低（空窗靠 TTL）</td>
+</tr>
+<tr>
+<td><strong>llm-d approx</strong></td>
+<td>✅ 同左</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>高</strong>（本地 LRU）</td>
+</tr>
+<tr>
+<td><strong>Dynamo precise</strong></td>
+<td>△ busy 门控（非 cost 项）</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ <code>router_predicted_ttl_secs</code></td>
+<td>低</td>
+</tr>
+<tr>
+<td><strong>Dynamo approx</strong></td>
+<td>△ 同上</td>
+<td>❌（靠 TTL prune）</td>
+<td>—</td>
+<td><code>router_ttl_secs</code> 默认 120s</td>
+<td>中（TTL 寿命内假阳）</td>
+</tr>
+<tr>
+<td><strong>AIBrix prefix-cache</strong></td>
+<td>❌（用 running）</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>高</strong></td>
+</tr>
+<tr>
+<td><strong>AIBrix Event Sync</strong></td>
+<td>❌ 主路径仍不用</td>
+<td>✅ ProcessBlockRemoved</td>
+<td>❌ <strong>空实现</strong></td>
+<td>❌</td>
+<td>中（Cleared 缺口）</td>
+</tr>
+<tr>
+<td><strong>AIBrix least-kv-cache / PD decode</strong></td>
+<td>✅ 独立策略</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>视是否开 sync</td>
+</tr>
+<tr>
+<td><strong>SGLang cache_aware</strong></td>
+<td>❌（<code>worker.load()</code>）</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>高</strong>（字符树）</td>
+</tr>
+<tr>
+<td><strong>vLLM Router cache_aware</strong></td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>高</strong>（同构 SGLang）</td>
+</tr>
+<tr>
+<td><strong>Mooncake Conductor</strong></td>
+<td>❌（只供索引）</td>
+<td>✅ 规范</td>
+<td>✅ 规范</td>
+<td>❌</td>
+<td>事件延迟型</td>
+</tr>
+<tr>
+<td><strong>Motor + Conductor</strong></td>
+<td>❌（SHM workload，非 usage%）</td>
+<td>经 Conductor</td>
+<td>经 Conductor</td>
+<td>❌</td>
+<td>中（无 TTL / 未用利用率）</td>
+</tr>
+<tr>
+<td><strong>LMCache kvaware</strong>（外仓）</td>
+<td>间接 Lookup</td>
+<td>Controller admit/evict</td>
+<td>—</td>
+<td>❌</td>
+<td>低（查真值）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3">3. 分框架实现细节<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<h3 id="31-llm-depp">3.1 llm-d（EPP）<a class="headerlink" href="#31-llm-depp" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>本地：<code>llm-d/docs/</code>、<code>llm-d/guides/</code>。插件实现在外仓 <code>llm-d-router</code> / <code>llm-d-kv-cache</code>。</p>
+</blockquote>
+<h4 id="kv-cache-utilization">KV cache utilization<a class="headerlink" href="#kv-cache-utilization" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>组件</td>
+<td><code>kv-cache-utilization-scorer</code></td>
+</tr>
+<tr>
+<td>数据</td>
+<td><code>metrics-data-source</code> scrape → <code>core-metrics-extractor</code> → 端点属性 <code>KVCacheUsagePercent</code></td>
+</tr>
+<tr>
+<td>进分</td>
+<td>Filter→Score→Pick；该 scorer 输出 <span class="arithmatex">\([0,1]\)</span>，<strong>偏好更低利用率</strong>（防碎片）</td>
+</tr>
+<tr>
+<td>典型权重</td>
+<td><strong>2.0</strong>（与 queue 同级；prefix 常 3.0）</td>
+</tr>
+<tr>
+<td>配置</td>
+<td><code>guides/*/router/*.values.yaml</code> 中 <code>pluginRef: kv-cache-utilization-scorer</code></td>
+</tr>
+<tr>
+<td>文档</td>
+<td><code>docs/architecture/core/router/epp/scheduling.md</code>、<code>datalayer.md</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>局限：</strong> 线性偏好低占用；**未**与「本请求未缓存 token 数」「前缀存活概率」耦合；与 prefix scorer 独立加权，高 <span class="arithmatex">\(M\)</span> + 高利用率的冲突靠权重硬调。</p>
+<h4 id="_2">驱逐 / 空窗<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>precise</strong></td>
+<td>Indexer 订 <code>BlockStored</code> / <code>BlockRemoved</code> / <code>AllBlocksCleared</code>（<code>kv-indexer.md</code>）</td>
+</tr>
+<tr>
+<td><strong>approx</strong></td>
+<td><code>approx-prefix-cache-producer</code> 路由后学习；**不订**引擎驱逐</td>
+</tr>
+<tr>
+<td><strong>speculativeIndexing</strong></td>
+<td><code>true</code>（precise 推荐）：路由后写入短 TTL 预测条目（默认 <strong>~2s</strong>），<code>BlockStored</code> 确认或过期删除。TTL = 预测条目最长存活时间，用来填「选机 → BlockStored 到达」空窗；详见 <a href="../09-ZMQ-KV-Events%E8%AF%A6%E8%A7%A3/">09 §6</a>、<a href="../00-%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%88%86%E5%B1%82%E6%A8%A1%E5%9E%8B/">00 §5.1（3）</a></td>
+</tr>
+</tbody>
+</table>
+<p>投递：Centralized（引擎 PUB→EPP SUB）或 Pod discovery（多 EPP 各订全量）。</p>
+<p><strong>局限：</strong> speculative 窗口内仍可能短暂假阳性；approx 路径假命中与引擎 LRU 无关，直到本地索引淘汰。</p>
+<hr />
+<h3 id="32-nvidia-dynamodynamolibkv-router">3.2 NVIDIA Dynamo（<code>dynamo/lib/kv-router/</code>）<a class="headerlink" href="#32-nvidia-dynamodynamolibkv-router" title="Permanent link">&para;</a></h3>
+<h4 id="kv-cache-utilization_1">KV cache utilization<a class="headerlink" href="#kv-cache-utilization_1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>进 cost？</td>
+<td><strong>否</strong>（cost 用 active prefill tokens / decode blocks / overlap）</td>
+</tr>
+<tr>
+<td>门控</td>
+<td><code>active_decode_blocks_threshold</code> 等：worker 上报 <code>kv_used_blocks ≈ num_gpu_blocks × kv_cache_usage</code>（<code>components/.../vllm/publisher.py</code>）；超阈 <strong>移出候选</strong>（block occupancy 门控）</td>
+</tr>
+<tr>
+<td>过热抑 herding</td>
+<td><code>overlap_score_credit_decay</code>：相对最轻 worker 的 active prefill 超出量衰减 device overlap credit（<code>scheduling/selector.rs</code>）——驱动是 <strong>token 负载</strong>，不是裸利用率标量</td>
+</tr>
+<tr>
+<td>配置</td>
+<td><code>DYN_ACTIVE_DECODE_BLOCKS_THRESHOLD</code>、<code>prefill_busy_threshold*</code>；HTTP <code>/busy_threshold</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>特点：</strong> 把「满」做成 <strong>硬过滤 + credit 衰减</strong>，而不是 llm-d 式独立 utilization scorer。更接近「满了别去 / 满了别太信 overlap」。</p>
+<h4 id="_3">驱逐 / 空窗<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>路径 / 行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BlockRemoved</code></td>
+<td><code>indexer/radix_tree.rs</code> → <code>apply_removed</code>；按 hash 删；mid-chain 有修复</td>
+</tr>
+<tr>
+<td><code>AllBlocksCleared</code></td>
+<td>remove/clear worker 索引</td>
+</tr>
+<tr>
+<td>Precise + predicted</td>
+<td><code>router_predicted_ttl_secs</code> → <code>SideIndexer</code>（<code>llm/.../indexer/side.rs</code>）；<code>find_matches</code> 取 primary 与 side 的 <strong>per-worker max</strong></td>
+</tr>
+<tr>
+<td>纯 approx</td>
+<td><code>--no-router-kv-events</code> + <code>router_ttl_secs</code>（默认 <strong>120s</strong>）本地预测；到期 <code>pruning.rs</code></td>
+</tr>
+<tr>
+<td>互斥</td>
+<td>predicted TTL **不能**与纯 local approx 同时开（配置校验）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>局限：</strong> LMCache 集成文档称 Router <strong>未完整消费全部 LMCache events</strong>；predicted TTL 窗口内仍有假阳性。</p>
+<hr />
+<h3 id="33-aibrixaibrixpkg">3.3 AIBrix（<code>aibrix/pkg/</code>）<a class="headerlink" href="#33-aibrixaibrixpkg" title="Permanent link">&para;</a></h3>
+<h4 id="kv-cache-utilization_2">KV cache utilization<a class="headerlink" href="#kv-cache-utilization_2" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>是否用利用率</th>
+<th>细节</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>默认 <strong><code>prefix-cache</code></strong></td>
+<td><strong>否</strong></td>
+<td>门控/并列用 <code>RealtimeNumRequestsRunning</code>（Gateway 在途）；<code>prefix_cache.go</code></td>
+</tr>
+<tr>
+<td><strong><code>least-kv-cache</code></strong></td>
+<td><strong>是</strong></td>
+<td><code>gpuCache + cpuCache</code> 选最低（<code>least_kv_cache.go</code>）</td>
+</tr>
+<tr>
+<td>PD <strong>decode</strong> scorer</td>
+<td><strong>是</strong></td>
+<td><code>FreeGPUPercent = 100 - KVCacheUsagePerc×100</code>（<code>pd/decode_scorer.go</code>）</td>
+</tr>
+<tr>
+<td>HPA</td>
+<td>是</td>
+<td><code>gpu_kv_cache_utilization</code> 等</td>
+</tr>
+<tr>
+<td>指标源</td>
+<td>scrape</td>
+<td><code>metrics.KVCacheUsagePerc</code> ← <code>kv_cache_usage_perc</code>（<code>pkg/metrics/metrics.go</code>）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论：</strong> 指标采了，<strong>默认亲和主路径没用</strong>；要利用率需换策略或走 PD decode 公式。</p>
+<h4 id="_4">驱逐 / 空窗<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>默认 approx</td>
+<td><code>PrefixHashTable</code> + 路由后 <code>AddPrefix</code>；仅 <strong>时间 LRU</strong>（<code>AIBRIX_PREFIX_CACHE_EVICTION_*</code>，常 20min）；**不知**引擎 Removed</td>
+</tr>
+<tr>
+<td><strong>KV Event Sync</strong></td>
+<td><code>AIBRIX_PREFIX_CACHE_KV_EVENT_SYNC_ENABLED</code> + remote tokenizer；<code>pkg/kvevent/handler.go</code> → <code>SyncPrefixHashTable</code></td>
+</tr>
+<tr>
+<td>Removed</td>
+<td><code>ProcessBlockRemoved</code>（<code>sync_hash.go</code>）：删 engine↔aibrix 映射与 prefixMap</td>
+</tr>
+<tr>
+<td>Cleared</td>
+<td><code>ProcessAllBlocksCleared</code>：<strong>占位空实现 <code>return nil</code></strong>（L368–371）→ <strong>全量 reset 后索引可能陈旧</strong></td>
+</tr>
+<tr>
+<td>Speculative</td>
+<td>**无**短 TTL；sync 模式下仍有 <code>AddPrefix</code> 推测写，但不以 TTL 管理空窗</td>
+</tr>
+</tbody>
+</table>
+<p><strong>局限：</strong> Cleared 缺口；跨 Gateway 时 approx 驱逐不同步 Redis（源码注释）；默认路径假命中风险高。</p>
+<hr />
+<h3 id="34-sglang-model-gatewaysglangsgl-model-gateway">3.4 SGLang Model Gateway（<code>sglang/sgl-model-gateway/</code>）<a class="headerlink" href="#34-sglang-model-gatewaysglangsgl-model-gateway" title="Permanent link">&para;</a></h3>
+<h4 id="kv-cache-utilization_3">KV cache utilization<a class="headerlink" href="#kv-cache-utilization_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>不进</strong> <code>cache_aware</code>。</li>
+<li>负载信号：<code>Worker.load()</code> ← <code>load_counter</code>（<code>WorkerLoadGuard</code> 请求 ±1）。</li>
+<li><code>power_of_two</code> 可拉 <code>/v1/loads</code> 的 <strong>total_tokens</strong>（仍非 utilization / waiting）。</li>
+</ul>
+<h4 id="_5">驱逐 / 空窗<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
+<p>文件头设计声明：<em>approximate radix tree … eliminating the need for direct cache state queries</em>（<code>policies/cache_aware.rs</code>）。</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>匹配</td>
+<td>字符级 <code>Tree</code>；<code>match_rate = matched_chars / input_chars</code></td>
+</tr>
+<tr>
+<td>树维护</td>
+<td>每次选中后 <code>tree.insert</code>；<code>evict_tenant_by_size(max_tree_size)</code> 裁 <strong>路由树</strong></td>
+</tr>
+<tr>
+<td>引擎 Removed</td>
+<td><strong>不处理</strong></td>
+</tr>
+<tr>
+<td>Speculative</td>
+<td><strong>无</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>假命中：</strong> 引擎已驱逐，路由器仍认为该 URL 有前缀，直到树 LRU 或负载失衡切走 → <strong>系统性假阳性</strong>；另有 <strong>字符≠token/block</strong> 误差。</p>
+<p>PD 树键：<code>pool::model</code>（prefill/decode/regular 隔离），避免互踢 tenant。</p>
+<hr />
+<h3 id="35-vllm-routerrouter">3.5 vLLM Router（<code>router/</code>）<a class="headerlink" href="#35-vllm-routerrouter" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Fork SGLang Gateway；<code>router/src/policies/cache_aware.rs</code> 与 SGLang <strong>算法同构</strong>。</li>
+<li>差异：树按 <code>model_id</code> 分（非 <code>pool::model</code>）；另强调 session <code>consistent_hash</code>。</li>
+<li><strong>利用率 / Removed / speculative：均无</strong>（同 §3.4）。</li>
+</ul>
+<hr />
+<h3 id="36-mooncake-conductor">3.6 Mooncake Conductor<a class="headerlink" href="#36-mooncake-conductor" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>本地主要为设计文档：<code>Mooncake/docs/source/design/conductor/</code>（Go 实现仓未必在本 workspace）。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>利用率</td>
+<td><strong>不消费</strong>；只维护前缀元数据</td>
+</tr>
+<tr>
+<td>事件</td>
+<td><code>BlockStored</code> / <code>BlockRemoved</code>；API 规范含 <code>cleared</code></td>
+</tr>
+<tr>
+<td>查询</td>
+<td><code>/query</code> → <code>longest_matched</code> + GPU/CPU/DISK + DP；首 miss 停</td>
+</tr>
+<tr>
+<td>Replay</td>
+<td><code>replay_endpoint</code> 补丢包</td>
+</tr>
+<tr>
+<td>Speculative</td>
+<td><strong>无</strong></td>
+</tr>
+</tbody>
+</table>
+<p>假命中主要来自 <strong>事件延迟/丢包</strong>（类型 A/B），不是 approximate 树。消费方（Motor）负责是否用利用率 / TTL。</p>
+<hr />
+<h3 id="37-mindie-pymotor">3.7 MindIE-PyMotor<a class="headerlink" href="#37-mindie-pymotor" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>命中</td>
+<td>Conductor <code>/query</code> → <code>matched_tokens</code></td>
+</tr>
+<tr>
+<td>负载</td>
+<td>SHM <code>active_tokens</code> / <code>active_kv_cache</code> → <code>calculate_workload_score</code></td>
+</tr>
+<tr>
+<td>利用率</td>
+<td><code>metric_registry</code> 有 <code>vllm:kv_cache_usage_perc</code> 等 → <strong>仅观测，不进</strong> <code>KvCacheAffinityPolicy</code></td>
+</tr>
+<tr>
+<td>Removed</td>
+<td>依赖 Conductor；Motor <strong>无本地 prefix 表</strong></td>
+</tr>
+<tr>
+<td>Speculative</td>
+<td><strong>无</strong></td>
+</tr>
+<tr>
+<td>公式</td>
+<td><code>unified</code>: <code>pscale·max(0,ISL−credit·M) + load_weight·load</code>；或 <code>load_gated</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>缺口：</strong> 精确命中底座有了，但 <strong>利用率事前风险</strong> 与 <strong>空窗共址（speculative）</strong> 未做；高 churn 时仍可能按「账本负载 + 略滞后的 <span class="arithmatex">\(M\)</span>」选机。</p>
+<p>路径：<code>motor/coordinator/scheduler/policy/kv_cache_affinity.py</code>。</p>
+<hr />
+<h3 id="38-lmcache-production-stack">3.8 LMCache / production-stack（补充）<a class="headerlink" href="#38-lmcache-production-stack" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本仓</td>
+<td>多为引擎 connector（vLLM/SGLang/Dynamo 集成），**无**完整 Controller 源码</td>
+</tr>
+<tr>
+<td>production-stack <code>kvaware</code></td>
+<td>Router <strong>Lookup</strong> Controller（admit/evict 元数据）→ 精确档；非 utilization scorer</td>
+</tr>
+<tr>
+<td>Dynamo+LMCache</td>
+<td>文档：Router <strong>未完整支持全部 LMCache events</strong> → 可能次优</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4">4. 实现手法对照（怎么做的）<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="41">4.1 利用率的三种用法<a class="headerlink" href="#41" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>① 软加权（llm-d）
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>   S += λ · (1 - kv_usage)     # 与 prefix/queue 并列；kv_usage = utilization
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>② 硬门控（Dynamo busy）
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>   if used_blocks &gt; threshold: 剔除候选   # block occupancy
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>③ 独立策略（AIBrix least-kv-cache）
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>   argmin(gpu_cache + cpu_cache)   # 不与 prefix 融合
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>用法</th>
+<th>优点</th>
+<th>缺口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td>可与亲和共存</td>
+<td>线性、无接纳尺寸、无存活先验</td>
+</tr>
+<tr>
+<td>②</td>
+<td>防止打进爆机</td>
+<td>阈值以下利用率不进分</td>
+</tr>
+<tr>
+<td>③</td>
+<td>实现简单</td>
+<td>默认亲和路径用不上</td>
+</tr>
+</tbody>
+</table>
+<p><strong>仍普遍缺失：</strong> <code>free_blocks &lt; uncached_tokens</code> 硬约束；<span class="arithmatex">\(u_{\mathrm{kv}}\times M\)</span> 的有效命中衰减；GPU 满但 L2/L3 有副本时的分层处理。</p>
+<h3 id="42">4.2 假命中三类缓解<a class="headerlink" href="#42" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>① 事件真值：Stored + Removed + Cleared + replay
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>② 空窗填补：speculative / predicted 短 TTL（路由后假定写入）
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>③ 近似认命：本地树/LRU，用时间换正确性（高 churn 下假阳系统性）
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>框架代表</th>
+<th>①</th>
+<th>②</th>
+<th>③</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>llm-d precise</td>
+<td>✅</td>
+<td>✅ ~2s</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Dynamo</td>
+<td>✅</td>
+<td>✅ predicted</td>
+<td>可选 120s approx</td>
+</tr>
+<tr>
+<td>AIBrix sync</td>
+<td>✅ Removed；❌ Cleared</td>
+<td>❌</td>
+<td>默认走 ③</td>
+</tr>
+<tr>
+<td>SGLang/vLLM</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅ 主路径</td>
+</tr>
+<tr>
+<td>Motor</td>
+<td>✅ 经 Conductor</td>
+<td>❌</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5">5. 耦合：为何要一起看<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>亲和 → 热机利用率↑ → 驱逐↑ → Removed 增多 / 执行前等待变长
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>                         → 类型 A 假阳 + 类型 B 空窗同时恶化
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>                         → 若仍用裸 M 高权重 → 正反馈
+</code></pre></div>
+<p>完整形态（目标，非单一框架已实现）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>M̂(w) = Index(w) · SurvivalPrior(u_kv, waiting, ISL−M) · SpeculativeState
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>score = f(M̂, load, waiting, …)
+</code></pre></div>
+<hr />
+<h2 id="6-motor">6. 对 Motor / 自研的启示（落地优先级）<a class="headerlink" href="#6-motor" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>动作</th>
+<th>对标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0</td>
+<td>确认 Conductor Removed/Cleared/replay 生产开启</td>
+<td>llm-d/Dynamo 正确性底座</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>scrape <code>kv_cache_usage_perc</code>（或 free_blocks）进 <code>unified</code> 低权重，或高水位硬门</td>
+<td>llm-d ① / Dynamo ②</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>路由后短 TTL speculative（或 Conductor 侧预测条目）</td>
+<td>llm-d/Dynamo ②</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>观测「路由预期 <span class="arithmatex">\(M\)</span> − 引擎实际 prefix hit」假命中率</td>
+<td>闭环</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>高利用率时衰减 overlap_credit 或提高 Explore</td>
+<td>Dynamo decay 思想</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7">7. 源码 / 文档索引<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>llm-d Indexer / speculative</td>
+<td><code>llm-d/docs/architecture/advanced/kv-management/kv-indexer.md</code></td>
+</tr>
+<tr>
+<td>llm-d utilization scorer</td>
+<td><code>llm-d/docs/architecture/core/router/epp/scheduling.md</code>；guides <code>*.values.yaml</code></td>
+</tr>
+<tr>
+<td>Dynamo selector / decay</td>
+<td><code>dynamo/lib/kv-router/src/scheduling/selector.rs</code></td>
+</tr>
+<tr>
+<td>Dynamo Removed</td>
+<td><code>dynamo/lib/kv-router/src/indexer/radix_tree.rs</code></td>
+</tr>
+<tr>
+<td>Dynamo SideIndexer</td>
+<td><code>dynamo/lib/llm/src/kv_router/indexer/side.rs</code></td>
+</tr>
+<tr>
+<td>AIBrix prefix-cache</td>
+<td><code>aibrix/pkg/plugins/gateway/algorithms/prefix_cache.go</code></td>
+</tr>
+<tr>
+<td>AIBrix Removed / Cleared</td>
+<td><code>aibrix/pkg/utils/syncprefixcacheindexer/sync_hash.go</code></td>
+</tr>
+<tr>
+<td>AIBrix least-kv-cache</td>
+<td><code>aibrix/pkg/plugins/gateway/algorithms/least_kv_cache.go</code></td>
+</tr>
+<tr>
+<td>SGLang cache_aware</td>
+<td><code>sglang/sgl-model-gateway/src/policies/cache_aware.rs</code></td>
+</tr>
+<tr>
+<td>vLLM cache_aware</td>
+<td><code>router/src/policies/cache_aware.rs</code></td>
+</tr>
+<tr>
+<td>Conductor</td>
+<td><code>Mooncake/docs/source/design/conductor/*.md</code></td>
+</tr>
+<tr>
+<td>Motor KVA</td>
+<td><code>MindIE-PyMotor/motor/coordinator/scheduler/policy/kv_cache_affinity.py</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-40">8. 面试口述（约 40 秒）<a class="headerlink" href="#8-40" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>KV cache utilization 和假命中是亲和在高负载下稳不稳的关键。开源里 llm-d 用 utilization scorer + precise 的 Removed/Cleared + 2 秒 speculative；Dynamo 用 busy 门控和 overlap 衰减，再用 predicted TTL 补空窗。AIBrix 默认 prefix-cache 只看 running，利用率在别的策略里；开了 Event Sync 能删 Removed，但 AllBlocksCleared 还是空实现。SGLang/vLLM 的 cache_aware 是近似字符树，根本不听引擎驱逐。我们 Motor 经 Conductor 能跟真值驱逐，但调度侧还没把 utilization 和 speculative 接进 unified——这是下一步该补的稳定性闭环。</p>
+</blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

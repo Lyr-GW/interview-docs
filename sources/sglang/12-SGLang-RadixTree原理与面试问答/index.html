@@ -1,0 +1,2350 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/sglang/12-SGLang-RadixTree%E5%8E%9F%E7%90%86%E4%B8%8E%E9%9D%A2%E8%AF%95%E9%97%AE%E7%AD%94/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>SGLang RadixAttention / Radix Tree 原理精讲与面试问答 - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sglang-radixattention-radix-tree" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              SGLang RadixAttention / Radix Tree 原理精讲与面试问答
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        目录
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-sglang-radix-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 背景：为什么 SGLang 要用 Radix Tree
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 核心数据结构
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 核心数据结构">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-radixkey-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 RadixKey：对 token 序列的轻量封装
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-treenode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 TreeNode：树节点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 树的整体形态
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-match_prefix-insert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 核心算法：match_prefix 与 insert
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 核心算法：match_prefix 与 insert">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-match_prefix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 match_prefix：找最长公共前缀
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-_split_node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 _split_node：把一条边从中间切断
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-insert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 insert：写入新前缀
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-lrulfu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 引用计数与驱逐（LRU/LFU/优先级）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 引用计数与驱逐（LRU/LFU/优先级）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-lock_ref-kv-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 lock_ref：防止正在使用的 KV Cache 被驱逐
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-cache-aware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 与调度器的结合：Cache-Aware 调度
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 与调度器的结合：Cache-Aware 调度">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#73-hicache-kv-gateway" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 HiCache：真实 KV 的分层存储，不是 Gateway 索引
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-experimentalsgl-router-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 实验路径：experimental/sgl-router 的 KV 事件路由
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#75" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.5 当前与实验实现的严格对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#76" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.6 兼容性与工程边界
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#77" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.7 面试回答模板：如何避免概念混淆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#78-router-tokenizer-input_ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.8 实验 Router 前置 Tokenizer：一致性、回退与 input_ids 转发
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7.8 实验 Router 前置 Tokenizer：一致性、回退与 input_ids 转发">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#router-tokenizer-chat-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Router 如何加载 tokenizer 并复刻 chat prompt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#input_ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么某些请求不能安全转发 input_ids
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ids-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IDs 如何进入执行 forward
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        是否会做两遍 tokenizer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#79-mindie-pymotor-tokenize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.9 对照：MindIE PyMotor 的双 Tokenize 与一致性边界
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 面试问答（24 题）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 一分钟总结话术
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="sglang-radixattention-radix-tree">SGLang RadixAttention / Radix Tree 原理精讲与面试问答<a class="headerlink" href="#sglang-radixattention-radix-tree" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>源码全部核实自本工作区 <code>sglang/</code> 仓库（核心文件 <code>python/sglang/srt/mem_cache/radix_cache.py</code>，
+配套文件 <code>base_prefix_cache.py</code>、<code>evict_policy.py</code>、<code>managers/schedule_policy.py</code>）。
+本文严格区分三条路径：<strong>推理引擎内的真实 KV Cache</strong>、当前 <code>sgl-model-gateway</code> 的**历史推测路由**，
+以及仅位于 <code>experimental/sgl-router</code> 的**KV 事件驱动路由**。后两者不能混称为“当前 Gateway 的同一实现”。
+定位：面向"大模型推理"方向面试，考察对 SGLang **前缀缓存复用（Prefix Caching）**核心数据结构的理解深度。</p>
+</blockquote>
+<h2 id="_1">目录<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<ol>
+<li><a href="#1-背景为什么-sglang-要用-radix-tree">背景：为什么 SGLang 要用 Radix Tree</a></li>
+<li><a href="#2-核心数据结构">核心数据结构</a></li>
+<li><a href="#3-核心算法match_prefix-与-insert">核心算法：match_prefix 与 insert</a></li>
+<li><a href="#4-引用计数与驱逐lrulfu优先级">引用计数与驱逐（LRU/LFU/优先级）</a></li>
+<li><a href="#5-与调度器的结合cache-aware-调度">与调度器的结合：Cache-Aware 调度</a></li>
+<li><a href="#6-进阶特性分页eagle-bigram命名空间隔离分层缓存">进阶特性：分页、EAGLE bigram、命名空间隔离、分层缓存</a></li>
+<li><a href="#7-跨实例-cache-aware-routing当前与实验实现的边界">跨实例 Cache-Aware Routing：当前与实验实现的边界</a></li>
+<li><a href="#8-面试问答24-题">面试问答（24 题）</a></li>
+<li><a href="#9-一分钟总结话术">一分钟总结话术</a></li>
+</ol>
+<hr />
+<h2 id="1-sglang-radix-tree">1. 背景：为什么 SGLang 要用 Radix Tree<a class="headerlink" href="#1-sglang-radix-tree" title="Permanent link">&para;</a></h2>
+<p>SGLang 论文（<em>"SGLang: Efficient Execution of Structured Language Model Programs"</em>, NeurIPS 2024）提出的 <strong>RadixAttention</strong> 机制，核心诉求是：多个请求之间只要共享同样的 token 前缀（system prompt、few-shot 示例、多轮对话历史、树状搜索的公共分支等），就应当复用已经计算好的 KV Cache，而不是重新做 prefill。</p>
+<p>要做"任意请求间、任意长度前缀"的复用，本质上是一个**最长公共前缀（Longest Common Prefix, LCP）检索 + 动态插入**问题。相比朴素的哈希表（只能做整串匹配）或简单前缀树（Trie，逐 token 建节点导致树很深、指针开销大），**基数树（Radix Tree / Patricia Trie）**把只有单个子节点的链式路径压缩成一条边（存一段 token 序列），既能做前缀匹配，又比逐字符 Trie 节省大量节点数和内存。</p>
+<p>在 SGLang 中，Radix Tree 的**边（edge）存的不是字符，而是一段 token id 序列**，对应的 <strong>value 是这段 token 在 GPU KV Cache 内存池里的物理索引（indices）</strong>。因此这棵树同时承担了两个角色：</p>
+<ul>
+<li><strong>索引结构</strong>：token 序列 → KV cache 物理地址的映射，支持前缀查找、分裂、插入。</li>
+<li><strong>引用计数 / LRU 驱逐器</strong>：每个节点还挂了 <code>lock_ref</code>、<code>last_access_time</code>、<code>hit_count</code> 等元数据，配合驱逐策略实现 KV Cache 显存的自动回收。</li>
+</ul>
+<h2 id="2">2. 核心数据结构<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<h3 id="21-radixkey-token">2.1 <code>RadixKey</code>：对 token 序列的轻量封装<a class="headerlink" href="#21-radixkey-token" title="Permanent link">&para;</a></h3>
+<p>```60:99:sglang/python/sglang/srt/mem_cache/radix_cache.py
+class RadixKey:
+    """is_bigram=True: token_ids holds raw tokens (N+1 for N bigrams); slices share one boundary token."""</p>
+<div class="highlight"><pre><span></span><code>__slots__ = (&quot;token_ids&quot;, &quot;extra_key&quot;, &quot;is_bigram&quot;, &quot;limit&quot;)
+
+def __init__(
+    self,
+    token_ids: array[int],
+    extra_key: Optional[str] = None,
+    is_bigram: bool = False,
+    limit: Optional[int] = None,
+):
+</code></pre></div>
+<p><code>``
+
+要点：
+
+- 用</code>array("q", ...)<code>（C 级别的 int64 数组）而不是 Python list 存 token_ids，</code>match()<code>里用**指数探测 + 二分**在数组切片上找分歧点（167-196 行），避免逐 token 的 Python for 循环，是一处明显的性能优化。
+-</code>extra_key<code>：命名空间隔离字段（比如 LoRA adapter id、cache salt），两个前缀相同但</code>extra_key<code>不同的请求，在树里永远不会共享节点（</code><em>check_compatible<code>强制校验）。
+-</code>is_bigram<code>：给 EAGLE 投机解码用的"二元组视图"，同一份</code>token_ids<code>底层数组，逻辑上呈现成相邻 token 对</code>(t_i, t</em>{i+1})<code>的序列，零拷贝切换（</code>maybe_to_bigram_view<code>）。
+-</code>limit`：允许"假装"数组被截断到某个长度而不做 O(n) 拷贝，用于 chunked prefill 场景。
+</p>
+<h3 id="22-treenode">2.2 <code>TreeNode</code>：树节点<a class="headerlink" href="#22-treenode" title="Permanent link">&para;</a></h3>
+<p><code>217:243:sglang/python/sglang/srt/mem_cache/radix_cache.py
+class TreeNode:
+
+    counter = 0
+
+    def __init__(self, id: Optional[int] = None, priority: int = 0):
+        self.children = defaultdict(TreeNode)
+        self.parent: TreeNode = None
+        self.key: RadixKey = None
+        self.value: Optional[torch.Tensor] = None
+        self.lock_ref = 0
+        self.last_access_time = time.monotonic()
+        self.creation_time = time.monotonic()
+
+        self.hit_count = 0
+        ...</code></p>
+<ul>
+<li><code>children</code>：<code>Dict[child_key, TreeNode]</code>。<code>child_key</code> 是这条边第一个"逻辑单元"（1 个 token，或 <code>page_size</code> 个 token 组成的 tuple，见 <code>RadixKey.child_key</code>），用它做 O(1) 的孩子查找，而不是遍历比较。</li>
+<li><code>key</code>：这条边上完整的 token 序列（<code>RadixKey</code>）。</li>
+<li><code>value</code>：这段 token 对应的 GPU KV Cache <strong>物理槽位索引</strong>（<code>torch.Tensor</code>），插入/驱逐/分裂时都要跟 <code>key</code> 同步切分。</li>
+<li><code>lock_ref</code>：<strong>引用计数</strong>。&gt;0 表示正被某个正在运行的请求占用，禁止被驱逐（GC 里的"根可达"思路）。</li>
+<li><code>last_access_time</code> / <code>hit_count</code> / <code>creation_time</code> / <code>priority</code>：分别服务于 LRU / LFU / FIFO / 优先级驱逐策略。</li>
+<li><code>evicted</code> 属性：<code>self.value is None</code>，即该节点的 KV Cache 已被换出/驱逐，但节点结构（key）可能仍保留用于分层缓存（HiCache）场景做占位。</li>
+</ul>
+<h3 id="23">2.3 树的整体形态<a class="headerlink" href="#23" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>根节点</strong> <code>root_node</code> 的 <code>key</code> 是空序列，<code>lock_ref=1</code>（永远不会被驱逐），代表空前缀。</li>
+<li>每条从根到某节点的路径拼接起来，就是一个被缓存过的 token 前缀；<code>value</code> 拼接起来就是这段前缀对应的 KV Cache 索引。</li>
+<li>与教科书 Radix Tree 的差异：这里不要求"每个内部节点至少两个孩子"的强压缩不变式——只有匹配和插入过程中动态调用 <code>_split_node</code> 时才会分裂，其余保持懒惰。</li>
+</ul>
+<h2 id="3-match_prefix-insert">3. 核心算法：match_prefix 与 insert<a class="headerlink" href="#3-match_prefix-insert" title="Permanent link">&para;</a></h2>
+<h3 id="31-match_prefix">3.1 <code>match_prefix</code>：找最长公共前缀<a class="headerlink" href="#31-match_prefix" title="Permanent link">&para;</a></h3>
+<p>```648:672:sglang/python/sglang/srt/mem_cache/radix_cache.py
+def _match_prefix_helper(self, node: TreeNode, key: RadixKey):
+    ...
+    child_key = key.child_key(self.page_size)</p>
+<div class="highlight"><pre><span></span><code>value = []
+while len(key) &gt; 0 and child_key in node.children.keys():
+    child = node.children[child_key]
+    child.last_access_time = access_time
+    prefix_len = child.key.match(key, page_size=self.page_size)
+    if prefix_len &lt; len(child.key):
+        new_node = self._split_node(child.key, child, prefix_len)
+        value.append(new_node.value)
+        node = new_node
+        break
+    else:
+        value.append(child.value)
+        node = child
+        key = key[prefix_len:]
+        if len(key):
+            child_key = key.child_key(self.page_size)
+
+return value, node
+</code></pre></div>
+<p><code>``
+
+逐步过程：
+
+1. 用请求 token 序列的首个"逻辑单元"作为</code>child_key<code>做 O(1) 孩子查找。
+2. 找到孩子后，调用</code>RadixKey.match()<code>（167-196 行的指数探测二分）算出这条边上实际共享了多少 token。
+3. 三种情况：
+   - **完全不匹配**（</code>child_key<code>都不在</code>children<code>里）：循环终止，当前</code>node<code>就是匹配终点。
+   - **部分匹配**（</code>prefix_len &lt; len(child.key)<code>）：这条边比请求前缀长，说明匹配"卡在边的中间"，必须调用</code>_split_node<code>把这条边从中间切开，生成一个新的中间节点作为精确匹配边界。
+   - **完全匹配这条边**（</code>prefix_len == len(child.key)<code>）：把</code>key<code>前进</code>prefix_len<code>，继续往下一层孩子走。
+4. 沿途收集每条边的</code>value<code>（KV indices），最后</code>torch.cat<code>拼成一段连续索引，直接可以喂给 attention kernel。
+
+**这个函数有副作用**：如果匹配点落在某条边中间，会真的执行一次树结构分裂（</code>_split_node`），这是"以后来的访问模式精细化树结构"的设计——不是纯只读查询。
+</p>
+<h3 id="32-_split_node">3.2 <code>_split_node</code>：把一条边从中间切断<a class="headerlink" href="#32-_split_node" title="Permanent link">&para;</a></h3>
+<p><code>674:694:sglang/python/sglang/srt/mem_cache/radix_cache.py
+def _split_node(self, key: RadixKey, child: TreeNode, split_len: int):
+    # new_node -&gt; child
+    new_node = TreeNode(priority=child.priority)
+    new_node.hit_count = child.hit_count
+    new_node.children = {key[split_len:].child_key(self.page_size): child}
+    new_node.parent = child.parent
+    new_node.lock_ref = child.lock_ref
+    new_node.key = child.key[:split_len]
+    new_node.value = child.value[:split_len].clone()
+    child.parent = new_node
+    child.key = child.key[split_len:]
+    child.value = child.value[split_len:].clone()
+    new_node.parent.children[key.child_key(self.page_size)] = new_node
+    ...
+    return new_node</code></p>
+<p><code>原父 -&gt; child</code> 变成 <code>原父 -&gt; new_node -&gt; child</code>：<code>new_node</code> 拿走公共前缀部分的 key/value，<code>child</code> 收缩成剩余后缀部分。这一步保持 <code>lock_ref</code>、<code>hit_count</code>、<code>priority</code> 在分裂前后语义一致（新节点继承旧节点的这些属性，因为它代表"共享前缀，本来就应该被算作曾经命中过/被引用过"）。</p>
+<h3 id="33-insert">3.3 <code>insert</code>：写入新前缀<a class="headerlink" href="#33-insert" title="Permanent link">&para;</a></h3>
+<p><code>_insert_helper</code>（704-757 行）逻辑和 <code>match_prefix</code> 高度对称：沿着树往下走，遇到公共前缀不完全匹配的边就分裂，走到头如果还有剩余 token，就新建一个叶子节点挂上去，同时维护 <code>evictable_size_</code>（可驱逐 token 数统计）和 <code>hit_count</code>（分裂/复用时 <code>_inc_hit_count</code>）。</p>
+<p><strong>为什么 <code>match_prefix</code> 和 <code>insert</code> 要各自独立实现类似逻辑，而不是复用同一份代码？</strong> 因为 <code>insert</code> 在末尾需要"新建叶子节点、更新可驱逐大小、发驱逐事件"，而 <code>match_prefix</code> 只做只读查询 + 必要的分裂，语义不同，强行合并会让分支判断变复杂，牺牲可读性，SGLang 选择保持两份对称但独立的实现。</p>
+<p>一个直观例子（源码文件末尾自带的 demo，<code>__main__</code> 部分）：依次插入 <code>[1,2,3]</code>、<code>[1,2,3]</code>（重复）、<code>[1,2,4,5]</code>、<code>[1,2,4,5,6,7]</code>、<code>[8,9,10,11,12]</code> 后，树会长成：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>[1,2] --- [3]
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>      \-- [4,5] --- [6,7]
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>[8,9,10,11,12]
+</code></pre></div>
+<p>之后查询 <code>[1,2,3,13,14]</code> 会匹配到 <code>[1,2,3]</code> 这个节点，返回 3 个 token 对应的 KV indices。</p>
+<h2 id="4-lrulfu">4. 引用计数与驱逐（LRU/LFU/优先级）<a class="headerlink" href="#4-lrulfu" title="Permanent link">&para;</a></h2>
+<h3 id="41-lock_ref-kv-cache">4.1 <code>lock_ref</code>：防止正在使用的 KV Cache 被驱逐<a class="headerlink" href="#41-lock_ref-kv-cache" title="Permanent link">&para;</a></h3>
+<p>```592:626:sglang/python/sglang/srt/mem_cache/radix_cache.py
+def inc_lock_ref(self, node: TreeNode) -&gt; IncLockRefResult:
+    ...
+    while node != self.root_node:
+        if node.lock_ref == 0:
+            self.evictable_size_ -= len(node.key)
+            self.protected_size_ += len(node.key)
+            delta -= len(node.key)
+        node.lock_ref += 1
+        self._update_leaf_status(node)
+        node = node.parent
+    return IncLockRefResult(delta=delta)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>一个请求正在使用某个节点代表的前缀时，会从该节点**一路往根节点回溯**给每个祖先 `lock_ref += 1`（因为祖先的 KV Cache 也是这个请求依赖的一部分）。只有 `lock_ref == 0` 的节点才会被从&quot;可驱逐&quot;转移到&quot;受保护&quot;的统计桶里。请求结束时 `dec_lock_ref` 做对称的回收。这本质上是一种**引用计数式的树上传播保护**。
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>### 4.2 驱逐：只淘汰叶子，按策略选择淘汰顺序
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>```563:590:sglang/python/sglang/srt/mem_cache/radix_cache.py
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>def evict(self, params: EvictParams) -&gt; EvictResult:
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    ...
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    leaves = list(self.evictable_leaves)
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    eviction_heap = [
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>        (self.eviction_strategy.get_priority(node), node) for node in leaves
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    ]
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    heapq.heapify(eviction_heap)
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    num_evicted = 0
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    while num_evicted &lt; num_tokens and len(eviction_heap):
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>        _priority, x = heapq.heappop(eviction_heap)
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>        self.token_to_kv_pool_allocator.free(x.value)
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>        num_evicted += len(x.value)
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>        self._delete_leaf(x)
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>        if len(x.parent.children) == 0 and x.parent.lock_ref == 0:
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>            new_priority = self.eviction_strategy.get_priority(x.parent)
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>            heapq.heappush(eviction_heap, (new_priority, x.parent))
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>        ...
+</code></pre></div></p>
+<p>关键设计点：</p>
+<ul>
+<li><strong>只能驱逐叶子节点</strong>（<code>evictable_leaves</code> 集合，由 <code>_update_leaf_status</code> 维护），因为内部节点的 KV Cache 是其所有子孙共享的前缀，删了会破坏树结构；用最小堆按策略优先级弹出。</li>
+<li>驱逐一个叶子后，如果它父节点因此变成"无孩子且未被锁定"的新叶子，立即把父节点也推入堆——<strong>级联驱逐</strong>，从叶子往根方向层层回收，直到凑够需要驱逐的 token 数或堆空。</li>
+<li>驱逐策略是可插拔的 <code>EvictionStrategy</code>（<code>evict_policy.py</code>）：<code>LRUStrategy</code>（默认，按 <code>last_access_time</code>）、<code>LFUStrategy</code>（按 <code>hit_count</code>）、<code>FIFO</code> / <code>MRU</code> / <code>FILO</code>、<code>PriorityStrategy</code>（业务优先级 + LRU 兜底）、<code>SLRUStrategy</code>（分段 LRU，命中次数到阈值前后区别对待，防止"一次性大请求"把长期热点前缀冲刷掉）。堆的排序 key 就是 <code>get_priority(node)</code> 返回的元组，天然支持多级排序。</li>
+</ul>
+<h2 id="5-cache-aware">5. 与调度器的结合：Cache-Aware 调度<a class="headerlink" href="#5-cache-aware" title="Permanent link">&para;</a></h2>
+<p>Radix Tree 不只是被动的缓存，还**反向影响调度顺序**。<code>schedule_policy.py</code> 里定义了：</p>
+<p>```139:152:sglang/python/sglang/srt/managers/schedule_policy.py
+class CacheAwarePolicy(Enum):
+    """Scheduling policies that are aware of the tree cache."""
+    LPM = "lpm"  # longest prefix match
+    DFS_WEIGHT = "dfs-weight"  # depth-first search weighting</p>
+<p>class CacheAgnosticPolicy(Enum):
+    """Scheduling policies that are not aware of the tree cache."""
+    FCFS = "fcfs"  # first come first serve
+    LOF = "lof"  # longest output first
+    RANDOM = "random"
+    ROUTING_KEY = "routing-key"
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>**LPM（Longest Prefix Match）策略**：调度器在等待队列里，优先把与&quot;当前正在运行 batch&quot;或&quot;彼此之间&quot;共享最长前缀的请求排到一起调度。直觉：把共享前缀的请求安排在临近的时间窗口执行，能最大化利用刚被计算出来、还未被驱逐的 KV Cache，减少重复 prefill；`DFS_WEIGHT` 则用树的深度优先遍历顺序做批次内的局部性优化。这也是为什么代码里专门维护了一棵 `self.waiting_queue_radix_tree = RadixCache.create_simulated()`（177 行左右）——**给等待队列单独模拟一棵树**，用于估计&quot;批内前缀共享&quot;，和真正持有 KV Cache 的主 radix tree 是分开的两棵树，避免相互脏写。
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>`match_prefix_for_req` 把每个请求的 token 序列丢进主树查询，写回 `req.prefix_indices`（命中的 KV indices）与 `req.last_node`（匹配终点节点），后续 `cache_unfinished_req` / `cache_finished_req` 会用这个 `last_node` 做 `inc_lock_ref`/`dec_lock_ref` 的配对操作。
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>## 6. 进阶特性：分页、EAGLE bigram、命名空间隔离、分层缓存
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>- **Page-aligned（分页对齐）**：当 `page_size &gt; 1`（Paged Attention 场景），所有 key 在参与树操作前都会 `key.page_aligned(page_size)`，把长度向下取整到 `page_size` 的倍数，`child_key()` 也从&quot;单 token&quot;变成&quot;一个 page 内多个 token 组成的 tuple&quot;。这让 Radix Tree 天然兼容按页管理的 KV Cache 分配器，代价是前缀匹配粒度从 token 级降到 page 级。
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>- **EAGLE 投机解码的 bigram 视图**：EAGLE draft 模型是基于&quot;相邻 token 对&quot;训练的，`RadixKey.maybe_to_bigram_view` 让同一棵树在不改变底层存储的前提下，把 key 解释成 bigram 序列参与匹配，`match()`/`child_key()` 内部都对 `is_bigram` 分支做了相应处理。
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>- **`extra_key` 命名空间隔离**：给 LoRA adapter id、cache salt 等场景使用，保证&quot;token 前缀相同但语义上下文不同&quot;的请求不会错误共享 KV Cache（`RadixKey._check_compatible` 强制两个 key 的 `extra_key` 一致才能比较/合并）。
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>- **优先级感知驱逐**：`priority` 字段沿插入路径取 max 向上传播（`_insert_helper` 118 行左右），配合 `PriorityStrategy`，可以让高优先级会话（如付费用户/系统级 prompt）的前缀更难被驱逐。
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>- **分层缓存 HiRadixCache**（`hiradix_cache.py`，未在本文详细展开）：在这棵 GPU 侧 radix tree 之上叠加 CPU/磁盘（甚至远程存储，如 `storage/hf3fs`、`lmc_radix_cache.py` 对接 LMCache）多级缓存，`TreeNode.host_value`/`host_ref_counter`/`write_through_pending_id` 这几个字段就是为分层缓存预留的：GPU 驱逐后先&quot;写透&quot;到 host，`host_ref_counter` 保护 host 侧副本不被过早清理。
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>## 7. 跨实例 Cache-Aware Routing：当前与实验实现的边界
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>### 7.1 先区分：这是三层不同的问题
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>| 层次 | 代码位置 | 解决的问题 | 是否是当前生产 Gateway 路径 |
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>|---|---|---|---|
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>| 引擎内 Radix Cache / HiCache | `python/sglang/srt/mem_cache/` | 当前 worker 如何复用、驱逐、下沉或回载**真实 KV page** | 是，但它不负责多 worker 选路 |
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>| 历史推测路由 | `sgl-model-gateway/src/policies/cache_aware.rs` | 多个 worker 中，把请求发给**历史上最可能**仍有该前缀的 worker | 是 |
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>| KV 事件路由 | `experimental/sgl-router/src/policies/cache_aware_zmq.rs` | 根据 worker 发布的 KV block 生命周期事件，选择**已确认持有**匹配 block 的 worker | 否，实验性代码 |
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>因此，**HiCache 不等于 KV-aware Gateway routing**：HiCache 首先是 worker 内的分层存储机制；只有额外开启 KV event 发布，并由支持订阅的 router 消费时，才形成跨实例的真实 cache-directory 路由闭环。
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>### 7.2 当前路径：`sgl-model-gateway` 的历史推测
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>当前使用的 `sgl-model-gateway` 中，`cache_aware` 维护的是按 `(pool, model)` 隔离的**字符级近似 Radix Tree**：
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>```text
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>(regular | prefill | decode, model)
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>  → 请求原始文本前缀
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>  → 上次被选中的 worker URL（tenant）
+</code></pre></div></p>
+<p>它不向 worker 查询真实 KV Cache，也不消费 <code>BlockStored</code> / <code>BlockRemoved</code> / <code>AllBlocksCleared</code> 事件。一次请求的处理逻辑如下：</p>
+<ol>
+<li>统计健康 worker 的 <code>load()</code>（在途请求数）。</li>
+<li>若同时满足 <code>(max_load - min_load) &gt; balance_abs_threshold</code> 与
+   <code>max_load &gt; min_load * balance_rel_threshold</code>，直接选择最小 load 的 worker。</li>
+<li>否则，对请求**原始文本字符**做最长前缀匹配，计算
+   <code>match_rate = matched_char_count / input_char_count</code>。</li>
+<li><code>match_rate &gt; cache_threshold</code> 时，选择树中记录的 worker URL；否则选择最小 load 的健康 worker。</li>
+<li>无论命中还是回退，均将 <code>text → selected worker URL</code> 写回树，作为下一次预测的历史。</li>
+</ol>
+<p>对应 <code>cache_aware.rs:400-450</code>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">is_imbalanced</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max_load</span><span class="p">.</span><span class="n">saturating_sub</span><span class="p">(</span><span class="n">min_load</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">balance_abs_threshold</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">max_load</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">min_load</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">balance_rel_threshold</span><span class="p">);</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">if</span><span class="w"> </span><span class="n">is_imbalanced</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">select_worker_min_load</span><span class="p">(</span><span class="o">..</span><span class="p">.);</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">}</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="kd">let</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tree</span><span class="p">.</span><span class="n">prefix_match_with_counts</span><span class="p">(</span><span class="n">text</span><span class="p">);</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="kd">let</span><span class="w"> </span><span class="n">match_rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">matched_char_count</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">input_char_count</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="p">;</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="kd">let</span><span class="w"> </span><span class="n">selected_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">match_rate</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">cache_threshold</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">    </span><span class="c1">// 使用历史记录的 tenant（即 worker URL）</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">    </span><span class="o">..</span><span class="p">.</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">    </span><span class="c1">// 当前实现按最小 live load 回退</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">    </span><span class="o">..</span><span class="p">.</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="p">};</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="n">tree</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">text</span><span class="p">,</span><span class="w"> </span><span class="n">workers</span><span class="p">[</span><span class="n">idx</span><span class="p">].</span><span class="n">url</span><span class="p">());</span>
+</code></pre></div>
+<p>这里的“cache hit”是**推测**，不是后端保证：worker 重启、真实 KV 被 LRU 驱逐、显存压力导致下沉或 cache flush 后，Gateway 的记录可能已陈旧。后端不会返回错误，只是这一次会发生预期外的 full prefill。</p>
+<blockquote>
+<p>注意：该文件头部仍有“低命中选择最小树”的旧式描述；当前选择代码实际是“低命中选择最小 <code>load()</code>”。面试或设计评审应以 <code>select_worker</code> 的实现为准。</p>
+</blockquote>
+<h3 id="73-hicache-kv-gateway">7.3 HiCache：真实 KV 的分层存储，不是 Gateway 索引<a class="headerlink" href="#73-hicache-kv-gateway" title="Permanent link">&para;</a></h3>
+<p><code>HiRadixCache</code>（<code>python/sglang/srt/mem_cache/hiradix_cache.py</code>）在同一个 worker 内扩展 Radix Cache，使 KV 可位于 GPU HBM、CPU pinned memory、磁盘或外部存储。其核心是保存/回载真实 KV page，而不是记录“请求应该路由到谁”。</p>
+<p>KV event 中的介质枚举反映了这个层次：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">StorageMedium</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">GPU</span> <span class="o">=</span> <span class="s2">&quot;GPU&quot;</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">CPU</span> <span class="o">=</span> <span class="s2">&quot;CPU_PINNED&quot;</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">DISK</span> <span class="o">=</span> <span class="s2">&quot;DISK&quot;</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">EXTERNAL</span> <span class="o">=</span> <span class="s2">&quot;EXTERNAL&quot;</span>
+</code></pre></div>
+<p>不要混淆两个名字相近的“event”：</p>
+<ul>
+<li><code>check_hicache_events()</code>：Scheduler 在 worker 内轮询 D2H/H2D、write-through、load-back 与 storage 队列的异步完成状态；**不是**发送给 router 的事件。</li>
+<li>KV cache event：可选的控制面消息，描述逻辑 KV block 的存入、移除、清空；可被外部 router 或存储组件订阅。</li>
+</ul>
+<h3 id="74-experimentalsgl-router-kv">7.4 实验路径：<code>experimental/sgl-router</code> 的 KV 事件路由<a class="headerlink" href="#74-experimentalsgl-router-kv" title="Permanent link">&para;</a></h3>
+<p>这是仓库中唯一实现了 KV event 消费并用于选路的路径，但目录名已明确标记为 <code>experimental</code>，不能表述为当前 <code>sgl-model-gateway</code> 的已用功能。</p>
+<p>启动 worker 时，<code>--kv-events-config</code> 可启用 <code>ZmqEventPublisher</code>。Radix/HiCache 的树操作会产生以下事件：</p>
+<table>
+<thead>
+<tr>
+<th>事件</th>
+<th>表达的真实状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BlockStored</code></td>
+<td>某 worker / DP rank 保存了某条 token-block hash 链，可附带 <code>medium</code></td>
+</tr>
+<tr>
+<td><code>BlockRemoved</code></td>
+<td>对应 block 已从该介质移除</td>
+</tr>
+<tr>
+<td><code>AllBlocksCleared</code></td>
+<td>该 worker 的已发布 cache 状态整体失效</td>
+</tr>
+</tbody>
+</table>
+<p>事件生成与发布路径为：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>RadixCache / HiRadixCache 树变更
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  → KVCacheEventMixin._record_store_event / _record_remove_event
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>  → tree_cache.take_events()
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>  → SchedulerKvEventsPublisher.publish_kv_events()
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>  → ZmqEventPublisher（topic, sequence number, msgpack batch）
+</code></pre></div>
+<p>实验 router 中的 <code>KvEventIndex</code> 为每个 <code>(worker URL, DP rank)</code> 启动 ZMQ SUB，使用事件更新 <code>HashTree</code>；<code>CacheAwareZmqPolicy</code> 在选路时：</p>
+<ol>
+<li>对请求按模型 tokenizer 得到 token IDs。</li>
+<li>按 worker 上报的 <code>page_size</code> 计算 block hash（EAGLE 使用 bigram hash）。</li>
+<li>在 <code>HashTree</code> 查最长 hash 链，得到真实持有该链的 worker 集合。</li>
+<li>在命中 worker 集合中选最小 active load；不命中、tokenize 失败、page size 未知或全局负载失衡时，退化为最小 load。</li>
+</ol>
+<p>这条路径的索引键是**token block hash**，而当前 Gateway 的索引键是**原始文本字符**；两者不应混称。</p>
+<h3 id="75">7.5 当前与实验实现的严格对比<a class="headerlink" href="#75" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>当前 <code>sgl-model-gateway: cache_aware</code></th>
+<th>实验 <code>sgl-router: cache_aware_zmq</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>稳定性标识</td>
+<td>当前 Gateway 实现</td>
+<td><code>experimental/</code> 目录下的实验实现</td>
+</tr>
+<tr>
+<td>cache 信息来源</td>
+<td>路由历史：<code>text → worker URL</code></td>
+<td>worker 发布的 <code>BlockStored/Removed/Cleared</code></td>
+</tr>
+<tr>
+<td>匹配粒度</td>
+<td>原始文本字符前缀</td>
+<td>token block hash 前缀</td>
+</tr>
+<tr>
+<td>是否需 router tokenizer</td>
+<td>否</td>
+<td>是</td>
+</tr>
+<tr>
+<td>是否感知真实驱逐 / flush</td>
+<td>否</td>
+<td>是，前提是事件流完整可用</td>
+</tr>
+<tr>
+<td>worker 重启后的陈旧状态</td>
+<td>只能靠健康检查、后续访问与树维护缓解</td>
+<td>可通过 worker 生命周期清理索引；仍需处理订阅重连和事件缺口</td>
+</tr>
+<tr>
+<td>低命中回退</td>
+<td>最小 live load</td>
+<td>最小 active load</td>
+</tr>
+<tr>
+<td><code>medium</code> 是否参与当前打分</td>
+<td>不适用</td>
+<td>事件携带该字段，但当前策略仅按“持有与否 + active load”选择，未对 GPU/CPU/DISK/EXTERNAL 延迟差异加权</td>
+</tr>
+</tbody>
+</table>
+<h3 id="76">7.6 兼容性与工程边界<a class="headerlink" href="#76" title="Permanent link">&para;</a></h3>
+<ol>
+<li>KV events 是**可选**能力：未传 <code>--kv-events-config</code> 时，worker 使用 <code>NullEventPublisher</code>，实验 router 会跳过该 worker 的事件订阅，必须退化到普通负载均衡或其他策略。</li>
+<li>ZMQ PUB/SUB 是异步控制面而非请求同步协议；发布器支持 sequence number 和可选 replay endpoint，但部署仍必须考虑订阅建立前的消息、消费者积压、网络断连和重放窗口不足导致的状态缺口。</li>
+<li>HiCache 与 KV events 不是任意后端均可组合：Python <code>HiRadixCache</code> 有事件发射路径；当前 <code>radix_cache_cpp.py</code> 的 <code>RadixCacheCpp</code> 明确断言不支持 <code>enable_kv_cache_events</code>。实际启用前需按所选 cache backend 验证。</li>
+<li>当前 <code>sgl-model-gateway</code> 的 mesh tree 同步与 KV events 是两件事。前者同步的是 Gateway 自己的历史文本树；源码注释表明远程 tree operation 的接收路径尚未接入生产调用链。</li>
+</ol>
+<h3 id="77">7.7 面试回答模板：如何避免概念混淆<a class="headerlink" href="#77" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>SGLang 里要分三层讲。引擎内 Radix Tree / HiCache 保存的是 token 到真实 KV page 的映射；HiCache 进一步管理 GPU、CPU、磁盘和外部层之间的 KV 搬运。当前 <code>sgl-model-gateway</code> 的 <code>cache_aware</code> 并不读取这些真实状态，而是用原始文本前缀和历史“上次选中哪台 worker”做近似亲和路由，失衡时回退到最短队列。仓库另有 <code>experimental/sgl-router</code>：它订阅 worker 的 KV block 事件，按 token block hash 建目录，才是严格意义的真实 cache-aware routing；但这是实验路径，不能当作当前 Gateway 已部署能力。</p>
+</blockquote>
+<h3 id="78-router-tokenizer-input_ids">7.8 实验 Router 前置 Tokenizer：一致性、回退与 <code>input_ids</code> 转发<a class="headerlink" href="#78-router-tokenizer-input_ids" title="Permanent link">&para;</a></h3>
+<p><code>cache_aware_zmq</code> 需要请求 token IDs 来计算 block hash，但不会为策略单独重复 tokenize。Chat ingress 使用共享的 <code>TokenizerRegistry</code> 预计算一次 <code>RequestTokens</code>，同一份 IDs 同时服务于路由决策和可选的 worker tokenization offload。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Chat HTTP body
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  → TokenizerRegistry：chat template render + encode
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>  → RequestTokens.ids
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>  ├─ SelectionContext：CacheAwareZmqPolicy 计算 block hash 并选 worker
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>  └─ 满足安全条件时：向下游 HTTP body 注入 input_ids
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>       → SGLang ChatCompletionRequest.input_ids
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>       → 跳过 chat-template tokenization
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>       → GenerateReqInput(input_ids)
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>       → Scheduler → prefill / KV match / model forward
+</code></pre></div>
+<h4 id="router-tokenizer-chat-prompt">Router 如何加载 tokenizer 并复刻 chat prompt<a class="headerlink" href="#router-tokenizer-chat-prompt" title="Permanent link">&para;</a></h4>
+<p>Router 按 <code>model_id → tokenizer_path</code> 维护 <code>TokenizerRegistry</code>。<code>tokenizer_path</code> 是本地 <code>tokenizer.json</code> 路径或 Hugging Face repo；CLI 未指定时默认使用 <code>model_id</code> 作为 repo。对于 chat 请求：</p>
+<ol>
+<li>优先读取同源 <code>tokenizer_config.json</code>，编译其中的 Hugging Face Jinja <code>chat_template</code>。</li>
+<li>DeepSeek-V4 使用仓库内置的 prompt renderer。</li>
+<li>将 <code>messages</code> 渲染为完整 prompt，再以 <code>add_special_tokens = false</code> 编码；BOS、role marker 等 special tokens 应由模板字面量提供。</li>
+<li><code>RequestTokens.engine_equivalent = true</code> 仅表示这条“模板渲染后编码”的路径成功；raw 文本 fallback 一律为 <code>false</code>。</li>
+</ol>
+<p>这里的一致性主要是**配置约定与实现复刻**，而非运行时强校验。实验 router 当前没有与每个 worker 协商 tokenizer revision、词表 hash 或 chat-template hash 的握手。因此部署者必须确保 router 与 worker 使用相同模型 revision / tokenizer 文件；若 worker 用参数覆盖 chat template，router 无法自动发现。</p>
+<h4 id="input_ids">为什么某些请求不能安全转发 <code>input_ids</code><a class="headerlink" href="#input_ids" title="Permanent link">&para;</a></h4>
+<p>“不安全”不表示请求非法，而是 router 无法证明自己的 IDs 与 worker 最终将执行的 prompt IDs 完全一致。错误地转发 IDs 会改变模型实际看到的 prompt，因此代码宁可让 worker 再 tokenize。</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>Router 缺少或可能错误的语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>raw prompt fallback</td>
+<td>当前实现可能只是提取 <code>prompt</code> / <code>text</code>，或拼接 <code>messages.content</code>；对 chat 会遗漏 role marker、BOS、assistant generation prompt。即使纯 completion 文本理论上可能相同，当前代码仍保守地标为 <code>engine_equivalent = false</code>。</td>
+</tr>
+<tr>
+<td>chat template 缺失或渲染失败</td>
+<td>无法构造与 engine 相同的 system/user/assistant 控制 token 和 generation prompt。</td>
+</tr>
+<tr>
+<td>tools / functions</td>
+<td>worker 可能将 tool schema、function 定义和 tool message 渲染进 prompt；router encoder 没有完整复刻。</td>
+</tr>
+<tr>
+<td>多模态</td>
+<td>worker 的 processor 会插入图像/音频/视频 placeholder token 并绑定特征；纯文本 tokenizer 无法重建其 IDs 和位置。</td>
+</tr>
+<tr>
+<td>thinking / reasoning / task</td>
+<td>请求参数可切换模板模式、插入或删除 thinking 标记、改变末尾 assistant turn；router 仅实现默认渲染。</td>
+</tr>
+<tr>
+<td>自定义 <code>chat_template</code>、续写最后 assistant 消息</td>
+<td>这些字段会改变 engine 的 tokenization，但 router 未将其纳入 encoder。</td>
+</tr>
+</tbody>
+</table>
+<p><code>input_ids_safe_to_forward</code> 对 tools、多模态、模板覆盖、reasoning/task、<code>continue_final_message</code> 和末尾 assistant message 采取拒绝转发的保守策略；这时原始 <code>messages</code> 仍随请求向下游传递，worker 以自己的实现完成 tokenization。</p>
+<h4 id="ids-forward">IDs 如何进入执行 forward<a class="headerlink" href="#ids-forward" title="Permanent link">&para;</a></h4>
+<p>选中 worker 后，Router 仅在 <code>engine_equivalent == true</code> 且安全检查通过时，把 token IDs 序列写入下游 JSON 的顶层 <code>input_ids</code>，并保留 <code>messages</code>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input_ids</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="n">obj</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">        </span><span class="s">&quot;input_ids&quot;</span><span class="p">.</span><span class="n">to_string</span><span class="p">(),</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">        </span><span class="n">serde_json</span><span class="p">::</span><span class="n">Value</span><span class="p">::</span><span class="n">Array</span><span class="p">(</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">            </span><span class="n">ids</span><span class="p">.</span><span class="n">iter</span><span class="p">()</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">                </span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="o">|&amp;</span><span class="n">i</span><span class="o">|</span><span class="w"> </span><span class="n">serde_json</span><span class="p">::</span><span class="n">Value</span><span class="p">::</span><span class="n">Number</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">into</span><span class="p">()))</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">                </span><span class="p">.</span><span class="n">collect</span><span class="p">(),</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">        </span><span class="p">),</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">    </span><span class="p">);</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="p">}</span>
+</code></pre></div>
+<p>SGLang worker 的 <code>serving_chat.py</code> 看到 <code>request.input_ids</code> 后，在 <code>_process_messages</code> 中直接令 <code>prompt_ids = request.input_ids</code>，跳过 chat-template tokenization；但仍从 <code>messages</code> 派生 stop token、tool-call constraint 和响应语义。随后 <code>GenerateReqInput(input_ids=...)</code> 进入 <code>TokenizerManager.generate_request()</code>，由 Scheduler 做 prefix-cache match、paged-KV 分配与 prefill，最终执行模型 forward。</p>
+<p><strong><code>input_ids</code> 不是 KV page index。</strong> 它只消除“文本 / chat template → token IDs”的重复 CPU 工作，不能跳过 prefill forward；只有引擎内 Radix Cache / HiCache 命中时，prefill 计算才可能被复用。</p>
+<h4 id="tokenizer">是否会做两遍 tokenizer<a class="headerlink" href="#tokenizer" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>请求条件</th>
+<th style="text-align: right;">Router tokenize</th>
+<th style="text-align: right;">Worker prompt tokenize</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>普通文本 chat，模板可复刻且安全</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td>Router IDs 透传，单次 tokenization</td>
+</tr>
+<tr>
+<td>非 cache-aware 且不具备 chat encoder 的普通路径</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td>仅 worker tokenize</td>
+</tr>
+<tr>
+<td>raw fallback、模板缺失/失败、tools、多模态、thinking 等</td>
+<td style="text-align: right;">路由需要 token 时为 1</td>
+<td style="text-align: right;">1</td>
+<td>为保证正确性允许双算</td>
+</tr>
+</tbody>
+</table>
+<p>在 PD 模式下，实验 Router 将同一份已注入 <code>input_ids</code> 的 body 发给 prefill 与 decode peer；是否跳过 prompt tokenization的判断仍由各 worker 的 <code>input_ids</code> 分支完成。</p>
+<h3 id="79-mindie-pymotor-tokenize">7.9 对照：MindIE PyMotor 的双 Tokenize 与一致性边界<a class="headerlink" href="#79-mindie-pymotor-tokenize" title="Permanent link">&para;</a></h3>
+<p>MindIE PyMotor 的 KV-affinity 路径与实验 <code>sgl-router</code> 的设计不同：Coordinator 会为调度 tokenize 一次，vLLM/SGLang engine 会为实际执行再 tokenize 一次；首请求中，Coordinator 的 token IDs **不会**写入下游请求体，更不会作为 <code>input_ids</code> 驱动 engine forward。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>客户端 messages / prompt
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  → PyMotor Coordinator
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>      → AutoTokenizer.apply_chat_template / encode（第 1 次）
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>      → token_ids：仅用于 Conductor KV 查询、命中长度与 prefill workload
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>      → 原始 req_data 透传
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>  → vLLM / SGLang Engine
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>      → 引擎自己的 tokenizer / chat template（第 2 次）
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>      → 实际 prefill / forward
+</code></pre></div>
+<p>Coordinator 的 <code>KvCacheAffinityPolicy._ensure_token_ids</code> 将 IDs 缓存在 <code>RequestInfo.token_ids</code>，以保证**调度阶段**同一个请求最多 tokenize 一次，并将相同 IDs 同时用于 Conductor 查询和 token 单位的 prefill workload 估算：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">cached</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">req_info</span><span class="p">,</span> <span class="s2">&quot;token_ids&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cached</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="k">return</span> <span class="n">cached</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">if</span> <span class="n">messages</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="n">encoded_ids</span> <span class="o">=</span> <span class="n">TokenizerManager</span><span class="p">()</span><span class="o">.</span><span class="n">apply_chat_template</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">tools</span><span class="p">)</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>    <span class="n">encoded_ids</span> <span class="o">=</span> <span class="n">TokenizerManager</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="n">req_info</span><span class="o">.</span><span class="n">token_ids</span> <span class="o">=</span> <span class="n">encoded_ids</span>
+</code></pre></div>
+<p>对于 OpenAI chat，Coordinator 的标准编码路径调用 Hugging Face <code>AutoTokenizer.apply_chat_template</code>，明确包含 <code>tools</code>、<code>add_generation_prompt=True</code> 与 <code>tokenize=True</code>。协调器的 <code>prefill_kv_event_config.model_path</code> 又从引擎配置段的 <code>model</code> / <code>model-path</code> 派生，因此正常部署会使用同一模型目录的 tokenizer 与默认 template。</p>
+<p>但这是**配置约定**，不是强一致性协议。当前代码未见以下机制：</p>
+<ul>
+<li>Coordinator token IDs 与 engine 返回的 <code>prompt_token_ids</code> 的相等断言；</li>
+<li>router / engine 之间的 tokenizer revision、词表 hash 或 chat-template hash 握手；</li>
+<li>engine 的 <code>--chat-template</code>、thinking/reasoning、多模态 processor 等配置向 Coordinator 的自动同步。</li>
+</ul>
+<p>因此两侧不一致时，首请求的影响主要是 KV-affinity 查询与 prefill workload 估算失真，可能导致 cache miss 或较差的实例选择；不会直接改变生成结果，因为 engine 最终仍使用自己根据原始 <code>messages</code> / <code>prompt</code> 得到的 IDs。</p>
+<p>这与实验 <code>sgl-router</code> 的取舍形成对比：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>PyMotor KV-affinity</th>
+<th>实验 <code>sgl-router</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>路由侧 IDs</td>
+<td>只用于 Conductor 与 workload</td>
+<td>用于 block-hash 路由，也可转发</td>
+</tr>
+<tr>
+<td>首请求是否传 <code>input_ids</code></td>
+<td>否</td>
+<td>普通文本 chat 且安全时传</td>
+</tr>
+<tr>
+<td>是否双 tokenize</td>
+<td>KV-affinity 下通常是</td>
+<td>仅不安全/回退路径是</td>
+</tr>
+<tr>
+<td>不一致的首要影响</td>
+<td>路由质量、KV 命中率、负载估算</td>
+<td>若错误透传会影响执行，因此采用严格安全门控</td>
+</tr>
+<tr>
+<td>推理输入权威来源</td>
+<td>engine tokenizer</td>
+<td>安全转发时 router IDs；否则 engine tokenizer</td>
+</tr>
+</tbody>
+</table>
+<p>有一个重要例外：发生流式重调度（reschedule）时，PyMotor 会请求 engine 返回 <code>prompt_token_ids</code> 和已生成 <code>token_ids</code>，随后将**engine 返回的权威 IDs**组装为 Completions 的 <code>prompt: list[int]</code> 进行重放；此时不会再依赖 Coordinator 首次用于 affinity 的 IDs。该设计也说明：重试执行层以 engine token 序列为准。</p>
+<h2 id="8-24">8. 面试问答（24 题）<a class="headerlink" href="#8-24" title="Permanent link">&para;</a></h2>
+<p><strong>Q1. 为什么 SGLang 选择 Radix Tree（基数树）而不是普通 Trie 或哈希表来做前缀缓存？</strong></p>
+<p>A：哈希表只能做"整串精确匹配"，无法支持"任意长度公共前缀"的复用；逐 token 建节点的普通 Trie 能做前缀匹配，但当大部分路径是单分支链时会产生大量只有一个孩子的节点，浪费内存和指针跳转开销。Radix Tree 把这些单分支链压缩成一条边（一个 <code>TreeNode.key</code> 存一段 <code>RadixKey</code>），既保留了前缀匹配能力，又把节点数降到"分叉点的数量级"。在 SGLang 里边上挂的 <code>value</code> 直接是 GPU KV Cache 的物理索引，所以这棵树本质上是"token 序列 → KV Cache 索引"的压缩前缀索引 + 引用计数驱逐器的合体。</p>
+<p><strong>Q2. <code>match_prefix</code> 的时间复杂度是多少？如果请求前缀长度是 N，最坏情况会怎样？</strong></p>
+<p>A：从根往下走，每一层用 <code>child_key</code> 做哈希查找（<code>node.children[child_key]</code>）是 O(1) 均摊；层数最多等于树的深度，深度上界是 min(前缀长度, 分叉点数量)。真正比较 token 是否相同的开销在 <code>RadixKey.match()</code> 里，用的是指数探测（倍增窗口）+ 二分定位分歧点，单次匹配复杂度是 O(log L)（L 是共享前缀长度）而不是 O(L)，因为底层比较用的是 C 级别的数组切片相等判断（<code>t0[lo:hi] != t1[lo:hi]</code>），一次覆盖一大段。所以整体近似 O(层数 × log(每层匹配长度))，远好于逐 token Python 循环。</p>
+<p><strong>Q3. <code>match_prefix</code> 为什么会修改树结构（<code>_split_node</code>）？只读查询为什么会有副作用？</strong></p>
+<p>A：因为匹配点可能落在某条边的中间——比如树里已经有 <code>[1,2,3,4,5]</code> 这条边，新请求前缀是 <code>[1,2,3,9]</code>，公共前缀长度是 3，但这条边长度是 5，3 &lt; 5，说明"匹配点在边内部"。如果不做任何处理，就没有一个真实节点能代表"恰好匹配了 3 个 token"这个位置，无法把这一段的 <code>value</code>（KV indices）单独返回，也无法在后续 <code>insert</code> 里挂接新分支。所以 <code>match_prefix</code> 必须把这条边从中间切断（<code>_split_node</code>），生成一个精确对应"3 个 token"边界的新节点。这是"查询顺便优化/精细化树结构"的设计，之后同样前缀的查询会更快命中，无需重复分裂。</p>
+<p><strong>Q4. <code>insert</code> 和 <code>match_prefix</code> 的核心循环逻辑几乎一样，为什么不复用同一个函数？</strong></p>
+<p>A：两者共同点是都要"沿树往下走、遇到部分匹配的边就分裂"，但收尾语义不同：<code>match_prefix</code> 到达匹配终点就返回（只读，不新建节点）；<code>insert</code> 到达终点后，如果 key 还有剩余 token，需要新建叶子节点、更新 <code>evictable_size_</code>、触发 <code>hit_count</code> 自增、发 KV cache 事件（<code>_record_store_event</code>）。强行合并成一个函数会让分支判断和返回值语义变得复杂，牺牲可读性和可维护性；保持对称但独立的两份实现，是可读性优先于 DRY 的取舍。</p>
+<p><strong>Q5. <code>TreeNode.lock_ref</code> 是干什么的？为什么要一路传播到根节点？</strong></p>
+<p>A：<code>lock_ref</code> 是引用计数，表示这个节点代表的 KV Cache 片段当前正被多少个"正在处理中"的请求占用。当一个请求匹配/插入到某个节点时，会调用 <code>inc_lock_ref(node)</code>，从这个节点开始沿 <code>parent</code> 指针一路加到根，因为该请求的完整 KV Cache 依赖是从根到这个节点的整条路径，任何一段祖先边被驱逐都会破坏这个请求当前占用的 KV Cache。只有 <code>lock_ref == 0</code> 的节点才会被记入 <code>evictable_size_</code> 并进入可驱逐候选（<code>evictable_leaves</code>）。请求结束后调用 <code>dec_lock_ref</code> 做对称回收。这是一种"树上传播型引用计数"，类似 GC 里对象图的可达性保护，但方向是从叶子到根。</p>
+<p><strong>Q6. 驱逐（evict）为什么只能对叶子节点做，不能直接驱逐一个内部节点？</strong></p>
+<p>A：内部节点的 <code>value</code>（KV Cache）是它所有子孙共享的公共前缀部分，如果直接删除内部节点，会让所有子孙丢失一段自己也依赖的 KV Cache，且树的连通性也会被破坏（子孙的 parent 指针悬空）。所以只有叶子节点——没有任何后代依赖它——才能安全释放。SGLang 用 <code>evictable_leaves</code> 这个集合精确维护"当前可驱逐的叶子候选"，驱逐一个叶子后，如果它的父节点因此变成新的空孩子叶子（且未被锁定），立即级联地把父节点也推进驱逐堆，从而实现"自底向上"整段链路的连锁回收。</p>
+<p><strong>Q7. 驱逐策略支持哪些？如果要新增一种驱逐策略（比如"按 token 数加权的 LFU"），该怎么改？</strong></p>
+<p>A：<code>evict_policy.py</code> 定义了一个抽象基类 <code>EvictionStrategy</code>，只要求实现 <code>get_priority(node) -&gt; 可比较对象</code>（返回值可以是元组，堆按元组字典序排序）；已有 <code>LRUStrategy</code>（<code>last_access_time</code>）、<code>LFUStrategy</code>（<code>(hit_count, last_access_time)</code>）、<code>FIFO</code>/<code>MRU</code>/<code>FILO</code>、<code>PriorityStrategy</code>（业务优先级优先，同优先级内按 LRU）、<code>SLRUStrategy</code>（分段 LRU，命中次数越过阈值的节点进入"受保护段"，减少一次性大请求把长期热点冲刷掉的"缓存污染"问题）。要新增策略：继承 <code>EvictionStrategy</code>，实现 <code>get_priority</code>，在 <code>utils.py</code> 的 <code>_EVICTION_POLICY_FACTORIES</code> 字典里注册一个策略名字符串即可，<code>RadixCache.evict()</code> 里的驱逐主循环完全不需要改动——典型的策略模式（Strategy Pattern）。</p>
+<p><strong>Q8. SGLang 的调度器如何利用 Radix Tree 来优化批处理调度？</strong></p>
+<p>A：<code>schedule_policy.py</code> 定义了 Cache-Aware 的 <code>LPM</code>（Longest Prefix Match）和 <code>DFS_WEIGHT</code> 两种策略：核心想法是"把彼此共享较长前缀的等待请求尽量安排到相邻的调度批次里"，这样刚被前一个请求计算出来、还驻留在 GPU 显存里的 KV Cache 段，能被后一个请求直接复用，减少重复 prefill 计算和显存换入换出。为了估计"等待队列内部彼此的前缀重叠度"，调度器额外维护了一棵独立的模拟树 <code>waiting_queue_radix_tree = RadixCache.create_simulated()</code>，与真正持有 KV Cache 物理索引的主树分开，避免相互干扰；再结合 <code>FCFS</code>/<code>LOF</code>/<code>RANDOM</code>/<code>ROUTING_KEY</code> 等 Cache-Agnostic 策略做兜底或与优先级调度混合。</p>
+<p><strong>Q9. <code>RadixKey</code> 里的 <code>extra_key</code> 字段是做什么的？为什么前缀相同的两个请求可能不共享节点？</strong></p>
+<p>A：<code>extra_key</code> 是一个命名空间标签，典型场景是多 LoRA 服务（不同 adapter id）、或者需要按 cache salt/版本号强制隔离的请求。即使两个请求的 token 序列完全相同，只要 <code>extra_key</code> 不同，<code>RadixKey._check_compatible</code> 会在比较/匹配时直接抛异常拒绝合并，<code>child_key()</code> 也会把 <code>extra_key</code> 编码进哈希 key（<code>(extra_key, plain)</code> 元组），保证它们在树里天然落到不同分支，不会发生"用错 LoRA 权重算出来的 KV Cache 被其他 adapter 复用"这类正确性问题。</p>
+<p><strong>Q10. 如果开启了 Paged Attention（<code>page_size &gt; 1</code>），Radix Tree 的匹配/插入逻辑要做哪些调整？</strong></p>
+<p>A：所有参与树操作的 key 先做 <code>page_aligned(page_size)</code>：把有效长度向下取整到 <code>page_size</code> 的整数倍，多余的尾部 token 不进树（由调用方在 <code>cache_finished_req</code>/<code>cache_unfinished_req</code> 里单独 free 或保留在 <code>req.prefix_indices</code> 里）。<code>child_key()</code> 从"单个 token"变成"一个 page 内 <code>page_size</code> 个 token 组成的 tuple"，保证子节点查找仍是 O(1) 哈希；<code>RadixKey.match()</code> 返回的公共前缀长度也会向下取整到 <code>page_size</code> 的倍数（<code>(matched_tokens // page_size) * page_size</code>）。效果是前缀复用的粒度从"token 级"降到"page 级"，与底层显存分配器的分页粒度保持一致。</p>
+<p><strong>Q11. EAGLE 投机解码为什么要在 Radix Tree 上做"bigram 视图"？具体怎么实现的？</strong></p>
+<p>A：EAGLE 的 draft 模型是以"相邻 token 对（bigram）"为单位建模的，需要 Radix Tree 按 bigram 粒度做前缀匹配和存储，而不是按单 token。SGLang 没有为此复制一份新的 key 表示，而是让 <code>RadixKey</code> 带一个 <code>is_bigram</code> 标志位：<code>token_ids</code> 依然是原始 token 数组（长度 N+1 对应 N 个 bigram），<code>__len__</code>/<code>__iter__</code>/<code>__getitem__</code>/<code>match</code>/<code>child_key</code> 内部按 <code>is_bigram</code> 分支，把逻辑索引重新解释成"滑动窗口 (t_i, t_{i+1})"序列，例如切片 <code>[start:stop)</code> 个 bigram 对应原始 token 的 <code>[start, stop+1)</code> 区间。这是**零拷贝**的视图切换（<code>maybe_to_bigram_view</code> 只是翻转一个布尔标志），避免为投机解码单独维护一棵树或复制 token 数组的开销。</p>
+<p><strong>Q12. 分层缓存（HiCache/HiRadixCache）是怎么和这棵 GPU 侧 Radix Tree 配合的？</strong></p>
+<p>A：<code>TreeNode</code> 里预留了 <code>host_value</code>（CPU/host 侧的 KV Cache 副本）、<code>host_ref_counter</code>（host 侧引用计数，<code>protect_host</code>/<code>release_host</code>）、<code>write_through_pending_id</code>（写透 CPU 的异步任务 id）、<code>hash_value</code>（每个 page 的内容哈希，用于跨实例/跨层对接远程存储如 HF3FS、LMCache 时做内容寻址）这几个字段。基本流程是：GPU 侧节点被驱逐前，先异步"写透"到 host 内存或更远的存储层，<code>host_ref_counter</code> 保护这份 host 副本在写透完成前不被过早清理；之后如果同样前缀被再次请求命中但 GPU 侧已无副本，可以从 host/远程存储层加载回 GPU（<code>init_load_back</code>），减少一次完整的 prefill 重算。这套字段是"同一份 <code>TreeNode</code> 元数据，同时描述多级存储位置"的设计，而不是为每一级存储单独建一棵树。</p>
+<p><strong>Q13. 为什么根节点 <code>root_node</code> 的 <code>lock_ref</code> 初始化为 1，<code>priority</code> 初始化为 <code>-sys.maxsize</code>？</strong></p>
+<p>A：<code>lock_ref=1</code> 保证根节点永远不会因为引用计数归零而被当作可驱逐候选（虽然驱逐逻辑本身也只处理叶子，根节点一般不是叶子，但这仍是一层防御性保护，且 <code>dec_lock_ref</code> 的循环条件是 <code>while node != self.root_node</code>，根节点的 <code>lock_ref</code> 语义上不需要真实递减）。<code>priority=-sys.maxsize</code> 是因为 <code>_insert_helper</code> 里节点的 <code>priority</code> 是沿路径取 <code>max</code> 向上传播/覆盖的（"任何经过这条路径的真实优先级都应该覆盖初始值"），根节点作为所有路径的公共起点，必须给一个"绝对最小"的哨兵值，才不会因为它意外地限制或影响真实业务优先级的传播语义。</p>
+<p><strong>Q14. 这套设计和 vLLM 的 Prefix Caching（PagedAttention + Hash-based Block）相比，核心差异是什么？</strong></p>
+<p>A：vLLM 早期版本用的是"按固定 block 做内容哈希，哈希表存 <code>hash(block content) -&gt; block id</code>"的方案，本质上是**块级、哈希表**结构，只能做"整块"粒度的精确复用，且对哈希冲突/顺序依赖（前面 block 内容变化会级联改变后面 block 的哈希）要专门处理。SGLang 的 Radix Tree 是**树形、变长边**结构，天然支持"任意 token 边界"的最长前缀匹配（<code>page_size=1</code> 时甚至能精确到单 token 边界），不依赖内容哈希做等值比较（除非开启分层缓存做跨实例内容寻址时才用 <code>hash_value</code>），且用引用计数 + 可插拔驱逐策略统一管理树上任意节点的生命周期。两者都是为了解决同一个问题（前缀复用换取减少重复 prefill），Radix Tree 的匹配粒度更细、结构更紧凑，但实现复杂度（分裂、级联驱逐、树上传播锁）也明显更高。</p>
+<p><strong>Q15. HiCache 是否会直接让 SGLang Gateway 知道哪台 worker 命中了 KV Cache？</strong></p>
+<p>A：不会。HiCache 是 worker 内部的分层 KV 存储与异步搬运机制，它决定真实 KV page 留在 GPU、下沉到 CPU pinned memory、写入磁盘还是外部存储。当前 <code>sgl-model-gateway</code> 的 <code>cache_aware</code> 不读取 HiCache 状态，也不查询真实 page；它只记录“相似文本上次被路由到哪个 worker”。因此“开启 HiCache”与“Gateway 获得精确 cache-aware routing”是两件独立的事。</p>
+<p><strong>Q16. 当前 <code>sgl-model-gateway</code> 的 <code>cache_aware</code> 为什么叫近似路由？</strong></p>
+<p>A：因为它的索引是 <code>原始文本前缀 → 历史 worker URL</code>，而不是 <code>token block → 当前 KV 位置</code>。它刻意不在路由器侧 tokenize，换取低开销；代价是无法得知 worker 的真实 LRU 淘汰、重启、cache flush 或分层回载状态。若预测错误，结果仍然正确，只是该请求无法复用预期的 KV，退化为 full prefill。</p>
+<p><strong>Q17. <code>experimental/sgl-router</code> 的 <code>cache_aware_zmq</code> 为什么更接近真实 cache-aware routing？它为什么仍不是“绝对精确”？</strong></p>
+<p>A：它消费 worker 的 <code>BlockStored</code>、<code>BlockRemoved</code>、<code>AllBlocksCleared</code> 事件，用请求 token 计算同样粒度的 block hash，在 hash tree 中查询当前报告持有该前缀的 worker。因此它知道的是“已发布的 block 生命周期”，而不是简单的请求历史。但该状态仍经由异步 ZMQ 控制面传播：订阅建立前的消息、积压、断连、重放窗口不足或事件未完全送达都会造成短暂滞后，所以工程上应称为**事件驱动的近实时 cache directory**，而非同步强一致目录。</p>
+<p><strong>Q18. 如果面试官问“当前 SGLang 是否通过 KV events 做 Gateway 路由”，怎样回答最准确？</strong></p>
+<p>A：要先限定代码路径。当前 <code>sgl-model-gateway</code> 中使用的是字符级历史推测 <code>cache_aware</code>，不消费 KV events；仓库的 <code>experimental/sgl-router</code> 实现了 <code>cache_aware_zmq</code>，会订阅 ZMQ KV events，并以 token block hash 做路由。因此不能笼统回答“是”或“否”：生产 Gateway 当前不是，实验 router 是。若具体部署采用 C++ <code>RadixCacheCpp</code>，还要补充该后端当前明确不支持 <code>enable_kv_cache_events</code>。</p>
+<p><strong>Q19. 为什么实验 <code>sgl-router</code> 在工具调用、多模态、thinking 等请求上不直接透传自己算出的 <code>input_ids</code>？</strong></p>
+<p>A：因为这些请求的 token 序列不只取决于纯文本 <code>messages</code>。工具调用可能把 schema 和 tool message 写入模板；多模态需要 worker 的 processor 插入 placeholder IDs 并对齐输入特征；thinking、reasoning、task 和自定义 template 可改变 prompt 末尾与特殊标记。Router 未完整复刻这些 engine-side 语义时，转发 IDs 会改变模型实际输入。因此 <code>input_ids_safe_to_forward</code> 选择保守回退：保留原始 <code>messages</code>，由 worker 自己 tokenization。</p>
+<p><strong>Q20. 实验 Router 如何避免为了“路由”和“执行”各 tokenize 一次？</strong></p>
+<p>A：Router 在 ingress 只构造一次 <code>RequestTokens.ids</code>，先借给 <code>SelectionContext</code> 供 <code>cache_aware_zmq</code> 计算 token block hash；若这些 IDs 是经同模板得到的 <code>engine_equivalent</code> IDs 且请求安全，再将同一数组写入下游 body 的 <code>input_ids</code>。Worker 收到该字段后跳过 chat-template tokenization，直接将 IDs 封装进 <code>GenerateReqInput</code>。这避免的是 prompt tokenization 的重复，而不是 prefill/model forward 的重复。</p>
+<p><strong>Q21. Router 和 worker 使用同一 tokenizer 是否有强一致性保证？</strong></p>
+<p>A：没有运行时强校验。实验实现按 <code>model_id</code> 配置加载 <code>tokenizer_path</code>，优先从同源 <code>tokenizer_config.json</code> 读取 chat template，并通过 DeepSeek-V4 的内置 renderer 做特例复刻；这依赖部署时 router 和 worker 指向相同模型 revision、tokenizer 文件与默认模板。当前未见 tokenizer hash/revision/template hash 的 worker 握手，所以发现无法复刻的请求语义时必须拒绝转发 IDs，回退到 worker tokenization。</p>
+<p><strong>Q22. PyMotor 的 KV-affinity 为什么也会出现两次 tokenize？</strong></p>
+<p>A：Coordinator 要先用 <code>AutoTokenizer</code> 得到 token IDs，向 Conductor 查询各实例的 KV 前缀命中，并以 token 数估算 prefill workload；但它将原始 <code>messages</code> / <code>prompt</code> 转发给 vLLM 或 SGLang engine，engine 再按自身 tokenizer/template 生成实际执行 IDs。Coordinator IDs 不会作为首请求的 <code>input_ids</code> 注入 engine，因此 KV-affinity 路径通常存在两次 tokenize。</p>
+<p><strong>Q23. PyMotor 怎样保证 Coordinator 与 engine 的 tokenization 一致？</strong></p>
+<p>A：它通过配置把 Coordinator 的 <code>prefill_kv_event_config.model_path</code> 从引擎的 <code>model</code> / <code>model-path</code> 派生；标准 chat 路径调用同一模型 tokenizer 的 <code>apply_chat_template(messages, tools, add_generation_prompt=True, tokenize=True)</code>。但这只是强约定，不是强校验：没有 tokenizer/template hash 握手，也不会自动同步 engine 的 template override、thinking 或多模态处理配置。因此它保证的是“正常同配置部署下应一致”，而非“运行时证明一致”。</p>
+<p><strong>Q24. PyMotor 两侧 tokenization 不一致会导致模型输出错误吗？</strong></p>
+<p>A：首请求通常不会。Coordinator IDs 只用于 Conductor cache 查询与 workload 估算，engine 仍用原始请求和自己的 tokenizer 执行 forward；不一致的后果是 cache affinity miss、错误的命中长度或次优调度，而不是改变模型输入。流式重调度则不同：PyMotor 使用 engine 返回的 <code>prompt_token_ids</code> 和输出 token IDs 重放，明确以 engine token 序列为权威来源。</p>
+<h2 id="9">9. 一分钟总结话术<a class="headerlink" href="#9" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>SGLang 引擎用 Radix Tree 实现 RadixAttention：边保存 token 序列，<code>value</code> 是真实 GPU KV page 索引；<code>match_prefix</code> 做最长前缀匹配，节点再用 <code>lock_ref</code> 与可插拔驱逐策略管理生命周期。HiCache 在**同一 worker 内**把真实 KV 扩展到 GPU、CPU、磁盘或外部层。跨 worker 时要严格区分：当前 <code>sgl-model-gateway</code> 的 <code>cache_aware</code> 只依据原始文本前缀和路由历史预测 KV 亲和性，负载失衡或低命中时回退到最小 load；仓库内基于 <code>BlockStored/Removed/Cleared</code> 与 token block hash 的真实 cache-directory 路由存在于 <code>experimental/sgl-router</code>，属于实验实现，不能表述为当前 Gateway 的默认能力。实验 Router 在安全的普通文本 chat 上可将同一份 token IDs 转发为 <code>input_ids</code>，避免 engine 重复 tokenize；PyMotor 则将 Coordinator IDs 限定为 Conductor 亲和路由与 workload 估算，首请求仍由 engine tokenizer 决定真实输入，双算换取执行正确性的隔离。</p>
+</blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

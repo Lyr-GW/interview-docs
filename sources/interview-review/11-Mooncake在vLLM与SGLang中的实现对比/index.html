@@ -1,0 +1,2077 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/interview-review/11-Mooncake%E5%9C%A8vLLM%E4%B8%8ESGLang%E4%B8%AD%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%AF%B9%E6%AF%94/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>专题 11：Mooncake 在 vLLM 与 SGLang 中的集成异同（源码级对比） - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#11mooncake-vllm-sglang" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              专题 11：Mooncake 在 vLLM 与 SGLang 中的集成异同（源码级对比）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0. 结论速览表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 整体架构对比图
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 维度一：代码归属与可插拔性
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 维度一：代码归属与可插拔性">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vllmmain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vLLM：main 分支现状已经是原生注册（历史上曾是外部包动态加载）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 维度二：PD 传输粒度与流水线程度
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 维度二：PD 传输粒度与流水线程度">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vllm-mooncakeconnectorprefill-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vLLM MooncakeConnector：Prefill 算完再传，Block 粒度，非分层流式
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-store" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 维度三：跨实例前缀缓存复用（Store 侧）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 维度三：跨实例前缀缓存复用（Store 侧）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vllm-connector-multiconnector-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vLLM：现已是主仓库原生 connector，仍靠 MultiConnector 和 PD 拼接
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sglanghicache-pd-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SGLang：HiCache 原生三级树，且和 PD 共享同一个 Engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 维度四：握手/建连机制
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 维度四：握手/建连机制">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vllmproxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vLLM：Proxy 撮合 + 请求体传元数据，无独立拓扑服务
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-cache-aware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 维度五：路由层的 Cache-Aware 能力
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 维度六：底层调用方式——共性远大于差异
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 面试高频问答
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 关键文件速查表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 参考
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="11mooncake-vllm-sglang">专题 11：Mooncake 在 vLLM 与 SGLang 中的集成异同（源码级对比）<a class="headerlink" href="#11mooncake-vllm-sglang" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>承接专题 04/10。本文基于工作区 <code>vllm/</code>、<code>sglang/</code>、<code>Mooncake/</code>（含 <code>mooncake-wheel</code>）三个仓库的**实际源码**，逐项对比两大推理引擎如何"用"Mooncake。核心结论先说：<strong>两者底层都调用同一份 <code>mooncake</code> Python wheel（<code>mooncake.engine.TransferEngine</code> + <code>mooncake.store.MooncakeDistributedStore</code>），工程集成的成熟度已经比较接近</strong>——SGLang 一直是原生一等公民、可插拔 backend；vLLM 在本文档最初写成时（旧分支快照）还依赖外部 <code>mooncake-wheel</code> 动态加载，<strong>但 <code>main</code> 分支现状已经变化：<code>MooncakeConnector</code>（PD）和 <code>MooncakeStoreConnector</code>（跨实例前缀共享）都已经直接合入 vLLM 主仓库并注册进默认 connector 工厂</strong>，不再需要 <code>kv_connector_module_path</code> 外部动态加载。下面第 0.1 节先说明这个更新，其余章节的分析结论大部分仍然成立（尤其是"是否支持逐层流式传输"这个关键判断——即使代码搬进了主仓库，<code>MooncakeConnector</code> 依然没有做分层流式）。</p>
+<p><strong>更新记录</strong>：2026-07-14 复查确认 vLLM 侧 Mooncake 代码归属已从"外部包动态加载"变为"主仓库原生注册"，本文档已同步修正第 0、1、2 节的相关结论，其余章节（传输粒度、握手机制、路由层对比等）未受影响，仍按原分析保留。</p>
+</blockquote>
+<hr />
+<h2 id="0">0. 结论速览表<a class="headerlink" href="#0" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>vLLM</th>
+<th>SGLang</th>
+<th>谁更"深"</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mooncake connector 代码位置</td>
+<td><strong>已原生合入 vllm 主仓库</strong>：<code>vllm/distributed/kv_transfer/kv_connector/v1/mooncake/mooncake_connector.py</code>（PD）+ <code>.../mooncake/store/connector.py</code>（跨实例前缀共享），均在 <code>factory.py</code> 默认注册表里，不再需要外部动态加载</td>
+<td><strong>在 sglang 仓库内</strong>，<code>sglang/srt/disaggregation/mooncake/conn.py</code>，与 nixl/mori/ascend 并列注册</td>
+<td>打平（vLLM 已追上，不再是外部插件）</td>
+</tr>
+<tr>
+<td>多 backend 抽象</td>
+<td>多个**独立 Connector 类**并列注册（<code>MooncakeConnector</code>/<code>MooncakeStoreConnector</code>/<code>P2pNcclConnector</code>/<code>NixlConnector</code>/<code>LMCacheConnectorV1</code>/...），彼此没有统一的"backend enum + 工厂"抽象，是并列的类而非同一接口下的可切换实现</td>
+<td>统一 <code>TransferBackend</code> 枚举 + <code>get_kv_class()</code> 工厂，<code>mooncake</code>/<code>nixl</code>/<code>mori</code>/<code>ascend</code>/<code>fake</code> 五个 backend 共享一套 <code>BaseKVManager/Sender/Receiver/BootstrapServer</code> 接口</td>
+<td>SGLang（抽象层次更统一，vLLM 是"并列多个类"而不是"同一接口切换 backend"）</td>
+</tr>
+<tr>
+<td>PD 传输粒度</td>
+<td><strong>Block 级，等 Prefill 全部算完后一次性批量传所有层</strong>（<code>wait_for_layer_load</code>/<code>save_kv_layer</code> 在主仓库版本依然是空实现，见第 3 节）</td>
+<td><strong>Page/chunk 级</strong>，<code>enable_overlap</code> 时中间 chunk 边算边传（chunked-prefill 驱动的流式），最后一个 chunk 收尾</td>
+<td>SGLang（更接近论文里的流式思想；代码位置追平不代表传输策略追平）</td>
+</tr>
+<tr>
+<td>跨实例前缀缓存复用</td>
+<td><code>MooncakeStoreConnector</code> 现已是主仓库原生 connector（<code>.../mooncake/store/connector.py</code> + <code>scheduler.py</code> + <code>worker.py</code>），可独立使用也可通过 <code>MultiConnector</code> 和 <code>MooncakeConnector</code> 拼接</td>
+<td><strong>HiCache 原生三级缓存树</strong>（L1 GPU/L2 CPU/L3 Mooncake Store），<code>MooncakeStore</code> 是一等公民后端，且能**复用同一个 Transfer Engine 实例**（PD 用的和 HiCache 用的是同一个 C++ engine）</td>
+<td>SGLang 仍略深（HiCache 是统一三级树 + engine 复用；vLLM 是两个独立 connector 拼接，无 engine 复用机制）</td>
+</tr>
+<tr>
+<td>握手/建连</td>
+<td>Proxy 层 round-robin 配对 + 请求体里传 <code>kv_transfer_params</code>（ZMQ 传指针）</td>
+<td>专门的 <strong>HTTP Bootstrap Server</strong>（<code>CommonKVBootstrapServer</code>）做拓扑注册，再叠加 ZMQ 传 buffer 元数据，两阶段更规范</td>
+<td>SGLang</td>
+</tr>
+<tr>
+<td>路由层 cache-aware</td>
+<td>无，<code>vllm_v1_proxy_server.py</code> 就是 <code>itertools.cycle</code> 轮询</td>
+<td>Rust <code>sgl-model-gateway</code> 有 <code>PDSelectionPolicy::CacheAware</code>（近似前缀树 + 负载权衡），虽不直查 Mooncake 元数据，但路由层本身更成熟</td>
+<td>SGLang</td>
+</tr>
+<tr>
+<td>底层调用方式</td>
+<td>Python 包直调 C++（<code>mooncake.engine.TransferEngine</code>）</td>
+<td>同上，且 PD 与 HiCache <strong>共享同一 engine 实例</strong>，减少重复初始化</td>
+<td>打平，SGLang 工程细节更精</td>
+</tr>
+<tr>
+<td>容错/黑名单</td>
+<td>有限（connector 层面的超时/重试）</td>
+<td><code>failed_sessions</code> 黑名单 + <code>send_probe</code> 探活恢复</td>
+<td>SGLang</td>
+</tr>
+<tr>
+<td><strong>是否对"传输值不值得"做成本比较</strong>（详见专题 10 第 3.4 节）</td>
+<td><strong>没有</strong>：<code>MooncakeStoreConnector</code> 的 <code>get_num_new_matched_tokens</code> 只做存在性查询，Store 里有命中就无条件决定拉取，不比较传输代价 vs 省下的算力</td>
+<td>未在本文覆盖范围内详细核实，但架构上也是"路由决定去哪、传输层按图执行"分层设计，通常不在 connector 层重复算成本</td>
+<td>打平偏 Mooncake Conductor（两者都比 Mooncake 自己的 Algorithm 1 简化）</td>
+</tr>
+</tbody>
+</table>
+<p>一句话总结：<strong>两边底层都是薄薄一层 Python binding 包住同一个 C++ Transfer Engine；SGLang 从一开始就把 Mooncake 深度产品化成了框架原生的可插拔组件（backend 抽象 + HiCache 三级树 + engine 复用），vLLM 之前是外挂第三方插件，现在（<code>main</code> 分支）已经把两个 Mooncake connector 原生合入主仓库，代码归属上追平了 SGLang，但传输策略层面（分层流式、成本感知决策、engine 复用）仍不如 SGLang 精细</strong>。</p>
+<hr />
+<h2 id="1">1. 整体架构对比图<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph TB
+    subgraph VLLM["vLLM 侧"]
+        direction TB
+        VProxy["vllm_v1_proxy_server.py&lt;br/&gt;轮询 Round-Robin"]
+        VConn["MooncakeConnector&lt;br/&gt;(vllm 主仓库原生注册)"]
+        VBase["KVConnectorBase_V1&lt;br/&gt;(vllm 仓库定义抽象基类)"]
+        VPipe["MooncakePipe / MooncakeStore&lt;br/&gt;(vllm 仓库内，无引用的遗留原语)"]
+        VTE["mooncake.engine.TransferEngine"]
+        VProxy --&gt; VConn
+        VConn -.实现.-&gt; VBase
+        VConn --&gt; VTE
+        VPipe -.可被第三方复用但已无人调用.-&gt; VTE
+    end
+
+    subgraph SGL["SGLang 侧"]
+        direction TB
+        SGw["sgl-model-gateway (Rust)&lt;br/&gt;CacheAware 路由 + bootstrap 注入"]
+        SBoot["CommonKVBootstrapServer&lt;br/&gt;HTTP 拓扑注册"]
+        SFactory["TransferBackend 枚举&lt;br/&gt;get_kv_class() 工厂"]
+        SConn["MooncakeKVManager/Sender/Receiver&lt;br/&gt;(sglang 仓库内，一等公民)"]
+        SHiCache["HiRadixCache&lt;br/&gt;L1 GPU / L2 CPU / L3 Storage"]
+        SStore["MooncakeStore (HiCache L3)"]
+        STE["mooncake.engine.TransferEngine&lt;br/&gt;(PD 与 HiCache 共享同一实例)"]
+        SGw --&gt; SBoot
+        SBoot --&gt; SFactory
+        SFactory --&gt; SConn
+        SConn --&gt; STE
+        SHiCache --&gt; SStore
+        SStore -.复用.-&gt; STE
+    end</code></pre>
+<hr />
+<h2 id="2">2. 维度一：代码归属与可插拔性<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<h3 id="vllmmain">vLLM：<code>main</code> 分支现状已经是原生注册（历史上曾是外部包动态加载）<a class="headerlink" href="#vllmmain" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>本节结论已按 2026-07-14 复查更新。之前的分析（当时的分支快照）里 vLLM 仓库只留了 <code>MooncakePipe</code>/<code>MooncakeStore</code> 两个无人调用的旧原语，真正的 connector 要靠 <code>kv_connector_module_path</code> 从外部 <code>mooncake-wheel</code> 包动态加载。<strong>现在 <code>main</code> 分支已经不是这样</strong>：</p>
+</blockquote>
+<p>```218:227:vllm/vllm/distributed/kv_transfer/kv_connector/factory.py
+KVConnectorFactory.register_connector(
+    "MooncakeConnector",
+    "vllm.distributed.kv_transfer.kv_connector.v1.mooncake.mooncake_connector",
+    "MooncakeConnector",
+)
+KVConnectorFactory.register_connector(
+    "MooncakeStoreConnector",
+    "vllm.distributed.kv_transfer.kv_connector.v1.mooncake.store.connector",
+    "MooncakeStoreConnector",
+)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>两个 connector 都在 `vllm/distributed/kv_transfer/kv_connector/v1/mooncake/` 目录下原生实现：
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>| Connector | 文件 | 职责 |
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>|---|---|---|
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>| `MooncakeConnector` | `mooncake/mooncake_connector.py` | PD 点对点传输（对应本文第 3 节的传输策略） |
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>| `MooncakeStoreConnector` | `mooncake/store/connector.py` + `store/scheduler.py`（scheduler 侧）+ `store/worker.py`（worker 侧，含 `LookupKeyClient`） | 跨实例前缀共享（对应专题 10 第 3 节&quot;Get 语义与成本判断&quot;） |
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>现在启动只需要 `--kv-transfer-config &#39;{&quot;kv_connector&quot;:&quot;MooncakeConnector&quot;, &quot;kv_role&quot;:&quot;kv_producer&quot;}&#39;`，**不再需要 `kv_connector_module_path` 这个外部动态加载参数**——这是判断&quot;是插件还是原生&quot;最直接的信号：需要 `kv_connector_module_path` 就是外部插件，不需要就是原生注册。
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>这个变化说明什么：vLLM 社区对 Mooncake 的重视程度在提升，正在把它从&quot;第三方可选后端&quot;逐步扶正为&quot;官方一线支持的 connector&quot;，和 NixlConnector、LMCacheConnectorV1 平级对待。但要注意——**代码搬进主仓库不代表传输策略也变得更精细**，第 3 节会展开讲：`MooncakeConnector` 依然没有做分层流式传输，`MooncakeStoreConnector` 的成本判断依然是&quot;有就拿&quot;的二元逻辑，这些是策略层面的差距，不会因为换个代码位置就消失。
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>### SGLang：Mooncake 是内置 backend，和 nixl/mori/ascend 平级
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>`disaggregation/utils.py` 里的 `TransferBackend` 枚举和 `get_kv_class()` 工厂，把 mooncake/nixl/mori/ascend/fake 五个后端统一抽象成 `KVManager`/`KVSender`/`KVReceiver`/`KVBootstrapServer` 四个角色：
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>```409:467:sglang/python/sglang/srt/disaggregation/utils.py
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>class TransferBackend(Enum):
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    MOONCAKE = &quot;mooncake&quot;
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    MORI = &quot;mori&quot;
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    NIXL = &quot;nixl&quot;
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    ASCEND = &quot;ascend&quot;
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>### SGLang：Mooncake 是内置 backend，和 nixl/mori/ascend 平级
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>`disaggregation/utils.py` 里的 `TransferBackend` 枚举和 `get_kv_class()` 工厂，把 mooncake/nixl/mori/ascend/fake 五个后端统一抽象成 `KVManager`/`KVSender`/`KVReceiver`/`KVBootstrapServer` 四个角色：
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>```409:467:sglang/python/sglang/srt/disaggregation/utils.py
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>class TransferBackend(Enum):
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    MOONCAKE = &quot;mooncake&quot;
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    MORI = &quot;mori&quot;
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    NIXL = &quot;nixl&quot;
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    ASCEND = &quot;ascend&quot;
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    FAKE = &quot;fake&quot;
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>def get_kv_class(transfer_backend: TransferBackend, class_type: KVClassType):
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    if transfer_backend == TransferBackend.MOONCAKE:
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        from sglang.srt.disaggregation.mooncake import (
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>            MooncakeKVBootstrapServer, MooncakeKVManager,
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>            MooncakeKVReceiver, MooncakeKVSender,
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        )
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        class_mapping = {
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>            KVClassType.MANAGER: MooncakeKVManager,
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>            KVClassType.SENDER: MooncakeKVSender,
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>            KVClassType.RECEIVER: MooncakeKVReceiver,
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>            KVClassType.BOOTSTRAP_SERVER: MooncakeKVBootstrapServer,
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>        }
+</code></pre></div></p>
+<p><strong>面试话术</strong>：vLLM 的多 connector 是"平铺的多个独立实现类"，谁想接入自己写一个 <code>KVConnectorBase_V1</code> 子类，Mooncake 只是其中一个外部实现；SGLang 是"统一角色接口 + backend 枚举"，Mooncake/NIXL/Mori/Ascend 四种硬件传输方案严格对齐同一套 Manager/Sender/Receiver/BootstrapServer 语义，切换 backend 只改一个配置项，代码结构更利于横向扩展新硬件（这也解释了为什么 SGLang 能更快接入 Ascend、Mori 等国产/新硬件后端）。</p>
+<hr />
+<h2 id="3-pd">3. 维度二：PD 传输粒度与流水线程度<a class="headerlink" href="#3-pd" title="Permanent link">&para;</a></h2>
+<h3 id="vllm-mooncakeconnectorprefill-block">vLLM MooncakeConnector：Prefill 算完再传，Block 粒度，非分层流式<a class="headerlink" href="#vllm-mooncakeconnectorprefill-block" title="Permanent link">&para;</a></h3>
+<p><code>wait_for_layer_load</code> / <code>save_kv_layer</code> 是 <code>KVConnectorBase_V1</code> 特意为"逐层流水线传输"开的口子（论文里"streaming KVCache transfer, overlap with incremental prefill"说的就是这个），但 Mooncake 的实现直接留空——这在代码合入主仓库后**依然没变**：</p>
+<p>```576:585:vllm/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/mooncake_connector.py
+def wait_for_layer_load(self, layer_name: str) -&gt; None:
+    """MooncakeConnector does not do layerwise saving."""
+    pass</p>
+<p>def save_kv_layer(
+    self,
+    layer_name: str,
+    kv_layer: torch.Tensor,
+    attn_metadata: AttentionMetadata,
+    **kwargs,
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>真正的传输是在整块 block 分配好之后，一次性把所有层对应 block 的内存批量传走（`batch_transfer_sync_write`/`batch_transfer_sync` 语义，与专题 10 描述的 `submitTransfer` 批量传输一致），不是逐层触发。
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>反而是 vLLM 自家的 `P2pNcclConnector` 才用上了逐层流水线（`save_kv_layer` 里每层生成即发送）——**这是本次对比里一个容易被问到的&quot;反直觉点&quot;：Mooncake 论文强调的分层流式，在 vLLM 的 MooncakeConnector 实现里反而没做，框架层的 hook 留空了。**
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>### SGLang：Chunked-Prefill 驱动的 Page 级流式（介于&quot;全量批传&quot;和&quot;逐层流式&quot;之间）
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>SGLang 走的是&quot;按 chunk 边算边传&quot;，不是逐层，是按 chunked-prefill 的 chunk 边界：
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>```705:709:sglang/python/sglang/srt/disaggregation/prefill.py
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>if self.enable_overlap:
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    ...
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    self.send_kv_chunk(req, last_chunk=False, end_idx=req.tmp_end_idx)
+</code></pre></div></p>
+<p>```657:657:sglang/python/sglang/srt/disaggregation/prefill.py
+self.send_kv_chunk(req, last_chunk=True)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>```mermaid
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>gantt
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    dateFormat X
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    axisFormat %s
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    title vLLM 与 SGLang 的 PD 传输时机对比（示意，非真实耗时）
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    section vLLM MooncakeConnector
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    Prefill 全部 chunk 计算 :p1, 0, 10
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    Prefill 完成后一次性 batch 传所有 block/所有层 :t1, 10, 14
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    section SGLang mooncake backend
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    Chunk1 计算 :sc1, 0, 3
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    Chunk1 边算边传(overlap) :st1, 3, 5
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    Chunk2 计算 :sc2, 3, 6
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    Chunk2 边算边传(overlap) :st2, 6, 8
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    最后 chunk 计算+收尾传输 :sc3, 6, 10
+</code></pre></div></p>
+<p><strong>面试话术</strong>："Mooncake 论文里说的分层流式传输，实际在两个引擎的落地都打了折扣——vLLM 的 MooncakeConnector 是等 prefill 全部完成才批量传（block 粒度但不分层不 overlap）；SGLang 是按 chunked-prefill 的 chunk 粒度 overlap，比 vLLM 细一档，但也不是逐 transformer 层传输。真正做到'生成一层传一层'的是 vLLM 自家的 P2pNcclConnector，不是 MooncakeConnector。"</p>
+<hr />
+<h2 id="4-store">4. 维度三：跨实例前缀缓存复用（Store 侧）<a class="headerlink" href="#4-store" title="Permanent link">&para;</a></h2>
+<h3 id="vllm-connector-multiconnector-pd">vLLM：现已是主仓库原生 connector，仍靠 MultiConnector 和 PD 拼接<a class="headerlink" href="#vllm-connector-multiconnector-pd" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>更新：<code>MooncakeStoreConnector</code> 之前只在 Mooncake 官方文档里出现、代码找不到；<code>main</code> 分支现状是它已经作为**独立的原生 connector**合入 <code>vllm/distributed/kv_transfer/kv_connector/v1/mooncake/store/</code>（<code>connector.py</code> + <code>scheduler.py</code> + <code>worker.py</code>），可以单独使用，不再依赖外部包。但它和 <code>MooncakeConnector</code>（PD 传输）在架构上仍然是**两个独立的 connector**，没有被合并成一个统一入口——想同时用 PD 传输 + 跨实例前缀共享，仍然要靠 <code>MultiConnector</code> 拼接：</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;kv_connector&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MultiConnector&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;kv_role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;kv_producer&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">&quot;kv_connector_extra_config&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">&quot;connectors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">      </span><span class="p">{</span><span class="nt">&quot;kv_connector&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MooncakeConnector&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;kv_role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;kv_producer&quot;</span><span class="p">},</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="p">{</span><span class="nt">&quot;kv_connector&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MooncakeStoreConnector&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;kv_role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;kv_producer&quot;</span><span class="p">}</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="p">]</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">}</span>
+</code></pre></div>
+<p>这说明在 vLLM 侧，"PD 点对点传输"和"跨实例前缀共享"即便都已经原生化，架构上仍然是**两套独立机制、靠 <code>MultiConnector</code> 拼接调用顺序**，两者各自持有自己的 Transfer Engine 实例，耦合度低但也意味着没有内建的智能协同（比如"这个 block 该走 P2P 直传还是从 Store 里捞现成的"这类判断，需要额外逻辑，不像 SGLang 那样天然共享一个 engine）。</p>
+<h3 id="sglanghicache-pd-engine">SGLang：HiCache 原生三级树，且和 PD 共享同一个 Engine<a class="headerlink" href="#sglanghicache-pd-engine" title="Permanent link">&para;</a></h3>
+<p>SGLang 的 <code>HiRadixCache</code> 把 GPU 显存（L1）、CPU host pool（L2）、远程存储（L3，可选 mooncake/nixl/hf3fs）统一成一棵树，<code>MooncakeStore</code> 是通过后端工厂注册的标准 L3 实现：</p>
+<p>```205:209:sglang/python/sglang/srt/mem_cache/storage/backend_factory.py
+StorageBackendFactory.register_backend(
+    "mooncake",
+    "sglang.srt.mem_cache.storage.mooncake_store.mooncake_store",
+    "MooncakeStore",
+)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>更值得注意的细节：如果同一进程内已经因为 PD 分离初始化过 `MooncakeTransferEngine`（RDMA + P2PHANDSHAKE 配置匹配），HiCache 的 `MooncakeStore` 会**直接复用这个 engine 实例**，而不是各起一个：
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>```454:491:sglang/python/sglang/srt/mem_cache/storage/mooncake_store/mooncake_store.py
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>if (self._shared_mooncake_transfer_engine is not None
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        and device_name == self._shared_mooncake_transfer_engine.get_ib_device()
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        and self.config.metadata_server == &quot;P2PHANDSHAKE&quot;
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        and self.config.protocol == &quot;rdma&quot;):
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    transfer_engine = self._shared_mooncake_transfer_engine.get_engine()
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    ...
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    ret_code = self.store.setup(client_hostname, self.config.metadata_server,
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>                                 ..., transfer_engine)
+</code></pre></div></p>
+<pre class="mermaid"><code>graph LR
+    subgraph "vLLM：两个原生 connector 各自独立，靠 MultiConnector 拼接"
+        A1["MooncakeConnector&lt;br/&gt;(mooncake/mooncake_connector.py，自己的 Engine 实例)"]
+        A2["MooncakeStoreConnector&lt;br/&gt;(mooncake/store/connector.py，自己的 Store/Engine 实例)"]
+        A3["MultiConnector 手动拼接调用顺序"]
+        A1 --&gt; A3
+        A2 --&gt; A3
+    end
+    subgraph "SGLang：HiCache 与 PD 共享同一 Engine"
+        B1["PD MooncakeKVManager&lt;br/&gt;初始化 TransferEngine"]
+        B2["HiCache MooncakeStore&lt;br/&gt;检测配置匹配则复用"]
+        B1 --&gt;|"get_engine() 复用"| B2
+    end</code></pre>
+<p><strong>面试话术</strong>："这是两边工程成熟度差距最大的一点——vLLM 里 PD 传输和前缀共享是两个独立 connector，要用户自己拼 MultiConnector，且 Store connector 的代码我在仓库里没找到，可能还没完全 open source；SGLang 的 HiCache 是把 GPU/CPU/远程存储做成一棵统一的 radix tree，Mooncake Store 只是可插拔的 L3 backend之一，而且工程上做了'同进程复用同一个 Transfer Engine 实例'的优化，避免重复初始化 RDMA 资源。"</p>
+<hr />
+<h2 id="5">5. 维度四：握手/建连机制<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<h3 id="vllmproxy">vLLM：Proxy 撮合 + 请求体传元数据，无独立拓扑服务<a class="headerlink" href="#vllmproxy" title="Permanent link">&para;</a></h3>
+<p><code>vllm_v1_proxy_server.py</code> 用 <code>itertools.cycle</code> 轮询选 Prefill/Decode 实例，Prefill 完成后把 <code>kv_transfer_params</code>（含 remote host/port）通过 HTTP 响应体传给 Proxy，再由 Proxy 转发给 Decode 请求：</p>
+<p>```135:154:Mooncake/mooncake-wheel/mooncake/vllm_v1_proxy_server.py
+def get_next_client(app, service_type: str):
+    """Get the next client in round-robin fashion."""
+    if service_type == "prefill":
+        client_idx = next(app.state.prefill_iterator)
+        return app.state.prefill_clients[client_idx]
+    elif service_type == "decode":
+        client_idx = next(app.state.decode_iterator)
+        return app.state.decode_clients[client_idx]
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>没有独立的&quot;拓扑注册中心&quot;，P/D 实例的地址信息完全靠请求体里裹带的字段传递，本质是**请求级、无状态**的撮合。
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>### SGLang：专门的 HTTP Bootstrap Server 做拓扑注册，两阶段握手更规范
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>`CommonKVBootstrapServer` 是跑在 Prefill 节点上的独立 aiohttp 服务，Prefill 启动时主动注册自己的拓扑信息：
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>```390:407:sglang/python/sglang/srt/disaggregation/common/conn.py
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>def register_to_bootstrap(self):
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    &quot;&quot;&quot;Register prefill server info to bootstrap server via HTTP PUT.&quot;&quot;&quot;
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    url = f&quot;{bootstrap_na.to_url()}/route&quot;
+</code></pre></div></p>
+<p>Decode 侧先通过这个 HTTP 服务 <code>GET /route</code> 拿到目标 Prefill 的地址，再走 ZMQ 交换 GPU buffer 指针等运行时元数据，进入 <code>Bootstrapping → WaitingForInput → Transferring → Success</code> 状态机。这是标准的**两阶段握手**：HTTP 层做持久化拓扑发现（类似服务注册中心），ZMQ 层做每次请求的实时元数据交换。</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant PVllm as vLLM Prefill
+    participant Proxy as vllm_v1_proxy_server
+    participant DVllm as vLLM Decode
+
+    Note over PVllm,DVllm: vLLM：无独立拓扑服务，靠 Proxy 撮合+请求体传参
+    Proxy-&gt;&gt;PVllm: 轮询选中，转发请求(max_tokens=1)
+    PVllm-&gt;&gt;Proxy: 返回 kv_transfer_params(remote_host/port)
+    Proxy-&gt;&gt;DVllm: 转发请求 + kv_transfer_params
+    DVllm-&gt;&gt;PVllm: ZMQ 直连拉取 KV(RDMA)
+
+    participant PSgl as SGLang Prefill
+    participant Boot as CommonKVBootstrapServer(HTTP)
+    participant DSgl as SGLang Decode
+
+    Note over PSgl,DSgl: SGLang：两阶段握手，独立拓扑服务
+    PSgl-&gt;&gt;Boot: PUT /route 注册拓扑(启动时)
+    DSgl-&gt;&gt;Boot: GET /route 查询 Prefill 地址
+    DSgl-&gt;&gt;PSgl: ZMQ 注册 GPU buffer 指针
+    PSgl-&gt;&gt;DSgl: ZMQ 回传 dst page indices 等元数据
+    PSgl-&gt;&gt;DSgl: RDMA batch_transfer_sync 传 KV</code></pre>
+<hr />
+<h2 id="6-cache-aware">6. 维度五：路由层的 Cache-Aware 能力<a class="headerlink" href="#6-cache-aware" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>vLLM</strong>：仓库内示例 Proxy（无论是通用的 <code>disagg_proxy_p2p_nccl_xpyd.py</code> 还是 Mooncake 专用的 <code>vllm_v1_proxy_server.py</code>）都是**纯轮询**，没有前缀感知调度；真正的 cache-aware 路由要靠外部系统（比如专题 04 提到的 Motor、production-stack router）在 Proxy 之上再加一层。</li>
+<li><strong>SGLang</strong>：自带 Rust 实现的 <code>sgl-model-gateway</code>，<code>PDSelectionPolicy::CacheAware</code> 策略维护每个 worker 的近似前缀树，在 Prefill/Decode worker 选择时做**缓存命中与负载的权衡**（<code>cache_threshold</code>/<code>balance_abs_threshold</code> 等参数）。注意：这个 cache-aware 是 gateway **本地**的启发式树，并不直接查询 Mooncake Store 或 Conductor 的全局 KV 元数据——和专题 04 里 Motor 通过 Mooncake Conductor 查"真实"前缀命中的思路不同，是两种不同的亲和调度实现路线（本地近似树 vs 查询中心化 KV 索引）。</li>
+</ul>
+<p><strong>面试话术</strong>："如果被问 SGLang 和 vLLM 谁的路由更强，可以说 SGLang 自带的 gateway 已经内置 cache-aware 策略，但它本质是路由层自己维护的近似前缀树（类似专题 04 里对比的 vLLM production-stack router 的做法），并不是去查 Mooncake 的全局 KV 索引；vLLM 官方示例 Proxy 干脆没有 cache-aware，这块完全留给了上层调度系统（比如我们项目里的 Motor + Mooncake Conductor）去做。"</p>
+<hr />
+<h2 id="7">7. 维度六：底层调用方式——共性远大于差异<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<p>两边**用的是同一个 Mooncake Python wheel**，没有本质区别：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># vLLM MooncakeConnector / SGLang MooncakeKVManager 初始化方式几乎一致</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mooncake.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransferEngine</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">TransferEngine</span><span class="p">()</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">engine</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># 注册 rpc_meta、metadata server</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">engine</span><span class="o">.</span><span class="n">batch_register</span><span class="p">(</span><span class="n">ptrs</span><span class="p">,</span> <span class="n">lens</span><span class="p">)</span>          <span class="c1"># 注册本地内存</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">engine</span><span class="o">.</span><span class="n">batch_transfer_sync</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">src_ptrs</span><span class="p">,</span> <span class="n">dst_ptrs</span><span class="p">,</span> <span class="n">lengths</span><span class="p">)</span>  <span class="c1"># 实际传输</span>
+</code></pre></div>
+<p>HiCache/Store 侧也是同一套：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mooncake.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">MooncakeDistributedStore</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">store</span> <span class="o">=</span> <span class="n">MooncakeDistributedStore</span><span class="p">()</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">store</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">local_hostname</span><span class="p">,</span> <span class="n">metadata_server</span><span class="p">,</span> <span class="n">global_segment_size</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">store</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value_bytes</span><span class="p">)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</code></pre></div>
+<p>差异只在**谁调用得更"干净"**：SGLang 做了 engine 实例复用（PD 和 HiCache 共享），vLLM 的 <code>MooncakePipe</code>/<code>MooncakeStore</code> 原语和 <code>MooncakeConnector</code> 是两条不相干的调用路径（前者甚至已经是无人引用的遗留代码）。</p>
+<hr />
+<h2 id="8">8. 面试高频问答<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<p><strong>Q1：Mooncake 在 vLLM 和 SGLang 里是不是同一份代码？</strong></p>
+<blockquote>
+<p>底层 C++ Transfer Engine 和 Python wheel（<code>mooncake.engine</code>/<code>mooncake.store</code>）是同一份，但上层集成代码完全不同、各自维护：vLLM 的 <code>MooncakeConnector</code>/<code>MooncakeStoreConnector</code>（现已原生合入 <code>vllm/distributed/kv_transfer/kv_connector/v1/mooncake/</code>）按 vLLM 的 <code>KVConnectorBase_V1</code> 接口写了一份适配；SGLang 的 <code>MooncakeKVManager</code> 等在 sglang 仓库里按自己的 <code>BaseKVManager</code> 接口写了另一份适配。两份适配代码互不复用，代码归属统一了不代表实现统一。</p>
+</blockquote>
+<p><strong>Q2：为什么说 vLLM 的 Mooncake 集成"没有做到论文里的分层流式传输"？</strong></p>
+<blockquote>
+<p>vLLM v1 的 <code>KVConnectorBase_V1</code> 专门设计了 <code>wait_for_layer_load</code>/<code>save_kv_layer</code> 两个 hook 支持逐层流水线，但 <code>MooncakeConnector</code> 的实现是空函数，即使现在代码已经原生合入主仓库也没有改变这一点——实际传输是整块 block 分配好之后一次性批量传所有层。反而是同仓库的 <code>P2pNcclConnector</code> 用上了这套逐层 hook。</p>
+</blockquote>
+<p><strong>Q3：SGLang 的 chunked-prefill overlap 和"分层流式"是一回事吗？</strong></p>
+<blockquote>
+<p>不是。SGLang 是按 chunked-prefill 的 chunk 边界（比如每 512/1024 token 一个 chunk）做 overlap，一个 chunk 算完就传，不等整个 prompt 算完；但一个 chunk 内部还是所有层一起传，粒度比"每个 transformer 层传一次"粗，比"prefill 全部完成再传"细，是中间态。</p>
+</blockquote>
+<p><strong>Q4：跨实例前缀缓存复用，两边分别怎么做？</strong></p>
+<blockquote>
+<p>vLLM 现在是 <code>MooncakeConnector</code>（PD 传输）+ <code>MooncakeStoreConnector</code>（前缀共享）两个**原生**connector，通过 <code>MultiConnector</code> 拼接使用（两者各自持有独立的 Store/Engine 实例，没有共享）。SGLang 是把远程存储做成 <code>HiRadixCache</code> 的 L3 层，<code>MooncakeStore</code> 只是可插拔 backend 之一（还可以换成 nixl/hf3fs），且和 PD 用的 Transfer Engine <strong>共享同一个实例</strong>，工程上仍然更完整——vLLM 追平了"有没有代码"，没追平"设计上是否统一"。</p>
+</blockquote>
+<p><strong>Q4'：vLLM 的 <code>MooncakeStoreConnector</code> 决定"要不要跨节点拉取"时，考不考虑传输成本？</strong></p>
+<blockquote>
+<p>不考虑，是二元查表逻辑：<code>get_num_new_matched_tokens</code> 只调 <code>lookup()</code> 查 Store 里存不存在更长的命中，只要命中数超过本地已算的 token 数就无条件决定拉取，没有 Mooncake Conductor 论文 Algorithm 1 里那套 <code>Ttransfer</code> 与 <code>kvcache_balancing_threshold</code> 的成本比较。这是因为"该不该传"这个决策已经被上一层的调度系统（Mooncake Conductor 或 Motor）在路由阶段做过一次，Connector 只是执行层，不需要重复判断。详见专题 10 第 3.4 节。</p>
+</blockquote>
+<p><strong>Q5：两边的 PD 握手机制有什么本质区别？</strong></p>
+<blockquote>
+<p>vLLM 靠一个无状态的 Proxy 轮询撮合 P/D，双方地址信息靠请求体传递；SGLang 有独立的 HTTP Bootstrap Server 做持久化的拓扑注册（类似服务发现），Decode 先查询再握手，是更规范的两阶段设计，也更容易扩展成支持异构 TP（SGLang 的 staging buffer 模式就依赖这套拓扑信息判断是否需要 gather-scatter）。</p>
+</blockquote>
+<p><strong>Q6：两个引擎的路由层谁能做 KV 亲和调度？</strong></p>
+<blockquote>
+<p>SGLang 自带 Rust gateway 且内置 <code>CacheAware</code> 路由策略（本地近似前缀树）；vLLM 官方示例 Proxy 只有轮询，KV 亲和调度需要靠外部系统（生产中常见做法是接入 Mooncake Conductor 的全局前缀索引，或类似 Motor 的方案，见专题 04）。</p>
+</blockquote>
+<hr />
+<h2 id="9">9. 关键文件速查表<a class="headerlink" href="#9" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>引擎</th>
+<th>组件</th>
+<th>文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vLLM</td>
+<td>KVConnector 抽象基类</td>
+<td><code>vllm/vllm/distributed/kv_transfer/kv_connector/v1/base.py</code></td>
+</tr>
+<tr>
+<td>vLLM</td>
+<td>Connector 工厂（<strong>现已原生注册 Mooncake</strong>）</td>
+<td><code>vllm/vllm/distributed/kv_transfer/kv_connector/factory.py</code></td>
+</tr>
+<tr>
+<td>vLLM</td>
+<td><code>MooncakeConnector</code>（PD 传输，原生）</td>
+<td><code>vllm/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/mooncake_connector.py</code></td>
+</tr>
+<tr>
+<td>vLLM</td>
+<td><code>MooncakeStoreConnector</code>（跨实例前缀共享，原生）</td>
+<td><code>vllm/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/store/{connector,scheduler,worker}.py</code></td>
+</tr>
+<tr>
+<td>vLLM</td>
+<td>遗留 Pipe/Store 原语（早期版本，无引用）</td>
+<td><code>vllm/vllm/distributed/kv_transfer/kv_pipe/mooncake_pipe.py</code>、<code>kv_lookup_buffer/mooncake_store.py</code></td>
+</tr>
+<tr>
+<td>vLLM</td>
+<td>逐层传输 hook（P2pNcclConnector 用，Mooncake 未用）</td>
+<td><code>vllm/vllm/attention/utils/kv_transfer_utils.py</code></td>
+</tr>
+<tr>
+<td>mooncake-wheel</td>
+<td>vLLM 专用 Proxy（独立脚本，未纳入 connector 注册体系）</td>
+<td><code>Mooncake/mooncake-wheel/mooncake/vllm_v1_proxy_server.py</code></td>
+</tr>
+<tr>
+<td>SGLang</td>
+<td>多 backend 工厂</td>
+<td><code>sglang/python/sglang/srt/disaggregation/utils.py</code></td>
+</tr>
+<tr>
+<td>SGLang</td>
+<td>Mooncake PD 实现（Manager/Sender/Receiver）</td>
+<td><code>sglang/python/sglang/srt/disaggregation/mooncake/conn.py</code></td>
+</tr>
+<tr>
+<td>SGLang</td>
+<td>Transfer Engine 封装（PD 与 HiCache 共享）</td>
+<td><code>sglang/python/sglang/srt/distributed/device_communicators/mooncake_transfer_engine.py</code></td>
+</tr>
+<tr>
+<td>SGLang</td>
+<td>Bootstrap HTTP 服务</td>
+<td><code>sglang/python/sglang/srt/disaggregation/common/conn.py</code></td>
+</tr>
+<tr>
+<td>SGLang</td>
+<td>HiCache 三级树</td>
+<td><code>sglang/python/sglang/srt/mem_cache/hiradix_cache.py</code></td>
+</tr>
+<tr>
+<td>SGLang</td>
+<td>HiCache L3 Mooncake 实现</td>
+<td><code>sglang/python/sglang/srt/mem_cache/storage/mooncake_store/mooncake_store.py</code></td>
+</tr>
+<tr>
+<td>SGLang</td>
+<td>Cache-Aware 路由（Rust）</td>
+<td><code>sglang/sgl-model-gateway/src/policies/cache_aware.rs</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10">10. 参考<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<ul>
+<li>专题 04：<code>04-KV亲和调度与Mooncake专题.md</code>（Conductor 调度视角）</li>
+<li>专题 10：<code>10-Mooncake传输引擎与存储管理深度拓展.md</code>（Transfer Engine / Store 底层机制）</li>
+<li>Mooncake 官方文档：<code>Mooncake/docs/source/getting_started/examples/vllm-integration/</code>、SGLang <code>docs/advanced_features/{pd_disaggregation,hicache_design}.md</code></li>
+<li>本文所有代码引用均来自工作区 <code>vllm/</code>、<code>sglang/</code>、<code>Mooncake/</code> 三个仓库的当前快照，行号可能随版本更新漂移，核心结论（架构差异）不受影响。</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

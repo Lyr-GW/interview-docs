@@ -1,0 +1,1869 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/2026-07-15/21-%E6%9C%AC%E5%A4%9C%E4%BA%A7%E5%87%BA%E7%B4%A2%E5%BC%95/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>21 · 本夜产出索引（00–83） - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#21-0083" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              21 · 本夜产出索引（00–83）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="21-0083">21 · 本夜产出索引（00–83）<a class="headerlink" href="#21-0083" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>2026-07-15 通宵迭代 · 一句话目录。上场导航见 <a href="../20-%E6%98%8E%E6%97%A9%E4%B8%8A%E5%9C%BA%E4%BD%9C%E6%88%98%E6%89%8B%E5%86%8C/"><code>20</code></a>。<br />
+<strong>唯一入口（推荐）</strong>：<a href="../82-%E7%BB%88%E5%B1%80%E5%AF%BC%E8%88%AA-%E5%8F%AA%E7%9C%8B%E8%BF%99%E9%A1%B5/"><code>82</code></a>（现在睡 / 现在练 / 明早起）；睡眠优先 <a href="../83-%E7%9D%A1%E7%9C%A0%E4%BC%98%E5%85%88%E5%A3%B0%E6%98%8E/"><code>83</code></a>。<br />
+<strong>明早打开序</strong>：<code>20</code> → <code>03</code> → <code>37</code> → <code>01</code> → 抽查（<a href="../41-%E6%9C%AC%E5%A4%9C%E8%B4%A8%E9%87%8F%E9%97%A8%E7%A6%81%E6%B8%85%E5%8D%95/"><code>41</code></a> / <a href="../40-%E5%8F%A3%E5%BE%84%E5%85%A8%E4%BB%93%E6%8A%BD%E6%A3%80%E6%8A%A5%E5%91%8A/"><code>40</code></a> / <a href="../70-%E7%AC%AC%E4%BA%8C%E8%BD%AE%E5%8F%A3%E5%BE%84%E6%8A%BD%E6%A3%80%E8%A1%A5%E4%B8%81/"><code>70</code></a>）。<br />
+<strong>全场对练</strong>：<a href="../42-45%E5%88%86%E9%92%9F%E6%A8%A1%E6%8B%9F%E9%9D%A2%E8%AF%95%E4%B8%B2%E8%81%94%E5%89%A7%E6%9C%AC/"><code>42</code></a>；<strong>15′ 高压计时</strong>：<a href="../73-%E5%AF%B9%E7%BB%83%E8%AE%A1%E6%97%B6%E5%99%A8%E5%89%A7%E6%9C%AC-15%E5%88%86%E9%92%9F%E7%89%88/"><code>73</code></a>；新卡快问：<a href="../43-%E7%BB%BC%E5%90%88%E5%BF%AB%E9%97%AE%E5%BF%AB%E7%AD%94%E5%BA%93-%E7%AC%AC%E4%BA%8C%E6%89%A9%E7%BC%96/"><code>43</code></a>（在 <code>05</code> 之外）；<strong>第三扩编</strong>：<a href="../51-%E7%AC%AC%E4%B8%89%E6%89%A9%E7%BC%96%E5%BF%AB%E9%97%AE30%E9%A2%98/"><code>51</code></a>；<strong>FAQ 收口 30 问</strong>：<a href="../74-%E6%9C%AC%E5%A4%9CFAQ%E6%94%B6%E5%8F%A330%E9%97%AE/"><code>74</code></a>。<br />
+<strong>失分区 15′ 专训 / 代码锚点</strong>：<a href="../76-%E5%A4%B1%E5%88%86%E5%8C%BA15%E5%88%86%E9%92%9F%E9%80%9F%E6%88%90%E8%AF%BE/"><code>76</code></a> · <a href="../77-%E4%BB%A3%E7%A0%81%E9%94%9A%E7%82%B9%E9%80%9F%E6%9F%A520%E6%9D%A1/"><code>77</code></a>（链 34/09/13/08、14/23）。<br />
+<strong>ASCII 白板 / 08 点停机检查</strong>：<a href="../78-%E9%9D%A2%E8%AF%95%E9%93%BE%E8%B7%AFASCII%E7%99%BD%E6%9D%BF%E5%9B%BE/"><code>78</code></a> · <a href="../79-08%E7%82%B9%E5%81%9C%E6%9C%BA%E5%89%8D%E6%A3%80%E6%9F%A5%E5%8D%95/"><code>79</code></a>（链 16/17/13/32/07、67/75/41）。<br />
+<strong>可录音跟读 / 产出统计（05:40）</strong>：<a href="../80-%E5%8F%AF%E5%BD%95%E9%9F%B3%E5%8F%A3%E8%BF%B0%E8%84%9A%E6%9C%AC%E5%90%88%E9%9B%86/"><code>80</code></a> · <a href="../81-%E9%80%9A%E5%AE%B5%E4%BA%A7%E5%87%BA%E7%BB%9F%E8%AE%A1%E5%BF%AB%E7%85%A7/"><code>81</code></a>（链 37/72/13/34/09/08/03；<strong>84 份</strong>）。<br />
+<strong>终局导航 / 睡眠优先（05:43）</strong>：<a href="../82-%E7%BB%88%E5%B1%80%E5%AF%BC%E8%88%AA-%E5%8F%AA%E7%9C%8B%E8%BF%99%E9%A1%B5/"><code>82</code></a> · <a href="../83-%E7%9D%A1%E7%9C%A0%E4%BC%98%E5%85%88%E5%A3%B0%E6%98%8E/"><code>83</code></a>（三岔路；此后 tick 只轻量；<strong>未 commit</strong>）。<br />
+<strong>睡前/起床时间盒</strong>：<a href="../49-%E9%80%9A%E5%AE%B5%E6%94%B6%E5%AE%98%E5%AF%BC%E8%88%AA-%E7%9D%A1%E5%89%8D%E4%B8%8E%E8%B5%B7%E5%BA%8A/"><code>49</code></a>（强制同序；仍薄=<code>15</code>；<strong>刷卷</strong>→<code>56</code>/<code>57</code>/<code>68</code>）。<br />
+<strong>睡前 10′ / 晨间 7 点</strong>：<a href="../58-%E7%9D%A1%E5%89%8D%E6%9C%80%E5%90%8E10%E5%88%86%E9%92%9F%E6%A3%80%E6%9F%A5%E5%8D%95/"><code>58</code></a> · <a href="../59-%E6%99%A8%E9%97%B4%E5%90%AF%E5%8A%A8%E6%B8%85%E5%8D%95-7%E7%82%B9%E7%89%88/"><code>59</code></a>。<br />
+<strong>中场摘要（给明早）</strong>：<a href="../67-%E9%80%9A%E5%AE%B5%E8%BF%AD%E4%BB%A3%E4%B8%AD%E5%9C%BA%E6%91%98%E8%A6%81-%E7%BB%99%E6%98%8E%E6%97%A9%E7%9A%84%E4%BD%A0/"><code>67</code></a>（1 页；勿新开长文；05:43 已挂 <code>82</code>/<code>83</code>）。<br />
+<strong>数字诚实总表</strong>：<a href="../50-%E7%AE%80%E5%8E%86%E6%95%B0%E5%AD%97%E8%AF%9A%E5%AE%9E%E6%80%BB%E8%A1%A8/"><code>50</code></a>（链 02/03/14/15/38）。<br />
+<strong>白板默写 / 简历翻卡 / 三大 STAR</strong>：<a href="../52-%E9%AB%98%E9%A2%91%E7%99%BD%E6%9D%BF%E9%BB%98%E5%86%99%E7%BA%B8/"><code>52</code></a> · <a href="../53-%E7%AE%80%E5%8E%86%E6%9D%A1%E7%9B%AE%E5%88%B0%E5%8D%A1%E5%8F%B7%E9%80%9F%E6%9F%A5/"><code>53</code></a> · <a href="../72-%E4%B8%89%E5%A4%A7%E9%A1%B9%E7%9B%AESTAR%E4%B8%80%E9%A1%B5%E7%BA%B8/"><code>72</code></a>（链 37/53/50）。<br />
+<strong>易混 / 反例</strong>：<a href="../54-%E6%98%93%E6%B7%B7%E6%A6%82%E5%BF%B5%E5%AF%B9%E7%85%A7%E5%8D%A1/"><code>54</code></a> · <a href="../55-%E5%8F%8D%E4%BE%8B%E4%B8%8E%E8%B8%A9%E5%9D%91%E6%95%85%E4%BA%8B%E5%8D%A1/"><code>55</code></a>。<br />
+<strong>随机抽题卷</strong>：<a href="../56-%E9%9A%8F%E6%9C%BA%E6%8A%BD%E9%A2%98%E5%8D%B7A/"><code>56</code></a> · <a href="../57-%E9%9A%8F%E6%9C%BA%E6%8A%BD%E9%A2%98%E5%8D%B7B/"><code>57</code></a> · <a href="../68-%E9%9A%8F%E6%9C%BA%E6%8A%BD%E9%A2%98%E5%8D%B7C/"><code>68</code></a>（只题面+翻卡号；A/B/C 隔轮）。<br />
+<strong>禁语扩表（04:54）</strong>：<a href="../69-%E7%A6%81%E8%AF%AD20%E6%9D%A1%E9%BB%98%E8%83%8C%E5%8D%A1/"><code>69</code></a>（20 条绝对不要说+替换半句；扩 <code>20</code>§5）。<br />
+<strong>口径复扫 / 非阻塞加深（05:10）</strong>：<a href="../70-%E7%AC%AC%E4%BA%8C%E8%BD%AE%E5%8F%A3%E5%BE%84%E6%8A%BD%E6%A3%80%E8%A1%A5%E4%B8%81/"><code>70</code></a> · <a href="../71-%E4%BB%8D%E5%8F%AF%E5%8A%A0%E6%B7%B1%E4%BD%86%E4%B8%8D%E9%98%BB%E5%A1%9E%E6%B8%85%E5%8D%95/"><code>71</code></a>（链 <code>40</code>；<code>04</code>/<code>36</code>/<code>39</code>）。<br />
+<strong>投机刀口（04:29）</strong>：<a href="../60-DeepSeek-MTP%E4%B8%8EMindIE%E6%8F%92%E4%BB%B6%E5%AF%B9%E7%85%A7%E5%8D%A1/"><code>60</code></a> · <a href="../61-DSpark%E4%B8%80%E9%A1%B5%E5%8F%A3%E8%BF%B0%E5%8D%A1/"><code>61</code></a>（链 <code>34</code>/<code>23</code>/<code>02</code>）。<br />
+<strong>亲和收口（04:45）</strong>：<a href="../62-Conductor%E8%B6%85%E6%97%B6%E4%B8%8E%E5%9B%9E%E9%80%80%E5%8F%A3%E8%BF%B0%E5%8D%A1/"><code>62</code></a> · <a href="../63-%E7%AC%AC%E4%BA%94%E5%8F%82%E6%95%B0%E4%B8%8E%E6%89%93%E5%88%86%E5%85%AC%E5%BC%8F%E9%80%9F%E8%AE%B0/"><code>63</code></a>（链 <code>12</code>/<code>17</code>/<code>ir/12</code>）。<br />
+<strong>Mooncake 深挖口述（04:48）</strong>：<a href="../64-%E4%BC%A0%E8%BE%93%E5%80%BC%E4%B8%8D%E5%80%BC%E5%BE%97%E6%88%90%E6%9C%AC%E7%9B%B4%E8%A7%89%E5%8D%A1/"><code>64</code></a> · <a href="../65-Mooncake-Store%E9%A9%B1%E9%80%90%E4%B8%8E%E5%89%AF%E6%9C%AC%E5%8F%A3%E8%BF%B0%E5%8D%A1/"><code>65</code></a>（链 <code>ir/10</code>；65 抽查级）。<br />
+<strong>双引擎对照（04:51）</strong>：<a href="../66-vLLM-SGLang-MooncakeConnector%E5%AF%B9%E7%85%A7%E5%8D%A1/"><code>66</code></a>（链 <code>ir/11</code>；四维一句）。<br />
+<strong>FAQ / git 说明（05:16）</strong>：<a href="../74-%E6%9C%AC%E5%A4%9CFAQ%E6%94%B6%E5%8F%A330%E9%97%AE/"><code>74</code></a> · <a href="../75-%E5%BE%85%E7%94%A8%E6%88%B7%E7%A1%AE%E8%AE%A4-git%E6%8F%90%E4%BA%A4%E8%AF%B4%E6%98%8E/"><code>75</code></a>（<strong>未 commit</strong>）。<br />
+<strong>失分区速成 / 代码锚（05:19）</strong>：<a href="../76-%E5%A4%B1%E5%88%86%E5%8C%BA15%E5%88%86%E9%92%9F%E9%80%9F%E6%88%90%E8%AF%BE/"><code>76</code></a> · <a href="../77-%E4%BB%A3%E7%A0%81%E9%94%9A%E7%82%B9%E9%80%9F%E6%9F%A520%E6%9D%A1/"><code>77</code></a>（<strong>未 commit</strong>）。<br />
+<strong>ASCII 白板 / 停机检查（05:35）</strong>：<a href="../78-%E9%9D%A2%E8%AF%95%E9%93%BE%E8%B7%AFASCII%E7%99%BD%E6%9D%BF%E5%9B%BE/"><code>78</code></a> · <a href="../79-08%E7%82%B9%E5%81%9C%E6%9C%BA%E5%89%8D%E6%A3%80%E6%9F%A5%E5%8D%95/"><code>79</code></a>（<strong>未 commit</strong>）。<br />
+<strong>录音合集 / 统计快照（05:40）</strong>：<a href="../80-%E5%8F%AF%E5%BD%95%E9%9F%B3%E5%8F%A3%E8%BF%B0%E8%84%9A%E6%9C%AC%E5%90%88%E9%9B%86/"><code>80</code></a> · <a href="../81-%E9%80%9A%E5%AE%B5%E4%BA%A7%E5%87%BA%E7%BB%9F%E8%AE%A1%E5%BF%AB%E7%85%A7/"><code>81</code></a>（<strong>未 commit</strong>）。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>文件</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>00</td>
+<td><a href="../00-%E9%80%9A%E5%AE%B5%E4%BC%98%E5%8C%96%E8%AE%A1%E5%88%92%E4%B8%8E%E8%BF%9B%E5%BA%A6/">通宵优化计划与进度</a></td>
+<td>本夜批次、风险摘要、验收勾选与进度日志</td>
+</tr>
+<tr>
+<td>01</td>
+<td><a href="../01-P0%E5%8F%A3%E8%BF%B0%E5%8D%A1-Dynamo%E6%8A%95%E6%9C%BA%E9%87%8F%E5%8C%96Profiling/">P0 口述卡 · Dynamo/投机/量化/Profiling</a></td>
+<td>四面口述闭环：cost 白板、拒绝采样、决策树、吞吐分叉</td>
+</tr>
+<tr>
+<td>02</td>
+<td><a href="../02-%E7%AE%80%E5%8E%86%E7%AC%AC%E4%B8%89%E5%B1%82%E8%BF%BD%E9%97%AE%E5%BC%B9%E8%8D%AF/">简历第三层追问弹药</a></td>
+<td>guidance/TTFT/Server/5000+/MTP×SO 诚实卡与证据边界</td>
+</tr>
+<tr>
+<td>03</td>
+<td><a href="../03-%E5%8F%A3%E5%BE%84%E7%BA%A2%E7%BA%BF%E9%80%9F%E6%9F%A5%E5%8D%A1/">口径红线速查卡</a></td>
+<td>上场倒背 8 条：FIFO/100、测算、D 不注册等</td>
+</tr>
+<tr>
+<td>04</td>
+<td><a href="../04-SGLang-SpecOverlap%E4%B8%8ELMCache-NIXL%E8%BE%B9%E7%95%8C/">SGLang Spec / LMCache / NIXL 边界</a></td>
+<td>机制边界 + 未压测不报加速比；软题提纲旁链</td>
+</tr>
+<tr>
+<td>05</td>
+<td><a href="../05-%E7%BB%BC%E5%90%88%E5%BF%AB%E9%97%AE%E5%BF%AB%E7%AD%94%E5%BA%93-%E6%89%A9%E7%BC%96/">综合快问快答库扩编</a></td>
+<td>~108 题分区刷；文末薄弱自检表</td>
+</tr>
+<tr>
+<td>06</td>
+<td><a href="../06-%E7%AE%97%E5%AD%90%E9%80%9F%E7%AD%9412%E9%A2%98%E5%8D%A1/">算子速答 12 题卡</a></td>
+<td>Prefill/FA/CG 等 45s 速答，不重读长文</td>
+</tr>
+<tr>
+<td>07</td>
+<td><a href="../07-PD%E5%88%86%E7%A6%BBhandoff%E5%8F%A3%E8%BF%B0%E5%8D%A1/">PD 分离 handoff 口述卡</a></td>
+<td>handoff vs concurrent + <strong>D 不注册 Conductor</strong></td>
+</tr>
+<tr>
+<td>08</td>
+<td><a href="../08-%E8%BD%AF%E6%80%A7%E9%A2%98%E8%B7%B3%E6%A7%BD%E5%8A%A8%E6%9C%BA%E5%AF%B9%E7%BB%83/">软性题跳槽动机对练</a></td>
+<td>拉力&gt;推力；禁涨薪嫌加班；压力轮救场</td>
+</tr>
+<tr>
+<td>09</td>
+<td><a href="../09-vLLM%E9%85%8D%E7%BD%AE%E8%83%8C%E5%90%8E%E5%8E%9F%E7%90%86%E4%B8%B2%E8%AE%B2%E5%8D%A1/">vLLM 配置背后原理串讲卡</a></td>
+<td>按目标选配置 60s；补二面零分题</td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="../10-%E8%96%84%E5%BC%B1%E8%87%AA%E6%A3%80%E8%A1%A5%E6%B4%9E%E6%B8%85%E5%8D%95/">薄弱自检补洞清单</a></td>
+<td>对照 05 自检；含明早 45min 刷题序母本</td>
+</tr>
+<tr>
+<td>11</td>
+<td><a href="../11-Scheduler%E4%B8%8EContinuousBatching%E5%8F%A3%E8%BF%B0%E5%8D%A1/">Scheduler 与 Continuous Batching</a></td>
+<td><code>schedule()</code> / chunked / 双预算口述</td>
+</tr>
+<tr>
+<td>12</td>
+<td><a href="../12-%E5%81%87%E5%91%BD%E4%B8%AD%E4%B8%8E%E9%A9%B1%E9%80%90%E6%84%9F%E7%9F%A5%E5%8F%A3%E8%BF%B0%E5%8D%A1/">假命中与驱逐感知</a></td>
+<td>假阳 vs RR；ZMQ Removed；Motor vs 近似树</td>
+</tr>
+<tr>
+<td>13</td>
+<td><a href="../13-Mooncake%E4%B8%89%E5%B1%8260%E7%A7%92%E5%8F%A3%E8%BF%B0%E5%8D%A1/">Mooncake 三层 60 秒</a></td>
+<td>Conductor / Store / TE + Motor 决策边界</td>
+</tr>
+<tr>
+<td>14</td>
+<td><a href="../14-Server%E9%87%8D%E6%9E%84%E4%B8%8E5000%E8%A1%8C%E8%AF%81%E6%8D%AE%E6%8F%90%E7%BA%B2/">Server 重构与 5000 行证据提纲</a></td>
+<td>路径核实；LOC/PR **待补**勿编</td>
+</tr>
+<tr>
+<td>15</td>
+<td><a href="../15-%E5%AE%9E%E6%B5%8B%E8%A1%A5%E6%B4%9E%E4%BD%9C%E4%B8%9A%E5%8D%95/">实测补洞作业单</a></td>
+<td>TPOT A/B、投机曲线、Conductor、cloc checklist</td>
+</tr>
+<tr>
+<td>16</td>
+<td><a href="../16-%E5%BC%82%E6%AD%A5%E8%B0%83%E5%BA%A6mask%E9%94%99%E4%BD%8D%E5%8F%A3%E8%BF%B0%E5%8D%A1/">异步调度 mask 错位</a></td>
+<td>三因→修法；验收=正确性非 TPOT−x%</td>
+</tr>
+<tr>
+<td>17</td>
+<td><a href="../17-Herding%E4%B8%8E%E8%B4%9F%E8%BD%BD%E9%97%A8%E6%8E%A7%E5%8F%A3%E8%BF%B0%E5%8D%A1/">Herding 与负载门控</a></td>
+<td>overlay→top-k→unified；五参数</td>
+</tr>
+<tr>
+<td>18</td>
+<td><a href="../18-Tokenizer%E5%90%8C%E6%BA%90%E4%B8%8Etools%E9%80%8F%E4%BC%A0%E5%8F%A3%E8%BF%B0%E5%8D%A1/">Tokenizer 同源与 tools 透传</a></td>
+<td>model_path 同源；tools+fail-closed vs 字符级</td>
+</tr>
+<tr>
+<td>19</td>
+<td><a href="../19-bitmask-NPU%E8%B7%AF%E5%BE%84%E8%AF%9A%E5%AE%9E%E5%8D%A1/">bitmask NPU 路径诚实卡</a></td>
+<td>torch 组合 vs fused；μs 经验勿编实测</td>
+</tr>
+<tr>
+<td>20</td>
+<td><a href="../20-%E6%98%8E%E6%97%A9%E4%B8%8A%E5%9C%BA%E4%BD%9C%E6%88%98%E6%89%8B%E5%86%8C/">明早上场作战手册</a></td>
+<td>开场 3min、翻卡表、失分区、刷题、禁语、应急</td>
+</tr>
+<tr>
+<td>21</td>
+<td><a href="./">本夜产出索引</a></td>
+<td>本表：00–83 一句话目录</td>
+</tr>
+<tr>
+<td>22</td>
+<td><a href="../22-K8s%E6%8E%A2%E9%92%88%E4%B8%8ERAS%E5%8F%A3%E8%BF%B0%E5%8D%A1/">K8s 探针与 RAS 口述卡</a></td>
+<td><strong>抽查级</strong>：三探针先后+RAS 三层+单一 owner</td>
+</tr>
+<tr>
+<td>23</td>
+<td><a href="../23-MTP%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E4%BA%92%E6%96%A5%E6%B7%B1%E6%8C%96%E5%8D%A1/">MTP 与结构化互斥深挖卡</a></td>
+<td>入口硬互斥；产品/工程双理由；对标 vLLM 多位置 mask</td>
+</tr>
+<tr>
+<td>24</td>
+<td><a href="../24-PD%E6%B7%B7%E9%83%A8%E4%B8%8E%E5%88%86%E7%A6%BB%E9%80%89%E5%9E%8B%E5%8F%A3%E8%BF%B0%E5%8D%A1/">PD 混部与分离选型</a></td>
+<td>何时 U vs P+D；P/U 注册、D 不注册；handoff 税一句</td>
+</tr>
+<tr>
+<td>25</td>
+<td><a href="../25-ZMQ-KV-Events%E9%80%9F%E7%AD%94%E5%8D%A1/">ZMQ KV Events 速答</a></td>
+<td>Stored/Removed；PUB+replay；per-DP；交叉假命中 <code>12</code></td>
+</tr>
+<tr>
+<td>26</td>
+<td><a href="../26-%E7%AB%9E%E5%93%81%E4%B8%80%E5%8F%A5%E5%AF%B9%E6%A0%87%E9%80%9F%E6%9F%A5%E5%8D%A1/">竞品一句对标速查</a></td>
+<td>Motor/Router/SGLang/Dynamo/llm-d/AIBrix；猜 vs 查</td>
+</tr>
+<tr>
+<td>27</td>
+<td><a href="../27-%E5%BC%95%E6%93%8EPrefixCache%E5%86%85%E6%A0%B8%E5%8F%A3%E8%BF%B0%E5%8D%A1/">引擎 PrefixCache 内核</a></td>
+<td>哈希链/APC/ref_cnt；与跨实例亲和两层正交</td>
+</tr>
+<tr>
+<td>28</td>
+<td><a href="../28-FunctionCall%E5%BF%AB%E9%97%AE%E5%8A%A0%E5%9B%BA%E5%8D%A1/">FunctionCall 快问加固</a></td>
+<td>Encode/Generate/Decode；4-Case；Hard Cut-off；约束⊥parser</td>
+</tr>
+<tr>
+<td>29</td>
+<td><a href="../29-%E9%87%8F%E5%8C%96%E7%B2%BE%E5%BA%A6%E9%AA%8C%E6%94%B6%E4%B8%89%E5%B1%82%E5%8F%A3%E8%BF%B0%E5%8D%A1/">量化精度验收三层</a></td>
+<td>决策树收口；任务/数值/长生成；W8A8·AWQ·FP8·KV 开关</td>
+</tr>
+<tr>
+<td>30</td>
+<td><a href="../30-Profiling%E7%A0%B4%E6%A1%88%E6%95%85%E4%BA%8B%E5%8F%A3%E8%BF%B0%E5%8D%A1/">Profiling 破案故事</a></td>
+<td>吞吐六步故事；TTFT 高 / TPOT 抖变体；链 01D + 07-10/05</td>
+</tr>
+<tr>
+<td>31</td>
+<td><a href="../31-MindIE%E5%B9%B6%E8%A1%8C%E7%AD%96%E7%95%A5%E9%80%9F%E7%AD%94%E5%8D%A1/">MindIE 并行策略速答</a></td>
+<td>Column/Row·DP/EP；maxBatchSize 定序一句；链 ir/09</td>
+</tr>
+<tr>
+<td>32</td>
+<td><a href="../32-%E6%8B%92%E7%BB%9D%E9%87%87%E6%A0%B7%E7%99%BD%E6%9D%BF%E7%89%B9%E8%AE%AD%E5%8D%A1/">拒绝采样白板特训</a></td>
+<td>四步默写+无损+大 batch 一句；链 01B + ir/02</td>
+</tr>
+<tr>
+<td>33</td>
+<td><a href="../33-%E5%AE%9E%E4%B9%A0Benchmark%E5%8F%AF%E8%A7%86%E5%8C%96STAR/">实习 Benchmark 可视化 STAR</a></td>
+<td>弱绑定 STAR；待补个人事实；链 02§8</td>
+</tr>
+<tr>
+<td>34</td>
+<td><a href="../34-%E6%8A%95%E6%9C%BA%E6%BC%94%E8%BF%9B%E7%BA%BF%E9%BB%98%E8%83%8C%E5%8D%A1/">投机演进线默背卡</a></td>
+<td>Medusa→EAGLE→MTP→DFlash→DSpark 每代一句 + MindIE 三插件；链 01B/32/ir/02</td>
+</tr>
+<tr>
+<td>35</td>
+<td><a href="../35-HTTP-Server%E9%87%8D%E6%9E%84%E8%BE%B9%E7%95%8C%E5%8F%A3%E8%BF%B0%E5%8D%A1/">HTTP Server 重构边界口述卡</a></td>
+<td>Handler/Interface/虚函数vs热路径/golden；LOC <strong>待补</strong>；链 14 + 07-10/04</td>
+</tr>
+<tr>
+<td>36</td>
+<td><a href="../36-HCCL%E4%B8%8EKV%E4%BC%A0%E8%BE%93%E8%BE%B9%E7%95%8C%E5%8D%A1/">HCCL 与 KV 传输边界卡</a></td>
+<td>集合≠点对点；TE 一句；通信非主战场；链 kv/10</td>
+</tr>
+<tr>
+<td>37</td>
+<td><a href="../37-%E4%B8%89%E5%88%86%E9%92%9F%E8%87%AA%E6%88%91%E4%BB%8B%E7%BB%8D%E5%AE%9A%E7%A8%BF/">三分钟自我介绍定稿</a></td>
+<td>90s/180s；SO+亲和+Tool；FIFO/100·测算·不吹 kernel</td>
+</tr>
+<tr>
+<td>38</td>
+<td><a href="../38-TTFT%E4%BA%94%E6%AE%B5%E5%88%86%E8%A7%A3%E4%B8%8E70%25%E6%B5%8B%E7%AE%97%E5%8D%A1/">TTFT 五段分解与 70% 测算卡</a></td>
+<td>五段白板；1187→351 假设清单；客户日志红线；全程标测算</td>
+</tr>
+<tr>
+<td>39</td>
+<td><a href="../39-%E9%AB%98%E5%8E%8B%E8%BF%BD%E9%97%AE%E5%BA%94%E6%80%A5%E8%AF%9D%E6%9C%AF%E5%8D%A1/">高压追问应急话术卡</a></td>
+<td>扩 20§6；12 场景 × 错例+正确 2–3 句模板</td>
+</tr>
+<tr>
+<td>40</td>
+<td><a href="../40-%E5%8F%A3%E5%BE%84%E5%85%A8%E4%BB%93%E6%8A%BD%E6%A3%80%E6%8A%A5%E5%91%8A/">口径全仓抽检报告</a></td>
+<td>MindIE 编译缓存 LRU/128 grep；已修/需修/可保留；高危 3 处已修</td>
+</tr>
+<tr>
+<td>41</td>
+<td><a href="../41-%E6%9C%AC%E5%A4%9C%E8%B4%A8%E9%87%8F%E9%97%A8%E7%A6%81%E6%B8%85%E5%8D%95/">本夜质量门禁清单</a></td>
+<td>对照 00 验收+20 禁语；仍薄仅实测链 15；明早打开序</td>
+</tr>
+<tr>
+<td>42</td>
+<td><a href="../42-45%E5%88%86%E9%92%9F%E6%A8%A1%E6%8B%9F%E9%9D%A2%E8%AF%95%E4%B8%B2%E8%81%94%E5%89%A7%E6%9C%AC/">45 分钟模拟面试串联剧本</a></td>
+<td>面试官视角六段时间盒；每段高压×1；文末自测打分；链 20/37/01/32/09/08/39</td>
+</tr>
+<tr>
+<td>43</td>
+<td><a href="../43-%E7%BB%BC%E5%90%88%E5%BF%AB%E9%97%AE%E5%BF%AB%E7%AD%94%E5%BA%93-%E7%AC%AC%E4%BA%8C%E6%89%A9%E7%BC%96/">综合快问快答库第二扩编</a></td>
+<td>~40 题；假命中/Herding/ZMQ/PrefixCache/竞品/Server/高压；在 <code>05</code> 之外</td>
+</tr>
+<tr>
+<td>44</td>
+<td><a href="../44-ChunkedPrefill%E4%B8%8E%E6%8A%A2%E5%8D%A0%E5%8F%A3%E8%BF%B0%E5%8D%A1/">Chunked Prefill 与抢占</a></td>
+<td>HOL/chunked/recompute；与 PD 一句；链 <code>11</code> + <code>07-10/01</code></td>
+</tr>
+<tr>
+<td>45</td>
+<td><a href="../45-aclgraph%E4%B8%8ECUDAGraph%E8%BE%B9%E7%95%8C%E5%8D%A1/">aclgraph 与 CUDA Graph 边界</a></td>
+<td>收益前提×paged 矛盾；aclgraph≈CG；未手写 AscendC；链 <code>06</code> + <code>07-10/02</code> + suanzi</td>
+</tr>
+<tr>
+<td>46</td>
+<td><a href="../46-MoE%E4%B8%8EMC2%E9%80%9F%E7%AD%94%E5%8D%A1/">MoE 与 MC2 速答</a></td>
+<td><strong>抽查级</strong>：EP/All2All/MC2；128选6→384；链 suanzi/04·ir/09·Seed§5</td>
+</tr>
+<tr>
+<td>47</td>
+<td><a href="../47-%E8%AF%AD%E4%B9%89%E8%B7%AF%E7%94%B1%E4%B8%8E%E5%BC%BA%E5%BC%B1%E6%A8%A1%E5%9E%8B%E5%8F%A3%E8%BF%B0%E5%8D%A1/">语义路由与强弱模型</a></td>
+<td>实例级 vs 模型级；难度信号；×KV 亲和正交；链 ir/06（Q10）</td>
+</tr>
+<tr>
+<td>48</td>
+<td><a href="../48-SGLang-RadixTree%E7%B2%BE%E7%AE%8014%E9%97%AE/">SGLang RadixTree 精简 14 问</a></td>
+<td>sglang/12→三列表；链 <code>04</code> Spec/overlap；不重抄讲义</td>
+</tr>
+<tr>
+<td>49</td>
+<td><a href="../49-%E9%80%9A%E5%AE%B5%E6%94%B6%E5%AE%98%E5%AF%BC%E8%88%AA-%E7%9D%A1%E5%89%8D%E4%B8%8E%E8%B5%B7%E5%BA%8A/">通宵收官导航 · 睡前与起床</a></td>
+<td>醒着/7:00 × 20′/45′；强制 <code>20→03→37</code>；链 <code>41</code>/<code>42</code>；仍薄=<code>15</code>；挂 <code>58</code>/<code>59</code>；刷卷含 <code>68</code></td>
+</tr>
+<tr>
+<td>50</td>
+<td><a href="../50-%E7%AE%80%E5%8E%86%E6%95%B0%E5%AD%97%E8%AF%9A%E5%AE%9E%E6%80%BB%E8%A1%A8/">简历数字诚实总表</a></td>
+<td>全部关键数字×性质×红线；链 <code>02</code>/<code>03</code>/<code>14</code>/<code>15</code>/<code>38</code></td>
+</tr>
+<tr>
+<td>51</td>
+<td><a href="../51-%E7%AC%AC%E4%B8%89%E6%89%A9%E7%BC%96%E5%BF%AB%E9%97%AE30%E9%A2%98/">第三扩编快问 30 题</a></td>
+<td>~30 题；数字诚实/Graph×Paged/MoE/语义/Radix；口径对齐 <code>03</code>/<code>50</code></td>
+</tr>
+<tr>
+<td>52</td>
+<td><a href="../52-%E9%AB%98%E9%A2%91%E7%99%BD%E6%9D%BF%E9%BB%98%E5%86%99%E7%BA%B8/">高频白板默写纸</a></td>
+<td>一张纸五块：拒绝采样/Dynamo cost/TTFT 五段/Motor 打分/FIFO；链 <code>32</code>/<code>01A</code>/<code>38</code>/<code>17</code>/<code>03</code></td>
+</tr>
+<tr>
+<td>53</td>
+<td><a href="../53-%E7%AE%80%E5%8E%86%E6%9D%A1%E7%9B%AE%E5%88%B0%E5%8D%A1%E5%8F%B7%E9%80%9F%E6%9F%A5/">简历条目到卡号速查</a></td>
+<td>简历句→本夜卡→深文；纯对照表；链 <code>20</code>/<code>50</code></td>
+</tr>
+<tr>
+<td>54</td>
+<td><a href="../54-%E6%98%93%E6%B7%B7%E6%A6%82%E5%BF%B5%E5%AF%B9%E7%85%A7%E5%8D%A1/">易混概念对照卡</a></td>
+<td>8 对一句话区分+挖穿+翻卡；链 suanzi/08·<code>03</code>·<code>12</code>·<code>07</code>·<code>27</code>·<code>13</code>·<code>28</code></td>
+</tr>
+<tr>
+<td>55</td>
+<td><a href="../55-%E5%8F%8D%E4%BE%8B%E4%B8%8E%E8%B8%A9%E5%9D%91%E6%95%85%E4%BA%8B%E5%8D%A1/">反例与踩坑故事卡</a></td>
+<td>10 例错答→砸点→锚点；链 <code>ir/01</code>·<code>39</code>·<code>03</code></td>
+</tr>
+<tr>
+<td>56</td>
+<td><a href="../56-%E9%9A%8F%E6%9C%BA%E6%8A%BD%E9%A2%98%E5%8D%B7A/">随机抽题卷 A</a></td>
+<td>15 题抽签：简历5+JD盲区5+白板3+软性2；只题面+翻卡号</td>
+</tr>
+<tr>
+<td>57</td>
+<td><a href="../57-%E9%9A%8F%E6%9C%BA%E6%8A%BD%E9%A2%98%E5%8D%B7B/">随机抽题卷 B</a></td>
+<td>另一套 15 题，主题与 A 错开；同结构；链 <code>49</code> 刷卷</td>
+</tr>
+<tr>
+<td>58</td>
+<td><a href="../58-%E7%9D%A1%E5%89%8D%E6%9C%80%E5%90%8E10%E5%88%86%E9%92%9F%E6%A3%80%E6%9F%A5%E5%8D%95/">睡前最后 10 分钟检查单</a></td>
+<td>只查红线/禁语；8 勾选；链 <code>03</code>/<code>39</code>/<code>37</code>；不学新知识</td>
+</tr>
+<tr>
+<td>59</td>
+<td><a href="../59-%E6%99%A8%E9%97%B4%E5%90%AF%E5%8A%A8%E6%B8%85%E5%8D%95-7%E7%82%B9%E7%89%88/">晨间启动清单 · 7 点版</a></td>
+<td>7:00–8:00 分钟表；水/红线/37/抽5/失分区1/禁语；链 <code>49</code>/<code>42</code>/<code>56</code>/<code>68</code>/<code>69</code></td>
+</tr>
+<tr>
+<td>60</td>
+<td><a href="../60-DeepSeek-MTP%E4%B8%8EMindIE%E6%8F%92%E4%BB%B6%E5%AF%B9%E7%85%A7%E5%8D%A1/">DeepSeek MTP 与 MindIE 三插件对照</a></td>
+<td>MTP 直觉 + MTP/LA/Memory；交叉 <code>23</code>；链 <code>34</code>/<code>ir/02</code></td>
+</tr>
+<tr>
+<td>61</td>
+<td><a href="../61-DSpark%E4%B8%80%E9%A1%B5%E5%8F%A3%E8%BF%B0%E5%8D%A1/">DSpark 一页口述卡</a></td>
+<td>Confidence-Scheduled + Semi-AR；相对 MTP 卖点；公开加速标出处；链 <code>02</code>/<code>34</code></td>
+</tr>
+<tr>
+<td>62</td>
+<td><a href="../62-Conductor%E8%B6%85%E6%97%B6%E4%B8%8E%E5%9B%9E%E9%80%80%E5%8F%A3%E8%BF%B0%E5%8D%A1/">Conductor 超时与回退</a></td>
+<td>0.2s→LB；失败不拖垮；LB≠RR；超时标配置/目标；链 <code>12</code>/<code>17</code>/<code>ir/12</code></td>
+</tr>
+<tr>
+<td>63</td>
+<td><a href="../63-%E7%AC%AC%E4%BA%94%E5%8F%82%E6%95%B0%E4%B8%8E%E6%89%93%E5%88%86%E5%85%AC%E5%BC%8F%E9%80%9F%E8%AE%B0/">第五参数与打分公式速记</a></td>
+<td>mode/w/credit/scale/topn；unified+gated 骨架可默写；链 <code>17</code>/<code>12</code></td>
+</tr>
+<tr>
+<td>64</td>
+<td><a href="../64-%E4%BC%A0%E8%BE%93%E5%80%BC%E4%B8%8D%E5%80%BC%E5%BE%97%E6%88%90%E6%9C%AC%E7%9B%B4%E8%A7%89%E5%8D%A1/">传输值不值得成本直觉</a></td>
+<td>Eq1/2·6~19GB/s；能抓靠 Store；Motor 简化 vs Conductor 精细；链 <code>ir/10</code></td>
+</tr>
+<tr>
+<td>65</td>
+<td><a href="../65-Mooncake-Store%E9%A9%B1%E9%80%90%E4%B8%8E%E5%89%AF%E6%9C%AC%E5%8F%A3%E8%BF%B0%E5%8D%A1/">Mooncake Store 驱逐与副本</a></td>
+<td><strong>抽查级</strong>：Master/Client；near-LRU/soft pin；与 Conductor 边界；链 <code>ir/10</code></td>
+</tr>
+<tr>
+<td>66</td>
+<td><a href="../66-vLLM-SGLang-MooncakeConnector%E5%AF%B9%E7%85%A7%E5%8D%A1/">vLLM/SGLang MooncakeConnector 对照</a></td>
+<td>PD 粒度/握手/跨实例前缀/路由 cache-aware 四维一句；链 <code>ir/11</code></td>
+</tr>
+<tr>
+<td>67</td>
+<td><a href="../67-%E9%80%9A%E5%AE%B5%E8%BF%AD%E4%BB%A3%E4%B8%AD%E5%9C%BA%E6%91%98%E8%A6%81-%E7%BB%99%E6%98%8E%E6%97%A9%E7%9A%84%E4%BD%A0/">通宵中场摘要 · 给明早的你</a></td>
+<td>1 页：本夜量级+强制入口+仍薄=15；链 <code>20</code>/<code>41</code>/<code>49</code>/<code>58</code>/<code>59</code>；勿新开长文</td>
+</tr>
+<tr>
+<td>68</td>
+<td><a href="../68-%E9%9A%8F%E6%9C%BA%E6%8A%BD%E9%A2%98%E5%8D%B7C/">随机抽题卷 C</a></td>
+<td>第三套 15 题：传输/Store/Connector/超时/五参数/MTP·DSpark；与 A/B 错开</td>
+</tr>
+<tr>
+<td>69</td>
+<td><a href="../69-%E7%A6%81%E8%AF%AD20%E6%9D%A1%E9%BB%98%E8%83%8C%E5%8D%A1/">禁语 20 条默背卡</a></td>
+<td>扩 <code>20</code>§5→20 条绝对不要说+替换半句；出门前扫</td>
+</tr>
+<tr>
+<td>70</td>
+<td><a href="../70-%E7%AC%AC%E4%BA%8C%E8%BD%AE%E5%8F%A3%E5%BE%84%E6%8A%BD%E6%A3%80%E8%A1%A5%E4%B8%81/">第二轮口径抽检补丁</a></td>
+<td>05:10 复扫 LRU/128 现行主语 <strong>0</strong>；干净证据；链 <code>40</code></td>
+</tr>
+<tr>
+<td>71</td>
+<td><a href="../71-%E4%BB%8D%E5%8F%AF%E5%8A%A0%E6%B7%B1%E4%BD%86%E4%B8%8D%E9%98%BB%E5%A1%9E%E6%B8%85%E5%8D%95/">仍可加深但不阻塞清单</a></td>
+<td>长上下文/Multi-LoRA/Embedding/NIXL/开源实物+挡法；链 <code>04</code>/<code>36</code>/<code>39</code></td>
+</tr>
+<tr>
+<td>72</td>
+<td><a href="../72-%E4%B8%89%E5%A4%A7%E9%A1%B9%E7%9B%AESTAR%E4%B8%80%E9%A1%B5%E7%BA%B8/">三大项目 STAR 一页纸</a></td>
+<td>SO/亲和/Tool 各一段 STAR；Result 走 <code>50</code>；链 <code>37</code>/<code>53</code>/<code>50</code></td>
+</tr>
+<tr>
+<td>73</td>
+<td><a href="../73-%E5%AF%B9%E7%BB%83%E8%AE%A1%E6%97%B6%E5%99%A8%E5%89%A7%E6%9C%AC-15%E5%88%86%E9%92%9F%E7%89%88/">对练计时器剧本 · 15 分钟版</a></td>
+<td>红线2′+STAR1′+深挖6′+白板4′+软性2′；面试官脚本；链 <code>42</code>/<code>56</code></td>
+</tr>
+<tr>
+<td>74</td>
+<td><a href="../74-%E6%9C%AC%E5%A4%9CFAQ%E6%94%B6%E5%8F%A330%E9%97%AE/">本夜 FAQ 收口 30 问</a></td>
+<td>红线+护城河+失分区；极短答 1–2 句+卡号；临场收口</td>
+</tr>
+<tr>
+<td>75</td>
+<td><a href="../75-%E5%BE%85%E7%94%A8%E6%88%B7%E7%A1%AE%E8%AE%A4-git%E6%8F%90%E4%BA%A4%E8%AF%B4%E6%98%8E/">待用户确认 · git 提交说明</a></td>
+<td>INCLUDE/EXCLUDE/英文 why；<strong>未执行 commit</strong>；听确认</td>
+</tr>
+<tr>
+<td>76</td>
+<td><a href="../76-%E5%A4%B1%E5%88%86%E5%8C%BA15%E5%88%86%E9%92%9F%E9%80%9F%E6%88%90%E8%AF%BE/">失分区 15 分钟速成课</a></td>
+<td>投机/配置/Mooncake/跳槽；每块必背+翻卡+自测；链 34/09/13/08</td>
+</tr>
+<tr>
+<td>77</td>
+<td><a href="../77-%E4%BB%A3%E7%A0%81%E9%94%9A%E7%82%B9%E9%80%9F%E6%9F%A520%E6%9D%A1/">代码锚点速查 20 条</a></td>
+<td>文件/符号→用途→面试怎么提；SO/MTP/Motor 已核实；待补标清</td>
+</tr>
+<tr>
+<td>78</td>
+<td><a href="../78-%E9%9D%A2%E8%AF%95%E9%93%BE%E8%B7%AFASCII%E7%99%BD%E6%9D%BF%E5%9B%BE/">面试链路 ASCII 白板图</a></td>
+<td>5 图可手画：SO/Motor/Mooncake/投机/PD；每图 3 句；链 16/17/13/32/07</td>
+</tr>
+<tr>
+<td>79</td>
+<td><a href="../79-08%E7%82%B9%E5%81%9C%E6%9C%BA%E5%89%8D%E6%A3%80%E6%9F%A5%E5%8D%95/">08 点停机前检查单</a></td>
+<td>入口/索引/commit 待用户/实测仍薄；链 67/75/41；<strong>未 commit</strong></td>
+</tr>
+<tr>
+<td>80</td>
+<td><a href="../80-%E5%8F%AF%E5%BD%95%E9%9F%B3%E5%8F%A3%E8%BF%B0%E8%84%9A%E6%9C%AC%E5%90%88%E9%9B%86/">可录音口述脚本合集</a></td>
+<td>8 段跟读：介绍/SO/KV/Mooncake/投机/配置/跳槽/红线；链 37/72/13/34/09/08/03</td>
+</tr>
+<tr>
+<td>81</td>
+<td><a href="../81-%E9%80%9A%E5%AE%B5%E4%BA%A7%E5%87%BA%E7%BB%9F%E8%AE%A1%E5%BF%AB%E7%85%A7/">通宵产出统计快照</a></td>
+<td>84 份 ls/wc；主题桶+验收+下一步（睡/刷59/commit）；链 00/21/67</td>
+</tr>
+<tr>
+<td>82</td>
+<td><a href="../82-%E7%BB%88%E5%B1%80%E5%AF%BC%E8%88%AA-%E5%8F%AA%E7%9C%8B%E8%BF%99%E9%A1%B5/">终局导航 · 只看这页</a></td>
+<td>三岔路：现在睡/现在练/明早起；收口 20/49/58/59/67/81；<strong>唯一入口</strong></td>
+</tr>
+<tr>
+<td>83</td>
+<td><a href="../83-%E7%9D%A1%E7%9C%A0%E4%BC%98%E5%85%88%E5%A3%B0%E6%98%8E/">睡眠优先声明</a></td>
+<td>文档过门槛；堆卡边际↓；优先睡+晨间 59/73/80；loop 只轻量</td>
+</tr>
+</tbody>
+</table>
+<p><strong>读序建议</strong>：不知道翻哪 → 先开 <a href="../82-%E7%BB%88%E5%B1%80%E5%AF%BC%E8%88%AA-%E5%8F%AA%E7%9C%8B%E8%BF%99%E9%A1%B5/"><code>82</code></a>（睡眠声明旁链 <a href="../83-%E7%9D%A1%E7%9C%A0%E4%BC%98%E5%85%88%E5%A3%B0%E6%98%8E/"><code>83</code></a>）；关灯前翻 <code>58</code>（或先扫 <code>67</code> 中场摘要 / 统计 <a href="../81-%E9%80%9A%E5%AE%B5%E4%BA%A7%E5%87%BA%E7%BB%9F%E8%AE%A1%E5%BF%AB%E7%85%A7/"><code>81</code></a>；<strong>停机勾选**翻 <code>79</code>；**跟读录音**翻 <code>80</code>）；起床 7:00 翻 <code>59</code>（总表仍 <code>49</code>）；上场仍先 <code>20</code>（开场定稿旁链 <code>37</code>；高压应急旁链 <code>39</code>；**禁语扩表**翻 <code>69</code>）→ <code>03</code> 红线 → <code>37</code> 开口 → <code>01</code> 四面；**临场 FAQ 收口**翻 <code>74</code>（红线/护城河/失分区 30 问）；**失分区 15′ 专训**翻 <code>76</code>；**指代码**翻 <code>77</code>；**手画白板**翻 <code>78</code>（默写空旁链 <code>52</code>）；**单项目 STAR</strong> 翻 <code>72</code>（数字旁链 <code>50</code>；简历句翻 <code>53</code>）；**15′ 高压计时**翻 <code>73</code>（全场仍 <code>42</code>）；**抽签默背**翻 <code>56</code>/<code>57</code>/<code>68</code>（答完再翻卡号；A/B/C 隔轮；路径见 <code>49</code>）；近义词追问翻 <code>54</code>（算子易混旁链 suanzi/08）；嘴里冒出二面错句翻 <code>55</code>（高压模板 <code>39</code>）；简历被挖翻 <code>53</code>（数字旁链 <code>50</code>；第三层正文 <code>02</code>）；白板默写翻 <code>52</code>（**五参数/公式**旁链 <code>63</code>；链路 ASCII <code>78</code>）；全场计时对练翻 <code>42</code>；新卡刀口快问翻 <code>43</code>（广谱仍 <code>05</code>；**第三扩编**翻 <code>51</code>）；数字被追翻 <code>50</code>（母本 <code>02</code>/<code>38</code>/<code>14</code>）；门禁/抽检翻 <code>41</code>/<code>40</code>/<code>70</code>；非阻塞加深主题翻 <code>71</code>（挡法母本 <code>39</code>；NIXL 边界仍 <code>04</code>/<code>36</code>）；RadixTree 精简 14 问翻 <code>48</code>（母本 <code>sglang/12</code>；Spec 叠 <code>04</code>；假命中旁链 <code>12</code>/<code>25</code>）；卡点翻号；MoE/MC2 抽查翻 <code>46</code>（母本 <code>06</code> Q7；并行定序旁链 <code>31</code>；深文 suanzi/04·ir/09·Seed§5）；语义路由/强弱（Q10）翻 <code>47</code>（深文 <code>ir/06</code>；与亲和正交）；Chunked/抢占刀口翻 <code>44</code>（母本 <code>11</code>；深文 <code>07-10/01</code>；选型旁链 <code>24</code>）；Graph/aclgraph 边界翻 <code>45</code>（速答母本 <code>06</code>；深文 <code>07-10/02</code> + suanzi；不吹 AscendC）；TTFT/−70% 测算翻 <code>38</code>（诚实母本 <code>02</code>；深文 <code>ir/12</code>；五段母本 <code>07-10/05</code>§6）；HCCL/传 KV 边界翻 <code>36</code>（深文 <code>kv/10</code>；三层仍 <code>13</code>；**传值不值得**翻 <code>64</code>；**Store 驱逐/副本抽查**翻 <code>65</code>；**vLLM×SGLang Connector 对照**翻 <code>66</code>）；投机演进默背翻 <code>34</code>（白板核仍 <code>32</code>；母本 <code>01</code> B / <code>ir/02</code>；**MTP/三插件刀口**翻 <code>60</code>；**DSpark 点名**翻 <code>61</code>）；Server 重构边界翻 <code>35</code>（证据路径母本 <code>14</code>；LOC 待补勿编）；实习可视化翻 <code>33</code>（弱绑定，母本 <code>02</code> §8）；Profiling 故事翻 <code>30</code>；并行速答翻 <code>31</code>（深文 <code>ir/09</code>）；Tool/FC 翻 <code>28</code>；量化验收翻 <code>29</code>；竞品点名翻 <code>26</code>；PrefixCache 内核翻 <code>27</code>；MTP×SO 翻 <code>23</code>（对照旁链 <code>60</code>）；PD 选型翻 <code>24</code>；K8s/RAS 抽查翻 <code>22</code>；Herding/门控翻 <code>17</code>（**超时回退**翻 <code>62</code>；**五参数默写**翻 <code>63</code>）；测数项只跟 <code>15</code>；**git 暂存范围**翻 <code>75</code>（听确认；未 commit；停机前再勾 <code>79</code>）；深文仍回 <code>interview-review/</code>。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

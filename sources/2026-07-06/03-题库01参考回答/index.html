@@ -1,0 +1,2560 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/sources/2026-07-06/03-%E9%A2%98%E5%BA%9301%E5%8F%82%E8%80%83%E5%9B%9E%E7%AD%94/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>题库 01 参考回答（面试者口吻 · 代码仓核实版） - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#01" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              题库 01 参考回答（面试者口吻 · 代码仓核实版）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../topics/interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一、开场与软性问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="一、开场与软性问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 自我介绍（2 分钟版）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 入职 11 个月就出来看机会，为什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. "独立交付"具体独立到什么程度？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 三段工作哪个最能代表你的水平？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 平时怎么跟踪前沿？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        二、结构化输出
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="二、结构化输出">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 端到端链路 ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 为什么能保证输出一定合法？ ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-xgrammar-outlines-guidance-lm-format-enforcer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 为什么选 xgrammar？和 Outlines / Guidance / lm-format-enforcer 的本质区别？ ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-fsm-vs-pda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. FSM vs PDA（已在题库内附标准答案）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#10-15-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 15 万词表逐 token 判断，开销怎么做低？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#11-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. token 跨语法单元的边界问题？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-bitmask-cpunpu-overlap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. bitmask 的 CPU→NPU 开销和 overlap？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 编译缓存设计；语义等价但字段顺序不同的 schema 会命中吗？ ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 容量怎么定？恶意用户每次发不同 schema 的最坏情况？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 缓存是进程级还是全局的？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-mask-bugstar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. mask/采样步错位 bug（STAR） ★（已对照源码逐行核实）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. 约束解码 × 投机解码？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-matcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. 请求被抢占再恢复，matcher 状态怎么办？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#19-ttfttpot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. 打开结构化输出后 TTFT/TPOT 变差多少？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. 约束解码会伤输出质量吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#21-sql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. 输出 SQL 方言还能用这套吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-openai-structured-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. OpenAI structured outputs 背后的异同？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-guidance-token-healing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. guidance 的 token healing？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kv-motor-mooncake" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        三、KV 亲和性调度（Motor + Mooncake）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="三、KV 亲和性调度（Motor + Mooncake）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. 白板架构题 ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. 为什么要做？收益上限由什么决定？ ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-ttft-70" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. TTFT -70% 怎么测的？低重复率会更差吗？ ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27-tokenize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. tokenize 一致性怎么保证？ ◆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#28-miss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. 字符级匹配的具体 miss 例子？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#29" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. 匹配用什么数据结构？复杂度？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#30-token-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. token 级匹配和 block 边界怎么对齐？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#31-unified-load_gated-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. unified / load_gated 打分与 5 个参数 ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        32. 热点前缀把一个实例打爆怎么办？ ◆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-stale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        33. 索引 stale 路由错了怎么兜底？ ◆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-pd-p-d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        34. PD 分离下亲和作用在 P 还是 D？ ◆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        35. 实例宕机后请求和索引怎么处理？ ◆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-mooncake" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        36. Mooncake 三组件 ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-store-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        37. Store 的 block 标识与一致性？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#38-transfer-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        38. Transfer Engine 为什么快？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#39" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        39. "存储换计算"什么时候亏？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#40-sglang-radixattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        40. 和 SGLang RadixAttention 能叠加吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#41-vllm-production-stack-rfc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        41. 给 vLLM production-stack 提 RFC 怎么设计？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        42. 多轮对话树的驱逐策略？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tool-call-reasoning-server-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        四、Tool Call / Reasoning 解析 + Server C++ 重构
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="四、Tool Call / Reasoning 解析 + Server C++ 重构">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#43-tool-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        43. tool call 解析做什么？多模型怎么适配？ ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-chunk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        44. 流式增量解析，标签切在 chunk 中间怎么办？ ◆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        45. 不闭合标签等异常怎么兜底？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#46" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        46. 重构的抽象设计与虚函数开销 ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#47-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        47. 删 1 万行怎么保证不引入回归？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#48" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        48. 对象所有权治理？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#49" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        49. 线程模型？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#50" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        50. 重来会选什么技术栈？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        五、推理系统基础
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="五、推理系统基础">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-70b-bf168k-batch-32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        51. 70B BF16、8K 上下文、batch 32 的显存账 ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-prefill-vs-decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        52. prefill vs decode 的本质区别及推导 ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-continuous-batching-pagedattention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        53. continuous batching 与 PagedAttention ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-ttfttpot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        54. TTFT/TPOT/吞吐的权衡旋钮 ◆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        55. 量化各路线的收益与风险 ◆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        56. 投机解码原理、无损性、失效场景 ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57-mtp-eagle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        57. MTP 和 EAGLE 的异同 ◆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#58-tpppdpep-moe-ep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        58. TP/PP/DP/EP 与 MoE 大 EP ◆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#59-mla-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        59. MLA 为什么省 KV？对亲和调度的影响 ○
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#60" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        60. 长上下文的瓶颈与各技术 ○
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        六、场景设计题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="六、场景设计题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-16-deepseek-v3-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        61. 16 卡部署 DeepSeek-V3 服务 Agent 产品 ★
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-p99-ttft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        62. P99 TTFT 周期性飙高的排查 ◆
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        63. 故障 5 秒恢复、请求不丢 ○
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        64. 成本减半、延迟不涨 ○
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        七、科研经历
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="七、科研经历">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#65-cta-net" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        65. CTA-Net 一句话 ○
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#66" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        66. 视觉科研转推理系统？ ○
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="01">题库 01 参考回答（面试者口吻 · 代码仓核实版）<a class="headerlink" href="#01" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>对应 <code>01-模拟面试问题清单.md</code> 的 66 题。
+所有涉及自己项目的回答均已对照 <code>MindIE-LLM/</code>、<code>MindIE-PyMotor/</code>、<code>vllm/</code> 仓库源码核实，标注了代码路径。
+格式：<strong>答</strong>＝可直接口述的回答要点；【补充讲解】＝薄弱点的原理展开；【⚠代码真相】＝代码与简历/常见说法不一致的地方，面试前必须对齐口径。</p>
+</blockquote>
+<hr />
+<h2 id="_1">一、开场与软性问题<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<h3 id="1-2">1. 自我介绍（2 分钟版）<a class="headerlink" href="#1-2" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"面试官好，我叫林炜，复旦计算机硕士，现在在华为昇腾计算产品线做大模型推理框架 MindIE 的开发，方向是推理服务系统。一年里我完整交付了三块工作：
+第一是**结构化输出**，从 0 到 1 独立交付，对标 vLLM——打通 JSON Schema → xgrammar 编译成下推自动机 → GrammarMatcher 逐 token 维护合法 token 集 → NPU 侧 bitmask 屏蔽 logits 的全链路，个人提交 5000+ 行，还做了 SHA-256 key 的 schema 编译缓存，并修复了约束解码叠加异步调度时 mask 与采样步错位的并发 bug。
+第二是**多实例 KV 亲和调度**：在 Motor 调度层把 tokenize 前置到 Coordinator，基于 Mooncake Conductor 的全局 KV 索引做 token 级最长前缀匹配，设计了 unified 加权打分和 load_gated 负载门控两种调度模式，客户场景实测 TTFT 降 70%、端到端时延降 50%。
+第三是 <strong>Tool Call / Reasoning 解析**和 **Server C++ 核心重构</strong>，覆盖 Qwen3、DeepSeek 等模型族，重构削减了约 1 万行冗余代码。
+我的特点是既有从 0 到 1 交付大特性的工程能力，也在调度、缓存这层积累了系统设计经验，希望在推理加速是核心业务的团队里继续深耕。"</p>
+<p>要点：先职位定位 → 三件事各一句"做了什么+量化结果" → 收尾说匹配点。控制在 90–120 秒，不要展开细节（细节留给追问）。</p>
+<h3 id="2-11">2. 入职 11 个月就出来看机会，为什么？<a class="headerlink" href="#2-11" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>（拉力 &gt; 推力，方向 &gt; 待遇）
+"主要是方向选择。我这一年做完结构化输出和 KV 亲和调度之后，确定了自己要在推理服务系统这个方向长期深耕。但我们团队的定位是配套昇腾硬件生态，自研引擎路线已经转向拥抱 vLLM，框架层深度优化的空间在收窄。与其等方向进一步收窄，不如在我刚完成两个完整特性交付、势能最好的时候，去一个把推理加速当核心竞争力的团队。我不是待不满一年的人——只要方向对，我会沉下来长期做。"</p>
+<p>禁忌：不说涨薪、不抱怨加班、不说"部门里大家都跳"。</p>
+<h3 id="3">3. "独立交付"具体独立到什么程度？<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"结构化输出这个特性，需求分析、技术选型（xgrammar vs guidance）、架构设计、编码、和采样器/调度器的联调、单元测试都是我一个人完成的，设计文档过了组内评审。不是说没有协作——采样器的 handler 接入点和 C++ 侧 replay buffer 的行为需要和负责 batch scheduler 的同事对齐接口，但特性本身的 owner 和全部代码提交是我。"</p>
+<h3 id="4">4. 三段工作哪个最能代表你的水平？<a class="headerlink" href="#4" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"KV 亲和调度最能代表系统设计能力——它要在前缀收益、负载均衡、索引时效性三者之间做权衡，我设计的双模式调度和五个配置化参数就是这个权衡的产品化；结构化输出最能代表工程交付能力——从 0 到 1、跨 Python/C++/NPU 采样全链路、还处理了异步并发的正确性问题。如果只能选一个，我选 KV 亲和，因为它的设计决策更多是我自己做的。"</p>
+<h3 id="5">5. 平时怎么跟踪前沿？<a class="headerlink" href="#5" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"三个渠道：vLLM/SGLang 的 release notes 和 RFC，重点看调度和 KV 管理相关的；arXiv 上推理加速的论文，比如最近 DeepSeek 的 DSpark（置信度调度的半自回归投机解码，生产环境比 MTP-1 快 57–85%）；还有 LMSYS、Mooncake 这些团队的博客。最近印象深的是 DSpark——它解决的正是投机解码在大 batch 下抢占算力反而降吞吐的问题，用置信度动态调整验证长度，这和我们做调度时'收益-代价动态权衡'的思路是一致的。"</p>
+<hr />
+<h2 id="_2">二、结构化输出<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="6">6. 端到端链路 ★<a class="headerlink" href="#6" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>（对照 <code>MindIE-LLM/mindie_llm/text_generator/plugins/structured_output/</code>）
+"分五步：
+① <strong>请求解析</strong>：OpenAI 兼容接口的 <code>response_format</code> 进来，<code>StructuredOutputRequest.from_response_format()</code> 解析出 <code>json_object</code> 或 <code>json_schema</code> 类型，提取 schema 字符串（structured_output_grammar.py）。
+② <strong>编译</strong>：<code>GrammarBackend</code> 持有 <code>xgr.GrammarCompiler</code>（用 <code>TokenizerInfo.from_huggingface</code> 从词表构建），调 <code>compile_json_schema()</code> 把 JSON Schema 转成 CFG 再编译成字节级下推自动机，产物是 <code>CompiledGrammar</code>。编译前先查缓存：SHA-256(schema) 做 key，命中直接复用（structured_output_manager.py）。
+③ <strong>实例化</strong>：每个请求从 <code>CompiledGrammar</code> 创建独立的 <code>GrammarMatcher</code>——编译结果可共享，运行态各自独立。
+④ <strong>逐步解码</strong>：每个 decode step，<code>fill_next_token_bitmask()</code> 根据当前自动机状态生成 <code>[batch, vocab/32]</code> 的 int32 bitmask（CPU），拷到 NPU 后在采样器的 handler 链里（selector 之前）把非法 token 的 logits 置 -inf；采样出的 token 再 <code>accept_token()</code> 推进自动机状态。
+⑤ <strong>终止</strong>：自动机到达接受状态后 <code>is_terminated</code>，后续 bitmask 置全 1 不再约束。"</p>
+<h3 id="7">7. 为什么能保证输出一定合法？ ★<a class="headerlink" href="#7" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"因为约束发生在采样之前而不是之后。自动机在每一步精确维护'从当前状态出发哪些 token 是合法的'这个集合，非法 token 的 logits 被置成 -inf，softmax 之后概率为 0，无论用贪心还是 top-p 采样都不可能选中。归纳地看：每一步输出都合法 + 自动机只有走到接受状态才允许终止（EOS 也受约束），所以整个序列一定是文法的合法句子。这是硬保证，和 prompt 工程的软引导本质不同。"</p>
+<h3 id="8-xgrammar-outlines-guidance-lm-format-enforcer">8. 为什么选 xgrammar？和 Outlines / Guidance / lm-format-enforcer 的本质区别？ ★<a class="headerlink" href="#8-xgrammar-outlines-guidance-lm-format-enforcer" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"核心差异在执行模型和 mask 生成开销：
+- <strong>Outlines</strong>：regex → FSM，token 级转移表。问题是 JSON 的递归嵌套要靠限制深度把 CFG 展开成 regex，状态爆炸；预处理慢。
+- <strong>lm-format-enforcer</strong>：运行时字符级检查，灵活但每步开销大。
+- <strong>Guidance</strong>：解释器式，支持 token healing，但当时和 vLLM 集成成熟度不如 xgrammar。
+- <strong>xgrammar</strong>：字节级 PDA 完整支持 CFG（递归不需要展开）；关键优化是把词表分成 context-independent（只看自动机局部位置就能判定，占 99%+，预计算进 adaptive token mask cache）和 context-dependent（需要栈状态，运行时用 persistent execution stack 检查），mask 生成 &lt;40µs；还和推理引擎 co-design，mask 生成能和 GPU 计算 overlap。vLLM 默认后端也是它，我们对标 vLLM 选它，同时在接口层留了多后端抽象。"</p>
+<h3 id="9-fsm-vs-pda">9. FSM vs PDA（已在题库内附标准答案）<a class="headerlink" href="#9-fsm-vs-pda" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"JSON 支持 object/array 任意深度嵌套，是上下文无关文法；纯 FSM 状态有限，表达不了不定深度的递归。xgrammar 的 PDA 结构是：CFG 每条规则内部是一个 FSM，规则之间的递归引用靠栈管理——遇到引用其他规则的转移就压栈进去，匹配完弹栈回来。运行时用 persistent execution stack（树状组织多路并行栈）做 O(1) 的状态分支和回滚。"</p>
+<p>【⚠代码真相】MindIE 仓里注释和文档写的"FSM"（如 structured_output.md 第 19 行"基于 FSM 的高性能 token 约束库"）是不严谨措辞——实际调用的 xgrammar 底层就是字节级 PDA（论文 arXiv 2411.15100 已核实）。如果面试官翻过仓库拿这个质疑，大方承认注释措辞不严谨即可，反而是展示底层理解的机会。</p>
+<h3 id="10-15-token">10. 15 万词表逐 token 判断，开销怎么做低？<a class="headerlink" href="#10-15-token" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"不是每步都全量检查。xgrammar 预处理时把 token 分两类：<strong>context-independent</strong>——合法性只取决于自动机的局部位置、与栈内容无关，这类占 99% 以上，编译期就为 PDA 每个位置预计算好存进 adaptive token mask cache（按位置的 token 分布自适应选存储格式：接受集/拒绝集/位图，内存从 160MB 压到 0.5MB 级）；<strong>context-dependent</strong>——需要看栈（比如嵌套深度影响 <code>]</code> <code>}</code> 是否合法），只剩不到 1%，运行时用 persistent execution stack 逐个检查，而且把待检 token 按字典序排序、利用公共前缀回滚复用，字符检查量降到 30%。所以每步 mask 生成能压到几十微秒。"</p>
+<h3 id="11-token">11. token 跨语法单元的边界问题？<a class="headerlink" href="#11-token" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"这正是 xgrammar 用**字节级** PDA 的原因。词表里的 token 和文法符号没有对齐关系——一个 token 可能是 <code>",\"na"</code>，横跨'逗号、引号、属性名开头'多个语法单元。xgrammar 的自动机边以字节为单位，判断一个 token 是否合法就是把它的字节序列在 PDA 上模拟走一遍，全部走通才算合法；这同时解决了 sub-UTF8 token（一个中文字符被切成多个字节 token）的问题。Outlines 那种 token 级 FSM 就需要在构建时做词表×状态的乘积展开，这是它预处理慢的根源。"</p>
+<h3 id="12-bitmask-cpunpu-overlap">12. bitmask 的 CPU→NPU 开销和 overlap？<a class="headerlink" href="#12-bitmask-cpunpu-overlap" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"bitmask 是 <code>[batch, vocab/32]</code> int32，128K 词表单请求就 16KB，batch 64 也才 1MB，H2D 拷贝本身微秒级。apply 那步我们当时用的是 PyTorch NPU 算子组合——<code>repeat_interleave</code> 把 32 位展开成 bool 掩码再 <code>masked_fill_(-inf)</code>（structured_output_bitmask.py），vLLM 用的是 xgrammar 自带的 fused kernel，这是我们可优化的点。overlap 方面：同步路径 bitmask 在 preprocess 生成；异步路径我特意把生成挪到 forward 线程里、NPU forward 之前做，这样它和主线程上一个 batch 的 postprocess 是流水并行的（plugin_manager.py L712-724）。"</p>
+<p>【⚠代码真相】apply 不是自研 kernel，是 torch NPU 算子组合，别在面试里说成"写了 NPU kernel"。可以主动说"用算子组合实现，fused kernel 是已识别的优化项"。</p>
+<h3 id="13-schema">13. 编译缓存设计；语义等价但字段顺序不同的 schema 会命中吗？ ★<a class="headerlink" href="#13-schema" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"key 是 <code>SHA-256(schema 字符串)</code> 前缀拼上输出类型（<code>_get_cache_key()</code>），value 存 <code>(原始 schema, CompiledGrammar)</code> 元组——存原文是为了哈希碰撞时做二次比对。<strong>字段顺序不同的语义等价 schema 不会命中</strong>，因为我们哈希的是原始字符串，没做规范化。这是当时权衡后的取舍：JSON 规范化（排序 key、去空白）本身有成本，而实际业务里同一个 schema 通常来自同一段客户端代码，字符串是逐字节一致的，规范化收益低。如果要优化，可以在解析后对 schema dict 做 canonical serialize 再哈希。"</p>
+<h3 id="14-schema">14. 容量怎么定？恶意用户每次发不同 schema 的最坏情况？<a class="headerlink" href="#14-schema" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"默认容量 100 条（<code>grammar_cache_size</code>，可配）。单条 CompiledGrammar 通常几百 KB 量级（adaptive mask cache 压缩后），100 条几十 MB，CPU 内存可控。最坏情况：每个请求都是新 schema，缓存全 miss，每次编译 100–200ms CPU——这不会打爆内存（容量有上限），但会把编译线程打满、拖高 TTFT，本质是个 CPU DoS 面。缓解手段：编译放独立线程池与请求处理隔离、对单租户的新 schema 编译做限流、以及给编译设超时上限。"</p>
+<p>【⚠代码真相】两个数字要对齐：代码默认容量是 <strong>100</strong>（不是简历口径的 128）；淘汰实际是 <strong>FIFO</strong>（普通 dict + <code>next(iter())</code> 删最早插入项，命中时没有 move-to-end，见 structured_output_manager.py L1054-1057），严格说不是 LRU。面试口径建议："容量默认 100、超限按插入序淘汰，等效于 FIFO；当时评估过 LRU，因为业务里 schema 集合稳定、复用模式接近全热，FIFO 和 LRU 收益差异小，就选了实现最简的。"——比被面试官翻代码抓包"你说 LRU 代码是 FIFO"体面得多。</p>
+<h3 id="15">15. 缓存是进程级还是全局的？<a class="headerlink" href="#15" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"进程级，每个引擎实例各自持有。多实例部署时同一 schema 会在每个实例各编译一次——因为编译产物和词表绑定（TokenizerInfo 参与编译），同模型实例间理论上可共享。没做分布式共享的原因：编译一次 100ms 级、命中后为零，单实例缓存已把成本摊薄到可忽略；引入分布式缓存要处理序列化、版本一致性（xgrammar 升级后产物不兼容），复杂度不划算。如果 schema 集合极大且冷启动频繁，可以考虑把编译产物随镜像预热或用 xgrammar 的序列化接口做共享存储。"</p>
+<h3 id="16-mask-bugstar">16. mask/采样步错位 bug（STAR） ★（已对照源码逐行核实）<a class="headerlink" href="#16-mask-bugstar" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"<strong>背景</strong>：结构化输出的正确性依赖一条严格时序：用 FSM 当前状态生成 mask → 采样 → 把采出的 token accept 回 FSM。MindIE 开异步调度后主线程（preprocess/postprocess）和 forward 线程（forward+sample）流水并行；另外 PD 分离下 C++ 调度器为每个约束请求维护一个 replay buffer（<code>prefillReplayTokenIds_</code>），D 节点要靠它重建 Python 侧的 grammar 状态。
+<strong>现象</strong>：异步 + 结构化输出场景输出非法 JSON、GrammarMatcher 报 token rejected；PD 场景还出现过一个症状很具体的 bug——D 节点首 token 多输出一个 <code>{</code>。
+<strong>定位与根因</strong>（三个错位）：
+① <strong>线程错位</strong>：bitmask 原来在主线程 preprocess 生成，但异步流水下主线程为 batch N+1 做 preprocess 时，batch N 还在 forward 线程里没 sample 完、FSM 没吃进它的 token——mask 基于过期状态生成，采出的 token 对旧状态合法、对真实状态非法，accept 时被 reject。
+② <strong>游标错位</strong>：C++ 的 <code>AddGeneratedToken</code> 是无条件 push 的（它不知道 Python FSM 是否接受），而 reject 的请求要到 postprocess 才被终止，异步滞后窗口里 rejected token 已进 buffer；如果重放切片用'FSM 接受数'做下标，一次 reject 后所有后续切片永久错位一格。
+③ <strong>顺序错位</strong>：decode 步如果先走 grammar 初始化再做状态同步，会先建出一个初始态 grammar，同步逻辑看到'已有 grammar'误判跳过回放——初始态 mask 只允许 <code>{</code>，于是多输出一个 <code>{</code>。
+<strong>修复</strong>：① 职责搬移——异步路径下 bitmask 生成移到 forward 线程 forward 之前、accept 在 sample 之后立即执行，主线程 preprocess/postprocess 各自跳过（plugin_manager.py L533/L568/L712-724/L755-759）；forward 线程单循环串行处理，同一请求相邻 step 的 mask 与 accept 严格有序，竞态消除。② 双游标——<code>num_tried_tokens</code>（含 rejected，对齐 C++ buffer 下标语义）做重放切片游标，<code>num_processed_tokens</code>（仅接受数）用于诊断（structured_output_grammar.py L159-189、sync_states_for_decode L809-838）。③ 顺序固化——decode 必须先 <code>sync_states_for_decode</code> 再初始化/生成 bitmask（structured_output_manager.py L650-658 有注释固化这个约束）；对齐失败不做部分回退，pop 掉 grammar 全量重建再重放。
+<strong>结果</strong>：异步高并发与 PD 场景不再复现；reject 仍有 fail-safe 兜底——<code>is_structured_accepted=False</code> 的序列在 output filter 里直接终止，保证任何残余异常都不会流出非法 JSON。"</p>
+<p><strong>【必备追问：既然 bitmask 保证每步合法，为什么还需要 replay？】</strong>
+"这是两个正交问题。bitmask 保证的是'<strong>FSM 状态正确的前提下**每步采样合法'；replay 解决的是'**FSM 状态本身缺失或过期</strong>'。GrammarMatcher 是 Python 进程内的内存对象，不随请求迁移：PD 分离下 P 节点采出首 token 后请求转到 D 节点，D 进程里没有这个请求的 matcher；重计算/抢占再调度同理。所以 C++ 侧维护已输出 token 前缀（P 侧 prefill token 初始化、decode 逐 token 追加），传给 Python 在 D 侧从初始态重建 matcher 并重放——重放的 token 都是当年被 mask 约束采出的合法 token，PDA 是确定性的，重放必达同一状态。replay 不是修非法 token 的，是跨进程重建状态的。"</p>
+<p><strong>【主动加分：对自己实现的批判性反思】</strong>（面试官若问"这块你满意吗"）
+"修复是对的，但我对实现有三点不满意：① 状态同步做成了每步 decode 的防御性核对，把 PD 首步、重计算、异步漂移、脏数据源四种场景揉在一个四路分支的函数里，可维护性差——更干净的设计是把'状态重建'做成显式事件，请求迁移/重计算时打标记，只在标记步重建，稳态零核对；② 重放全部失败后的 suffix 搜索兜底（尾部 512 窗口逐起点试）是启发式，理论上可能匹配到'从初始态解析得通但并非真实状态'的假后缀，且超窗即失败——fail-safe 但不 fail-correct；③ 重放数据有两个来源、兜底源可能混入 prompt 噪声，说明数据源契约没定义干净，靠下游防御硬扛。这些是我复盘出来的改进方向。"</p>
+<h3 id="17">17. 约束解码 × 投机解码？<a class="headerlink" href="#17" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"两个要点：draft 每个 speculative 位置也必须过 grammar mask——否则 target 验证可能接受非法 token 就破防了；grammar 真实状态只能跟着验证后采纳的 token 走。vLLM 是三段式：① 沿 draft <strong>临时**推进 grammar 填多位置 mask（假设 draft 全接受，非正式提交）；② **立刻</strong> <code>rollback</code> 回到真实态——必须在目标模型 verify <strong>之前</strong>；③ verify 后按真实采纳序列**正式 accept**。反例：Draft=<code>A,B,C</code>，验证后=<code>A,X</code>——若不先 rollback，grammar 假停在 <code>A→B→C</code>，真实应是 <code>A→X</code>；把 rollback 拖到 verify 后还会拉长假状态暴露窗口。勿说成「verify 后再从 k 回滚到 m」。xgrammar persistent execution stack + <code>max_rollback_tokens=k</code> 支撑试探回滚。我们 MindIE 当前是 <strong>Serving 入口硬互斥</strong>（<code>ValidateMtpConstraints</code>），插件层尚未打通多位置 mask/rollback；要支持就按上述三段式补齐，工作量可控但非现状。"</p>
+<h3 id="18-matcher">18. 请求被抢占再恢复，matcher 状态怎么办？<a class="headerlink" href="#18-matcher" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"matcher 是纯 CPU 状态，抢占不销毁它就没问题；但跨实例迁移或状态丢失时需要重建。我们的做法是重放：从 CompiledGrammar（缓存里还在）重新 create matcher，把已生成的 token 序列逐个 accept 回去——PDA 是确定性的，重放后状态和原来一致。长序列重放有开销，所以有个 suffix fallback 窗口（最近 512 token）做兜底。这里的坑就是 16 题说的游标对齐问题。"</p>
+<h3 id="19-ttfttpot">19. 打开结构化输出后 TTFT/TPOT 变差多少？<a class="headerlink" href="#19-ttfttpot" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"三块开销：首次编译 100–200ms 加在 TTFT 上，命中缓存后归零；每步 mask 生成几十微秒量级（xgrammar 的 cache 设计）加上 apply 的算子开销，摊到 TPOT 上是个位数百分比；异步路径下 mask 生成和流水 overlap 后进一步摊薄。坦白说当时交付压力下没有留下一组严格的开关对比数据，这是我复盘后在补的——现在我会说：任何自己交付的特性，性能画像数据必须常备。"（诚实 + 展示改进意识）</p>
+<h3 id="20">20. 约束解码会伤输出质量吗？<a class="headerlink" href="#20" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"会，两个机制：一是分布截断——模型想输出的高概率 token 被 mask 掉后，概率质量重新分配到合法 token 上，可能被迫走低概率路径，生成'语法合法但语义差'的内容；二是贪心逼迫——比如模型倾向先解释再给 JSON，约束强行让它第一个 token 就是 <code>{</code>，跳过了'思考'。缓解：schema 设计上给模型留自由字段（description/reasoning 字段放前面）；两阶段生成——先自由生成思考再约束生成 JSON（reasoning 模型天然适配）；OpenAI 的做法也是配合训练让模型本身擅长 schema 跟随，约束只兜底。"</p>
+<p><strong>追问：reasoning 模型叠加结构化输出，vLLM 和 MindIE 的做法有什么区别？为什么？</strong></p>
+<p><strong>答：</strong>
+"这正好是上面说的'两阶段生成'在两个框架里的落地差异，核心区别是**要不要在思考阶段就上 bitmask**。</p>
+<p><strong>vLLM 是显式做了 reasoning 感知的门控</strong>（<code>v1/structured_output/__init__.py</code> 的 <code>StructuredOutputManager</code>）：持有一个按 <code>--reasoning-parser</code> 配置实例化的 <code>reasoner</code>（DeepSeek-R1/Qwen3 等各自的 <code>&lt;think&gt;</code> 边界识别器），加一个全局开关 <code>enable_in_reasoning</code>（默认 False）。两个关键方法：<code>should_fill_bitmask</code>——reasoner 存在且 <code>enable_in_reasoning=False</code> 且该请求还没检测到 <code>reasoning_ended</code> 时，直接跳过填 bitmask，思考阶段等价于自由生成；<code>should_advance</code>——同理跳过 FSM 状态推进，思考内容不消耗、也不污染 grammar 的自动机状态。一旦 <code>reasoner.is_reasoning_end_streaming()</code> 检测到 <code>&lt;/think&gt;</code>，才把 <code>reasoning_ended</code> 置 True，从下一 token 开始正常约束。边界处理很细：投机解码一个 decode window 里可能同时跨越'思考中→思考结束'，代码里专门在窗口内逐 token 探测边界、命中后当场切换 <code>apply_bitmask</code>，并用 <code>rollback</code> 撤销边界前多算的 FSM 状态前进，保证不会把思维链内容错误地喂给 grammar。</p>
+<p><strong>MindIE 目前没有这层门控</strong>（<code>structured_output_manager.py</code>/<code>structured_output_grammar.py</code>）：<code>grammar_init</code> 在请求进来时就编译并绑定 grammar，<code>build_and_assign_structured_guided_bitmask</code> 对之后每个 decode step 无条件填 bitmask、无条件 <code>accept_tokens</code> 推进 FSM——从第一个 token（包括思考过程）起就被约束。仓库里确实有 <code>CommonReasoningParser</code>（<code>runtime/models/base/reasoning_parser.py</code>），但它只用于**输出侧**按 <code>&lt;think&gt;</code>/<code>&lt;/think&gt;</code> token id 切出 <code>reasoning_content</code> 给前端展示，跟结构化输出模块之间没有调用关系，两条链路互不感知。所以 reasoning 模型（如 DeepSeek-R1）叠加 <code>json_schema</code> 时，思考内容也会被按 schema 硬约束——大概率直接崩（<code>&lt;think&gt;</code> 开头就不是合法 JSON 起始字符），这是文档里明确写的'不支持与 MTP/投机推理叠加'之外，一个代码层面客观存在但没写进文档的能力缺口。</p>
+<p><strong>为什么会有这个差距</strong>：一是 vLLM 的 reasoning 生态成熟更早，<code>--reasoning-parser</code> 是通用配置项，思考+结构化输出组合的诉求更早暴露、有动力去补；二是这件事工程量不小——要在两处推进逻辑里插入按 token 增量探测 <code>&lt;/think&gt;</code> 边界，还要处理投机解码窗口内跨边界的 corner case（上面的 rollback），不是一两行改动；三是 MindIE 的结构化输出是后加的独立 plugin，优先做了基础可用性（PD 分离、prefix cache 兼容）和强约束互斥校验（MTP），reasoning 场景当时没排上优先级。面试如果被问到，我会坦率说这是我知道的一处与 vLLM 对齐的差距，实践中的规避是业务侧约定：只在 <code>&lt;/think&gt;</code> 后的正文部分传 <code>response_format</code>，或者干脆对 reasoning 模型关闭结构化输出。"</p>
+<h3 id="21-sql">21. 输出 SQL 方言还能用这套吗？<a class="headerlink" href="#21-sql" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"能。xgrammar 支持任意 EBNF 上下文无关文法（<code>compile_grammar()</code> 接口，vLLM 的 <code>guided_grammar</code> 就走这个），SQL 语法本身是 CFG，写一份该方言的 EBNF 就能编译。真正的难点在**上下文相关约束**：表名列名必须是库里真实存在的——这超出 CFG 表达能力。工程解法：把合法表名/列名动态注入 grammar（枚举成终结符，代价是 grammar 随 schema 变化、缓存命中率下降），或者 CFG 只管语法、语义靠生成后校验+重试。"</p>
+<h3 id="22-openai-structured-outputs">22. OpenAI structured outputs 背后的异同？<a class="headerlink" href="#22-openai-structured-outputs" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"公开信息看，机制同源：也是 constrained decoding，schema 首次使用有明显的额外延迟、之后消失——和我们'编译+缓存'的行为特征完全一致。差异在两点：一是他们配合了训练，模型本身对 schema 跟随做过对齐，约束更多是兜底而不是硬矫正，输出质量更好；二是工程上他们按 (model, schema) 维度做全局缓存服务。这印证了 20 题说的方向：约束解码的终态是'训练管质量、约束管保证'。"</p>
+<h3 id="23-guidance-token-healing">23. guidance 的 token healing？<a class="headerlink" href="#23-guidance-token-healing" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"token healing 解决 prompt 边界的 tokenize 偏置问题：比如 prompt 以 <code>"http:</code> 结尾，自然续写应该是 <code>//</code>，但 tokenizer 里 <code>://</code> 是一个 token——prompt 尾部已经把 <code>:</code> 单独成 token，模型就永远选不到 <code>://</code>，生成质量下降。guidance 的做法是把 prompt 最后一个 token 回退（backup），让模型重新生成，但约束生成结果必须以被回退的文本为前缀——既修复了边界又不改变语义。这在拼接式模板（prompt 里嵌变量）场景特别重要。"</p>
+<hr />
+<h2 id="kv-motor-mooncake">三、KV 亲和性调度（Motor + Mooncake）<a class="headerlink" href="#kv-motor-mooncake" title="Permanent link">&para;</a></h2>
+<h3 id="24">24. 白板架构题 ★<a class="headerlink" href="#24" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>（对照 <code>MindIE-PyMotor/motor/coordinator/</code>）
+"请求进入 Coordinator（FastAPI 的 InferenceServer）后走五步：
+① <strong>路由分发</strong>：<code>select_router_class</code> 按集群形态选 UnifiedPDRouter（PD 分离）或 PDHybridRouter（混部）。
+② <strong>tokenize 前置</strong>：KvCacheAffinityPolicy 里的 TokenizerManager——用和下层引擎同一个 model_path 加载 AutoTokenizer，messages 走 <code>apply_chat_template</code>（连 tools 一起模板化），保证 token 序列和引擎 prefill 看到的一致。结果缓存在请求上，只算一次。实测 4K token 约 6ms。
+③ <strong>前缀查询</strong>：拿 token_ids POST 到 KV Conductor 的 <code>/query</code>（带 block_size=128，超时 200ms），Conductor 基于全局 KV 索引返回每个实例（按 DP rank）的最长匹配 token 数。快路径：prompt 不足一个 block 直接跳过查询。索引数据源是各引擎实例通过 kv-events（ZMQ）上报的 KV block 增删事件。
+④ <strong>打分选实例</strong>：unified 或 load_gated 模式（见 31 题），worker 先选出 Top3 候选，再由 SchedulerServer 用最新负载做全局仲裁，防止多 worker 并发下基于过期负载扎堆。
+⑤ <strong>分发执行</strong>：PD 分离下亲和调度只作用于 P 实例（D 实例不注册 Conductor、走负载均衡），P 算完 KV 经传输给 D。任何一步失败（Conductor 超时、tokenize 失败）都降级回纯负载均衡，保证可用性。"</p>
+<h3 id="25">25. 为什么要做？收益上限由什么决定？ ★<a class="headerlink" href="#25" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"不做的损失是重复 prefill：多实例部署下，负载均衡随机把同前缀请求打到不同实例，每个实例都要对同一段前缀算一遍完整 attention，浪费算力还拉高 TTFT。收益上限 = 前缀重复率 × 前缀占输入的比例 × prefill 在端到端时延中的占比。我们客户场景是 4K 上下文、高重复率的（长 system prompt + 模板化输入），三个因子都高，所以能做到 TTFT -70%；反过来说如果请求都是独立短 prompt，这个特性收益趋近于零、只剩 6ms tokenize 开销，所以它是配置化开关的。"</p>
+<h3 id="26-ttft-70">26. TTFT -70% 怎么测的？低重复率会更差吗？ ★<a class="headerlink" href="#26-ttft-70" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"客户真实流量回放：4K 上下文、前缀重复率高的场景，对比开/关亲和调度的 TTFT 分布。收益曲线随重复率单调：重复率降到 20% 时命中收益大幅缩水，但成本是固定小额的——tokenize 6ms 串行开销 + Conductor 查询（200ms 超时上限，正常毫秒级）+ 未命中时等价于负载均衡。所以最坏情况是'白花 6ms'，不会灾难性变差；真正要防的是 Conductor 慢导致查询顶到超时，我们做了超时降级。"</p>
+<h3 id="27-tokenize">27. tokenize 一致性怎么保证？ ◆<a class="headerlink" href="#27-tokenize" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"三个层面：① 同源加载——TokenizerManager 从配置的 model_path 用 <code>AutoTokenizer.from_pretrained</code> 加载，和下层 vLLM 实例用的是同一份 tokenizer 文件；② 模板一致——messages 请求走 <code>apply_chat_template</code> 且把 tools 一起传入，这样 system prompt、tool 定义注入后的 token 序列和引擎侧渲染结果一致；③ 部署约束——模型版本升级时 Coordinator 和引擎的 model_path 必须同步更新，这靠部署流水线保证。多模态输入当时没覆盖（image token 的展开依赖引擎侧处理），是已知边界。"</p>
+<p>【⚠代码真相】tokenizer 是从**本地 model_path 配置加载**的（kv_cache_affinity.py L458-489），不是运行时从引擎动态拉取。上一轮面试你答的"拉起实例时动态读上来"与代码不符，本轮对齐为"同源配置加载 + 部署时同步"。</p>
+<h3 id="28-miss">28. 字符级匹配的具体 miss 例子？<a class="headerlink" href="#28-miss" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"举个真实例子：两个请求 user 内容完全相同，但一个带 tools 一个不带。chat template 渲染后，字符串的公共前缀截止在 system prompt 结尾，字符级匹配会报一段较长的公共前缀；但 tokenizer 是 BPE 贪心合并的——tools 注入改变了后文，边界处的合并方式跟着变，真实 token 序列的公共前缀比字符前缀短（甚至在边界处完全岔开）。字符级匹配高估了命中，把请求路由过去后实际复用不到那么多 block，白白牺牲了负载均衡。vLLM production-stack router 的字符级 radix tree（router 仓 <code>src/tree.rs</code>，DashMap<char, NodeRef>）就有这个问题，这是我们做 token 级匹配的直接动因。"</p>
+<h3 id="29">29. 匹配用什么数据结构？复杂度？<a class="headerlink" href="#29" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"匹配不在 Motor 本地做——Motor 把 token_ids 发给 KV Conductor，Conductor 维护全局索引：引擎实例通过 kv-events 上报 block 级（block_size=128）的增删事件，索引按前缀链哈希组织（每个 block 的标识包含其前缀链的哈希，等价于一棵哈希化的前缀树）。查询是沿 block 链逐级探查，复杂度 O(prompt 长度 / block_size)。返回的是每个 endpoint（instance + dp_rank 粒度）的匹配 token 数。规模上：实例数 × 每实例 KV block 数，单集群十几个实例、每实例数万 block，内存和查询延迟都是毫秒级可控的。"</p>
+<h3 id="30-token-block">30. token 级匹配和 block 边界怎么对齐？<a class="headerlink" href="#30-token-block" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"引擎的 prefix cache 是 block 粒度的（我们 block_size 配 128，vLLM 默认 16），复用只能发生在完整 block 上——匹配 4097 个 token、block 128 的话，实际可复用 floor(4097/128)=32 个 block 即 4096 个 token。Conductor 的索引本身就是 block 事件构建的，返回的匹配数天然是 block 对齐的，所以我们的打分输入不会高估。这也是 token 级匹配优于字符级的另一个点：字符数没法换算成 block 数，token 数可以精确对齐。"</p>
+<h3 id="31-unified-load_gated-5">31. unified / load_gated 打分与 5 个参数 ★<a class="headerlink" href="#31-unified-load_gated-5" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>（对照 kv_cache_affinity.py、coordinator.py L131-146）
+"<strong>unified</strong>（默认）：每个候选实例算一个融合分，越低越好：
+<code>score = prefill_load_scale × max(0, isl − overlap_credit × matched_tokens) + load_weight × load_cost</code>
+第一项是'路由过去还要付出的 prefill 代价'（输入长度减去可复用前缀，overlap_credit 是复用折扣系数），第二项是当前负载（load_cost = active_tokens + 0.3 × active_kv_cache）。两项都在 token 量纲上，直接可加。它允许'前缀一般但负载极低'的实例胜出，适合负载波动大的场景。
+<strong>load_gated</strong>：两阶段硬门控——先按负载升序取 TopN（load_gate_topn，默认 2），只在这 N 个里按最长前缀排序，平局再比负载。负载有硬上界、亲和只做门控内 tie-break，适合怕热点的场景；topn=1 时退化为纯负载均衡。
+<strong>5 个参数</strong>：<code>kv_affinity_mode</code>（模式选择）、<code>load_weight</code>（unified 负载权重，0=纯前缀）、<code>overlap_credit</code>（前缀折扣）、<code>prefill_load_scale</code>（prefill 代价权重）、<code>load_gate_topn</code>（门控宽度）。另外 worker 提议候选数 Top3 是内部常量。两种模式共享同一套 Conductor 查询，只是决策函数不同。"</p>
+<h3 id="32">32. 热点前缀把一个实例打爆怎么办？ ◆<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"三道防线：① load_gated 模式就是为此设计的——负载门控在先，热点实例一旦负载排出 TopN 就自动被排除，亲和让位；② unified 模式下 load_weight 随负载线性起作用，实例越忙分越差，形成负反馈；③ 全局仲裁——worker 基于的负载快照可能过期，SchedulerServer 在最终决策时用 fresh load 重算，避免一个调度周期内多个 worker 同时把请求怼到同一实例。更彻底的解法是热点 block 主动复制到多实例（Mooncake Conductor 论文里有这个机制），我们当时没做，是演进方向。"</p>
+<h3 id="33-stale">33. 索引 stale 路由错了怎么兜底？ ◆<a class="headerlink" href="#33-stale" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"先说代价：路由错了**不影响正确性**，只影响性能——引擎发现 block 不在本地就正常 prefill 重算，等价于一次 cache miss。这是这个设计的安全底座：亲和调度是纯性能优化，任何失效都优雅降级。stale 的来源有两个：kv-events 上报延迟（毫秒级）和 block 被引擎驱逐但索引未及时删除。兜底：查询 200ms 超时直接 fallback 负载均衡；打分时 matched_tokens 做了 <code>min(命中值, isl)</code> 的钳制防脏数据；驱逐导致的高估靠 overlap_credit 参数打折——它本质上就是对索引可信度的先验折扣。"</p>
+<h3 id="34-pd-p-d">34. PD 分离下亲和作用在 P 还是 D？ ◆<a class="headerlink" href="#34-pd-p-d" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"只作用在 P（和混部的 U 角色）——代码里 <code>_KVA_SELECT_ROLES = {ROLE_P, ROLE_U}</code>，D 实例根本不注册到 Conductor。原因：prefix cache 复用省的是 prefill 计算，这发生在 P 实例；D 实例的 KV 是从 P 传输过来的，它没有'可复用的历史前缀'概念，按负载均衡选就行。UnifiedPDRouter 里每次请求独立做两次选择：P 走亲和、D 走负载，D 分配失败还会回滚已占的 P 配额。"</p>
+<h3 id="35">35. 实例宕机后请求和索引怎么处理？ ◆<a class="headerlink" href="#35" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"三条线：① <strong>调度隔离</strong>——实例 DEL 事件触发 Conductor <code>/unregister</code>，同时 InstanceManager 把它从调度池摘除，新请求不再路由过去；② <strong>在途请求</strong>——Coordinator 有 Rescheduler（reschedule_enabled 默认开），流式传输中断的请求会把 prompt token 和已生成 token 合并成 token 数组，改写成 completions 请求重新调度到健康实例，用户侧表现为流暂停后继续而不是报错；③ <strong>索引清理</strong>——Coordinator 只负责 unregister 实例级注册，block 级索引依赖引擎停止上报 kv-events 后由 Conductor 侧生命周期管理，短暂 stale 期内路由错了也只是 cache miss（33 题的安全底座再次生效）。"</p>
+<h3 id="36-mooncake">36. Mooncake 三组件 ★<a class="headerlink" href="#36-mooncake" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"Mooncake 是 Kimi 的推理平台，FAST'25 最佳论文，核心思想是 KVCache 为中心的分离式架构——用集群里闲置的存储资源换计算。三个组件：
+① <strong>Transfer Engine</strong>：高性能传输层，统一抽象 RDMA/TCP/NVMe-oF，拓扑感知多网卡选路，GPU 显存/DRAM/SSD 间零拷贝搬 KV；
+② <strong>Mooncake Store</strong>：把闲置 CPU/DRAM/SSD 组成分布式 KV 池，对象级 Put/Get、副本与租约管理、驱逐策略；
+③ <strong>Conductor</strong>：全局调度器/元数据层，跟踪 KV block 在各节点的分布（前缀链哈希标识），回答'哪个实例有最长可复用前缀'，还能做热点复制决策。
+我们用的是 Conductor 这层元数据能力——Motor 通过 HTTP 接口 register/query，引擎通过 kv-events 喂索引；Store 和 Transfer Engine 在我们的 PD 分离 KV 传输链路里由引擎侧 connector 使用。"</p>
+<h3 id="37-store-block">37. Store 的 block 标识与一致性？<a class="headerlink" href="#37-store-block" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"block 用前缀链哈希标识：每个 block 的 key 由'自身内容 + 前缀链哈希'递推算出，相同前缀序列在任何节点算出的 key 一致，这让全局索引不需要中心化分配 ID。一致性上 Store 是 Master/Client 架构：Master 管元数据和副本状态机（Replica 有 PROCESSING/COMPLETE 等状态），Get 只读 COMPLETE 副本；写入走租约，超时未完成的副本会被回收。它提供的是最终一致 + 读已提交级别的保证——对 KV cache 这种'丢了可重算'的数据，这个级别刚好，不需要强一致的开销。"</p>
+<h3 id="38-transfer-engine">38. Transfer Engine 为什么快？<a class="headerlink" href="#38-transfer-engine" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"四点：① RDMA 零拷贝——绕过内核协议栈，GPU Direct RDMA 下显存到远端显存不过 CPU；② 拓扑感知选路——识别 NIC 和 GPU 的 PCIe 亲和，选最短路径的网卡，多网卡聚合带宽；③ 批量传输——BatchTransfer 接口把多个 block 合并提交，摊薄提交开销；④ 分段与并行——大对象切 segment 多路并行传。端点故障有重试和路径切换。效果是 KV 传输能打满网卡线速，比走 TCP 的方案高一个量级。"</p>
+<h3 id="39">39. "存储换计算"什么时候亏？<a class="headerlink" href="#39" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"临界点是'取回时延 vs 重算时延'：重算时延 ≈ prefix_tokens × 每 token prefill 时间（算力决定）；取回时延 ≈ KV 字节数 / 有效带宽 + 固定开销。KV 字节数 = tokens × layers × kv_heads × head_dim × 2(KV) × dtype 字节——GQA 下每 token 通常几百 KB。短前缀时固定开销占主导，重算更快，所以要设最小命中长度门槛；带宽差（跨机房、走 TCP）或 GPU 很空闲时也亏。MLA 模型每 token KV 小一个数量级，传输侧收益显著变好——这也是架构和系统协同演化的例子。"</p>
+<h3 id="40-sglang-radixattention">40. 和 SGLang RadixAttention 能叠加吗？<a class="headerlink" href="#40-sglang-radixattention" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"能，而且是互补的两层：RadixAttention 在**单实例内**用 radix tree 管理前缀复用（字符/token 树 + lock_ref 引用计数 + LRU 驱逐），我们在**多实例间**做路由亲和——把请求送到 radix tree 命中率最高的那个实例，实例内的复用交给引擎自己。叠加后全局命中率 = 路由命中 × 实例内命中。可互相借鉴的点：SGLang 调度器的 LPM（longest prefix match）优先策略、可插拔驱逐策略；反过来我们的全局索引可以给单实例驱逐提供'别的实例有没有副本'的信号，驱逐有副本的 block 更安全。"</p>
+<h3 id="41-vllm-production-stack-rfc">41. 给 vLLM production-stack 提 RFC 怎么设计？<a class="headerlink" href="#41-vllm-production-stack-rfc" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"现有 kvaware/prefixaware 路由是字符级 radix tree（router 仓 tree.rs），差距就是 28 题说的字符-token 不一致。RFC 我会分三块：① tokenize 服务化——router 侧引入与引擎同源的 tokenizer（HF fast tokenizer，Rust 生态现成），对 messages 请求复用引擎的 chat template 渲染；② 索引订阅——vLLM 已有 KV events 机制（enable_kv_cache_events），router 订阅 ZMQ 事件流构建 token/block 级全局索引，替代现在的'请求历史近似'；③ 打分开放——把亲和与负载的融合公式做成策略接口，默认提供 unified/load_gated 两种。卖点用我们的生产数据：token 级匹配消除字符级高估，高重复场景 TTFT 显著改善。"</p>
+<h3 id="42">42. 多轮对话树的驱逐策略？<a class="headerlink" href="#42" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"对话树的访问模式是'树干热、树叶冷'：公共 system prompt 和早期轮次被所有分支共享，越深的分支越专属。纯 LRU 会在容量压力下把树干和树叶一视同仁地按时间驱逐，但树干的复用价值远高于树叶。更好的策略：按引用计数/子树活跃度加权——SGLang 的级联驱逐就是从叶子往上驱逐、被引用的中间节点不能先于子节点被逐；再叠加 LFU 或优先级（system prompt 类 block 标高优先级）。分层存储也是解法：树干 block 下沉到 DRAM/SSD（HiCache 三层），显存只留活跃分支。"</p>
+<hr />
+<h2 id="tool-call-reasoning-server-c">四、Tool Call / Reasoning 解析 + Server C++ 重构<a class="headerlink" href="#tool-call-reasoning-server-c" title="Permanent link">&para;</a></h2>
+<h3 id="43-tool-call">43. tool call 解析做什么？多模型怎么适配？ ★<a class="headerlink" href="#43-tool-call" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>（对照 <code>MindIE-LLM/mindie_llm/runtime/models/</code>）
+"模型输出的 tool call 是模型自定义格式的文本——Qwen3 是 XML 风格的 <code>&lt;tool_call&gt;{json}&lt;/tool_call&gt;</code>（有专用 token id 151657/151658），DeepSeek 是自家的 DSML 格式——框架要把它们解析成 OpenAI 协议的 <code>tool_calls</code> 结构化字段返回。适配架构是注册表模式：<code>ToolCallsProcessor</code> 基类定义流式/非流式解析接口，各模型子类用 <code>@register_module</code> 注册到 <code>ToolCallsProcessorManager</code>；每个模型的 Router 声明自己用哪个 parser（如 qwen3_moe → "qwen3"），运行时按模型名实例化。新增模型只需要写一个子类 + 一行注册，这就是抽象的价值。Reasoning 解析同理——<code>CommonReasoningParser</code> 按 <code>&lt;think&gt;</code>/<code>&lt;/think&gt;</code> 的 token id 切分思考与正文。"</p>
+<h3 id="44-chunk">44. 流式增量解析，标签切在 chunk 中间怎么办？ ◆<a class="headerlink" href="#44-chunk" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"核心是把解析器做成跨 chunk 的状态机而不是无状态的正则。我们维护三类状态：当前解析阶段（正文/工具名已发/参数流式中，<code>current_tool_name_sent</code>、<code>current_tool_id</code> 等字段）、未消费的 token 缓冲、以及按 token id（而非字符串）识别的标签边界。标签 token 未完整到达时，缓冲住不下发；一旦确认进入 tool call，工具名先发一个增量帧，参数部分逐 chunk 发 arguments 增量。参数 JSON 在流式中永远是残缺的，我们有个 json_completor 按填充模式补全括号引号，保证每个增量帧拼起来是前缀一致的。用 token id 判边界比字符串匹配鲁棒——不会被内容里恰好出现的 <code>&lt;tool_call&gt;</code> 字样骗到。"</p>
+<h3 id="45">45. 不闭合标签等异常怎么兜底？<a class="headerlink" href="#45" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"边界情况清单：<code>&lt;think&gt;</code> 没有闭合就 EOS——按'从 start 到结尾都是 reasoning'处理，正文为空；tool call 标签开了没闭——已发出去的增量帧无法收回，结束时把 arguments 用 completor 补全成合法 JSON 并正常收尾，同时打点记录；嵌套/交错（think 里出现 tool call 字样）——因为用 token id 判界，内容里的字面量不会触发状态转移；纯乱序输出——解析失败降级为普通 content 返回，不阻塞请求。原则是：解析器永远不能因为模型输出不规范而抛异常打断流。"</p>
+<h3 id="46">46. 重构的抽象设计与虚函数开销 ★<a class="headerlink" href="#46" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"重复的成因：每接一个新 endpoint（completions/chat/embedding…），历史上都是复制一份完整的'参数校验→请求构造→提交推理→流式回写'链路再改差异点，久而久之十几份 90% 相同的代码。我的做法是模板方法模式：抽象基类固化骨架流程（生命周期钩子：validate/build/submit/on_token/on_finish），差异点做成虚函数由子类覆写，公共逻辑只留一份，净删约 1 万行。虚函数开销的问题我评估过：调用发生在请求级别（每请求几次到每 token 一次），一次虚调用纳秒级，对比毫秒级的推理步长完全不可见；真正的热路径（采样、attention）不在这层。担心 per-token 路径的话还可以用 CRTP 静态多态，但实测没必要，可读性优先。"</p>
+<h3 id="47-1">47. 删 1 万行怎么保证不引入回归？<a class="headerlink" href="#47-1" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"四层：① 先补特征化测试（characterization test）——重构前给每个 endpoint 录制真实请求/响应对作为 golden，重构后逐字节比对，流式的比对帧序列；② 小步提交——一次只迁移一个 endpoint 到新基类，每步全量跑测试，出问题二分定位成本低；③ 接口冻结——重构期间对外 API 和 wire format 不动，纯内部结构调整；④ 灰度验证——先在测试集群跑全量业务回归再合入主干。事后看，最有价值的是第一步：golden 测试让'行为没变'从口头承诺变成机器可验证的事实。"</p>
+<h3 id="48">48. 对象所有权治理？<a class="headerlink" href="#48" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"请求生命周期的核心对象是 request context——它要穿越 HTTP 线程、调度队列、推理回调、流式回写多个执行上下文，历史代码里 shared_ptr 满天飞、谁都持有谁都不负责。治理原则：① 明确唯一 owner——context 由请求管理器 unique_ptr 持有，生命周期与请求严格绑定；② 跨线程传递用 shared_ptr 但收敛到'队列持有 + 回调临时持有'两处，其余场景传裸引用或 weak_ptr；③ 回调链里的 weak_ptr 解决'请求已取消但回调还在飞'的悬挂问题——lock 失败就丢弃；④ 用 RAII 把资源释放（KV 配额、连接）挂在 context 析构上，杜绝手工释放遗漏。"</p>
+<h3 id="49">49. 线程模型？<a class="headerlink" href="#49" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"典型三段式：① HTTP/IO 线程池——收请求、参数校验、tokenize，把 request context 投递到调度队列后立即返回，不阻塞；② batch 调度线程——从队列组 batch，走 continuous batching 循环提交给 NPU executor；异步调度模式下 forward 和 pre/postprocess 分属两个线程流水（这就是 16 题那个 bug 的舞台）；③ 回写——每步采样结果通过回调/无锁队列送回对应请求的流式通道，由 IO 线程写 SSE。关键设计点：队列是线程边界，跨界只传 context 指针不传大数据；流式回压（客户端慢）不能反压到调度线程，中间加有界缓冲。"</p>
+<h3 id="50">50. 重来会选什么技术栈？<a class="headerlink" href="#50" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"我会选 vLLM 式的分层：服务层 Python（FastAPI）+ 核心层 C++/CUDA 只做算子和关键路径。MindIE 全 C++ 的教训是：HTTP 服务、协议解析这些非热路径用 C++ 开发效率低、内存 bug 多、交付要编译出包，而这层根本不是瓶颈。如果服务层也要求高性能（超高 QPS 网关），Rust 是更好的选择——vLLM 自己的 router 就是 Rust。原则：性能敏感度决定语言，热路径下沉、非热路径要开发效率。"</p>
+<hr />
+<h2 id="_3">五、推理系统基础<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="51-70b-bf168k-batch-32">51. 70B BF16、8K 上下文、batch 32 的显存账 ★<a class="headerlink" href="#51-70b-bf168k-batch-32" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"权重：70B × 2 字节 = <strong>140GB</strong>。
+KV cache 按 Llama-70B 规格：80 层、GQA 8 个 KV 头、head_dim 128——每 token = 2(K+V) × 2 字节 × 80 层 × 8 头 × 128 = <strong>320KB</strong>。
+8K × 32 = 262K token，KV 总量 ≈ 262144 × 320KB ≈ <strong>80GB</strong>。
+合计 220GB+ 再加激活和碎片，单卡 80GB 装不下：TP8 后每卡权重 17.5GB + KV 10GB + 开销，从容；TP4 每卡 35 + 20，也可行。要点：① GQA 是前提——MHA 64 头的话 KV 直接 ×8 到 640GB；② KV 随 batch × 序列长线性涨，是长上下文高并发的第一显存瓶颈，这也是 PagedAttention、KV 量化、MLA 存在的理由。"</p>
+<p>【补充讲解】KV 公式：<code>2 × dtype字节 × layers × kv_heads × head_dim × tokens</code>。记住三个锚点：Llama-70B GQA ≈ 320KB/token；Qwen-7B ≈ 60KB/token 量级；DeepSeek MLA（latent 512+64，61 层）≈ 70KB/token——比同规模 GQA 小近一个数量级。</p>
+<h3 id="52-prefill-vs-decode">52. prefill vs decode 的本质区别及推导 ★<a class="headerlink" href="#52-prefill-vs-decode" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"prefill 一次前向处理全部 prompt token，GEMM 的 M 维大，算术强度高，<strong>compute-bound</strong>；decode 每步只处理 1 个 token（每请求），GEMM 退化成 GEMV，每步都要把全部权重从 HBM 读一遍却只做一点计算，<strong>memory-bound</strong>，瓶颈是带宽。由此推导出一系列系统设计：① <strong>PD 分离</strong>——两种负载资源画像不同，混跑互相干扰（prefill 长时间占住 GPU 造成 decode 卡顿），分开部署各自用最优并行度和 batch 策略；② <strong>chunked prefill</strong>——不分离时把长 prefill 切块和 decode 混批，限制单步计算量以稳住 TBT；③ <strong>投机解码</strong>——decode 带宽瓶颈下算力闲置，用小模型出草稿、大模型一次验证多个 token，本质是拿闲置算力换延迟；④ <strong>continuous batching</strong>——decode 阶段靠加大 batch 提升算术强度来逼近 compute 屋顶。一句话：这个二分是几乎所有推理系统设计的第一性原理。"</p>
+<h3 id="53-continuous-batching-pagedattention">53. continuous batching 与 PagedAttention ★<a class="headerlink" href="#53-continuous-batching-pagedattention" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"static batching 是整 batch 进整 batch 出——短请求算完了要陪长请求等，GPU 空转。continuous batching 以步为粒度调度：每个 decode step 结束都可以移出完成的请求、插入新请求，batch 成员动态变化，吞吐提升数倍。它的前提是 KV 显存管理足够灵活——这就是 PagedAttention：把每个请求的 KV cache 从'连续大块预分配'改成'按 block（如 16 token）分页、逻辑连续物理离散'，配 block table 寻址。解决了两个问题：预分配造成的内部碎片（按 max_len 分配但实际用不满）和连续分配造成的外部碎片，显存利用率从 20-40% 提到 90%+，间接放大了可用 batch。副产品：block 级共享让 prefix caching、beam search 共享成为可能。"</p>
+<h3 id="54-ttfttpot">54. TTFT/TPOT/吞吐的权衡旋钮 ◆<a class="headerlink" href="#54-ttfttpot" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"本质是一条 batch 大小的权衡曲线：batch 越大吞吐越高，但单步时间变长、TPOT 变差；prefill 插队越激进 TTFT 越好、decode 越受干扰。具体旋钮：<code>max-num-seqs</code> 和 <code>max-num-batched-tokens</code> 控制并发与单步 token 预算，是吞吐-延迟主旋钮；chunked prefill 的 chunk size 决定 prefill 对 TBT 的干扰上限；调度优先级（prefill 优先 vs decode 优先）直接分配 TTFT 和 TPOT 的损益；<code>gpu-memory-utilization</code> 决定 KV 池大小进而决定并发上限；抢占策略（recompute vs swap）影响过载时的尾延迟。调参前先问业务要什么：对话产品保 TPOT 和 TTFT P99，离线批处理拉满吞吐。"</p>
+<h3 id="55">55. 量化各路线的收益与风险 ◆<a class="headerlink" href="#55" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"按'收益来源'分类记：
+- <strong>W4A16</strong>（GPTQ/AWQ）：权重 4bit、计算仍 FP16。收益是权重显存÷4 + decode 带宽瓶颈下读权重快近 4 倍，延迟直接改善；计算不加速（要反量化）。风险最低的显存/延迟优化，小 batch 场景首选。
+- <strong>W8A8-INT8</strong>（SmoothQuant）：权重激活都 8bit，用 INT8 TensorCore，算力×2。难点是激活有 outlier 通道——SmoothQuant 用数学等价变换把激活的量化难度迁移一部分到权重上。大 batch compute-bound 场景收益大。
+- <strong>FP8</strong>（E4M3）：H100 后硬件原生支持，算力×2、显存÷2，动态范围比 INT8 好、几乎不需要复杂校准，正在成为服务默认；KV cache FP8 再省一半 KV。
+- <strong>FP4/NVFP4</strong>：Blackwell 硬件支持，激进压缩，配微缩放格式（block-wise scale）控制精度，还在落地早期。
+风险共性：outlier 处理、长尾任务（数学/代码）掉点比通用问答明显、量化误差在长生成里累积。上线前必须过业务评测集不能只看 perplexity。"</p>
+<h3 id="56">56. 投机解码原理、无损性、失效场景 ★<a class="headerlink" href="#56" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"原理：draft 模型快速出 k 个候选 token，target 模型一次前向并行验证——把 k 步串行 decode 换成 1 步并行验证。无损性靠拒绝采样保证：接受概率 min(1, p_target/p_draft)，被拒后从修正分布 max(0, p−q) 重采样，数学上可证输出分布与 target 独立采样完全一致。失效场景：① 接受率低（draft 与 target 分布差异大：领域不匹配、高温采样）——草稿白算还多付验证；② <strong>大 batch 下 GPU 已经 compute 饱和</strong>——投机的本质是拿 decode 的闲置算力换延迟，算力用光后验证反而挤占正常请求，吞吐下降；③ draft 本身太慢，k 步 draft 时间接近 target 一步；④ 输出高熵不可预测（创意写作），推测长度收益低；⑤ draft 模型和额外 KV 占显存，挤压 batch 上限。
+EAGLE 演进：<strong>EAGLE-1</strong> 特征级自回归——draft 头不预测 token 而预测 target 的 top-layer feature（特征序列比 token 序列规整、不确定性低），同时把采样出的 token 喂回消除采样歧义，复用 target 的 embedding 和 LM head；<strong>EAGLE-2</strong> 动态草稿树——用 draft 置信度近似接受率，动态扩展/剪枝树分支，配 tree attention 并行验证；<strong>EAGLE-3</strong> 放弃特征预测改直接出 token + 多层特征融合（training-time test），能吃更大训练数据，加速最高 6.5×。"</p>
+<h3 id="57-mtp-eagle">57. MTP 和 EAGLE 的异同 ◆<a class="headerlink" href="#57-mtp-eagle" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"同：都是轻量 draft 头挂在 target 上、复用主干表征做投机。异：① 训练方式——MTP 是预训练时和主模型**联合训练**的（DeepSeek-V3 的 MTP 头在预训练目标里就有），分布对齐天然好；EAGLE 是训练后单独蒸馏的附加头。② 结构——MTP 头是完整的 transformer 层（含独立 embedding 投影），EAGLE 是更轻的单层结构。③ 部署——MTP 权重随模型发布直接可用（vLLM/SGLang 加载 DeepSeek 时开 speculative 配置即用），EAGLE 要额外训练。实践中 DeepSeek 系模型用 MTP 是默认选项，接受率 80%+；EAGLE-3 在有训练条件时上限更高。"</p>
+<h3 id="58-tpppdpep-moe-ep">58. TP/PP/DP/EP 与 MoE 大 EP ◆<a class="headerlink" href="#58-tpppdpep-moe-ep" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"TP 切权重矩阵（列切 AllGather/行切 AllReduce），每层两次集合通信，要求高带宽互联（NVLink 域内）；PP 按层切，通信只在段间传激活，跨机友好但有流水线气泡；DP 复制模型分流量，推理侧就是多实例；EP 切 MoE 的 expert，token 按路由结果 all2all 分发到 expert 所在卡。MoE 推理用大 EP 的原因：① expert 权重总量巨大（DeepSeek-V3 671B）但每 token 只激活少数 expert——TP 切 expert 内部矩阵会让每卡算的矩阵太碎、效率低，EP 把不同 expert 放不同卡，每个 expert 的 GEMM 保持完整形状；② 大 EP 下每卡 expert 数少，可以把 batch 里路由到同 expert 的 token 聚合成大 GEMM，算术强度高；③ 代价是 all2all 通信和负载不均（热 expert），所以要配 expert 负载均衡和通信-计算 overlap。典型部署：attention 部分 TP/DP、MoE 部分 EP，混合并行。"</p>
+<h3 id="59-mla-kv">59. MLA 为什么省 KV？对亲和调度的影响 ○<a class="headerlink" href="#59-mla-kv" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"MLA 把 K、V 压缩成一个共享的低秩 latent 向量（DeepSeek-V3：512 维 latent + 64 维解耦 RoPE 分量），缓存的是 latent 而不是完整 K/V，每 token KV 从 GQA 的几百 KB 降到 ~70KB，小近一个数量级；计算时把升维矩阵吸收进 Q/O 投影，不需要显式还原 K/V。对我们调度的影响：① KV 传输量骤降——PD 分离和跨实例 KV 迁移的成本大幅下降，39 题说的'存储换计算'临界点前移，更多场景值得传而不是重算；② 单卡 KV 池能装的 token 数增加近 10 倍，prefix cache 命中的驻留时间变长，亲和调度的收益更持久；③ block 字节数变小，索引粒度和传输 batch 参数要重调。"</p>
+<h3 id="60">60. 长上下文的瓶颈与各技术 ○<a class="headerlink" href="#60" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"三个瓶颈：① 位置编码外推——训练长度外的位置 RoPE 失效，YaRN 通过按频段分组缩放 RoPE（高频保分辨率、低频做插值）实现少量微调甚至零微调的窗口扩展；② prefill 时延与干扰——attention 是 O(n²)，128K prompt 的 prefill 秒级，chunked prefill 切块混批防止饿死 decode，但总时延还在——需要 context parallelism（ring attention 类，把序列切到多卡、KV 环形流转）并行摊薄；③ KV 显存——线性涨，靠 KV 量化、MLA、稀疏化（H2O/SnapKV 只留重要 token）、分层卸载（HiCache）组合拳。"</p>
+<hr />
+<h2 id="_4">六、场景设计题<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h3 id="61-16-deepseek-v3-agent">61. 16 卡部署 DeepSeek-V3 服务 Agent 产品 ★<a class="headerlink" href="#61-16-deepseek-v3-agent" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>（按"负载分析→部署形态→调度→缓存→特性支持"的顺序说）
+"先分析负载：Agent 流量 = 长 system prompt（工具定义，高度重复）+ 多轮追加 + tool call 中断续推 + 结构化输出，特征是前缀重复率极高、输入长输出短、请求间歇性强。
+<strong>部署形态</strong>：V3 是 671B MoE + MLA。16×H800 的话权重 FP8 约 700GB，两机 16 卡起步：attention 用 TP+DP、MoE 用 EP16 的混合并行；PD 分离在这个规模收益存疑——卡数少，分离后 P、D 各自的弹性都不够，我倾向混部 + chunked prefill 控干扰，除非流量证明 prefill 干扰不可接受。
+<strong>调度</strong>：前缀重复率高 → prefix caching 必开 + 亲和路由（DP 组间做 token 级亲和，正是我做过的东西）；tool call 中断的会话在等待工具结果期间 KV 保留但会被驱逐——按 session 做软亲和，回来还路由到原实例。
+<strong>缓存</strong>：MLA 每 token KV 小，显存池能装很多；仍配 HiCache 式分层（显存→DRAM），工具等待期的 KV 下沉不驱逐,回来免重算。
+<strong>特性</strong>：结构化输出走 xgrammar，schema（工具参数）高度重复、编译缓存命中率会非常高；投机解码用自带 MTP，但要做负载感知开关——白天高并发关、低谷开。
+<strong>兜底</strong>：这套里每个优化都要能独立降级，监控按 TTFT/TPOT/命中率/驱逐率分层。"</p>
+<h3 id="62-p99-ttft">62. P99 TTFT 周期性飙高的排查 ◆<a class="headerlink" href="#62-p99-ttft" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"先把 TTFT 分解成可测的段：排队时间 + tokenize + 调度 + prefill 执行 + 首 token 回传，vLLM metrics 里有现成指标。周期性是关键线索，按周期长短列假设：
+分钟级周期 → 定时任务类：日志轮转、metrics 抓取、模型 checkpoint 相关 IO、K8s 探针风暴；
+和流量周期吻合 → 突发排队：看 queue depth 和 QPS 相关性，长 prompt 大请求造成 head-of-line blocking（没开 chunked prefill 时一个 128K prefill 能卡住所有人）；
+不规则但重复 → 资源周期：KV 池周期性打满触发抢占风暴（看 preemption 计数）、prefix cache 周期性驱逐（命中率锯齿）、Python GC、CUDA graph 重捕获；
+硬件级 → GPU 降频（温度/功耗周期）、NUMA 页迁移。
+方法：先看 metrics 相关性锁定层次，再对可疑层上 profiler（nsys 抓一个尖刺窗口）确认。原则是指标分层定位在前、profiler 精确定位在后，不上来就抓 trace。"</p>
+<h3 id="63-5">63. 故障 5 秒恢复、请求不丢 ○<a class="headerlink" href="#63-5" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"这正是我们 Motor 做的事，分三层：
+<strong>检测</strong>（&lt;1s）：探针周期太慢，用旁路心跳 + 推理链路探活（发一个 1 token 的虚拟请求）双通道，硬件故障靠底层上报（我们 FaultManager watch 节点故障事件并分级）。
+<strong>流量切换</strong>（&lt;1s）：Coordinator 侧摘除故障实例——这要求调度层有实例健康态的实时视图，新请求立即路由到健康实例。
+<strong>在途请求恢复</strong>：我们的 Rescheduler 方案——流式请求把 prompt token + 已生成 token 合并重推到健康实例，配合 prefix cache 命中（如果 KV 有副本）重推的 prefill 代价很小；用户看到的是流暂停 1-2 秒后继续。
+<strong>容量兜底</strong>：N+1 冗余，或像我们 ScaleP2D 那样故障时把 P 实例改配给 D 用，保 decode 容量。
+5 秒预算分配：检测 1s + 摘流 0.5s + 重调度重推 2s + 缓冲 1.5s，可达。"</p>
+<h3 id="64">64. 成本减半、延迟不涨 ○<a class="headerlink" href="#64" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"按 ROI 排序：
+① <strong>量化</strong>——FP8 权重+KV：显存近半、吞吐提升，同 SLA 下卡数直接砍，精度过评测集即可上，最大头；
+② <strong>缓存</strong>——prefix caching + 亲和路由：重复率高的业务 prefill 省 50%+，等效容量翻倍，我做过、收益实测；
+③ <strong>调度压密</strong>——按真实流量画像调 batch 上限和 KV 池占比，把 GPU 利用率从典型的 40% 提到 70%+，配合潮汐错峰混部（低谷跑离线批处理）；
+④ <strong>投机解码</strong>——低负载时段开 MTP，延迟改善的同时等效吞吐提升；
+⑤ <strong>模型分级</strong>——简单请求路由到小模型（语义路由），大模型只接复杂任务。
+①②③是确定性收益先做，④⑤要 A/B 验证。同时立监控红线：TTFT/TPOT P99 不劣化作为每步的回滚判据。"</p>
+<hr />
+<h2 id="_5">七、科研经历<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h3 id="65-cta-net">65. CTA-Net 一句话 ○<a class="headerlink" href="#65-cta-net" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"一句话：用 CNN 分支提局部多尺度特征、轻量 Transformer 分支建全局依赖，通过聚合模块双向融合，让两者互补——CNN 弥补 Transformer 小数据下的归纳偏置缺失，Transformer 弥补 CNN 感受野受限，所以能在参数量最少的情况下在 CIFAR/医学影像数据集上拿到 SOTA。发在 JBHI（二区）。"</p>
+<h3 id="66">66. 视觉科研转推理系统？ ○<a class="headerlink" href="#66" title="Permanent link">&para;</a></h3>
+<p><strong>答：</strong>
+"读研时发现自己的兴奋点在'让系统跑得更快'而不是'让模型涨一个点'——做实验时我花在优化训练 pipeline 上的时间比调模型多。迁移价值有三块：① 对模型结构的理解是推理优化的地基——看到 MLA 我能立刻明白它为什么省 KV、对系统意味着什么；② 实验方法论——控制变量、消融分析，和性能调优的归因方法是同一套思维；③ 论文阅读能力——推理加速的前沿在论文里，我保持每周跟 arXiv 的习惯就是读研练出来的。"</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

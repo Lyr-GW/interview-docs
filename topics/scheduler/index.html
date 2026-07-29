@@ -1,0 +1,2444 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/topics/scheduler/">
+      
+      
+        <link rel="prev" href="../flash-attention/">
+      
+      
+        <link rel="next" href="../function-call-structured-output/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>调度器与 Continuous Batching - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#continuous-batching" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              调度器与 Continuous Batching
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 一句话总结
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 核心原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 核心原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 问题背景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 方案概述
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 实现细节
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 实现细节">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 调度队列与请求状态机
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 每步调度决策流程
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 抢占与内存回收
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-pagedattention-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 PagedAttention 与 KV 缓存管理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-chunked-prefill-mix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Chunked Prefill 与 MIX 模式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-pd-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 PD 分离与远程 KV 传输
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-dp-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 多 DP 协调与同步（MindIE 特色）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 框架对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 框架对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-mindie-scheduler-vs-vllm-scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 MindIE Scheduler vs vLLM Scheduler
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 面试要点
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 面试要点">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 常见追问
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1 常见追问">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-block-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1: block table 里存什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-vllm-v1-swapped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2: 为什么 vLLM v1 没有 SWAPPED？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3-max_num_batched_tokens-max_num_seqs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3: max_num_batched_tokens 和 max_num_seqs 如何配合？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-chunked-prefill-decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4: Chunked Prefill 如何与 decode 同批？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5-1-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5: 前缀全命中为何还要重算 1 token？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q6-mindie-prescheduler-dp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q6: MindIE 的 PreScheduler 多 DP 投票机制如何工作？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q7: 抢占对延迟有什么影响，如何缓解？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q8-mindie-placeholder-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q8: MindIE 的 placeholder token 机制解决什么问题？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 口述话术
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 延伸阅读
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 延伸阅读">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 相关主题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 源文件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vllm-mindie-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 一句话总结
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 核心原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 核心原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 问题背景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 方案概述
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 实现细节
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 实现细节">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 调度队列与请求状态机
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 每步调度决策流程
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 抢占与内存回收
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-pagedattention-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 PagedAttention 与 KV 缓存管理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-chunked-prefill-mix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Chunked Prefill 与 MIX 模式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-pd-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 PD 分离与远程 KV 传输
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-dp-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 多 DP 协调与同步（MindIE 特色）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 框架对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 框架对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-mindie-scheduler-vs-vllm-scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 MindIE Scheduler vs vLLM Scheduler
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 面试要点
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 面试要点">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 常见追问
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1 常见追问">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-block-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1: block table 里存什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-vllm-v1-swapped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2: 为什么 vLLM v1 没有 SWAPPED？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3-max_num_batched_tokens-max_num_seqs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3: max_num_batched_tokens 和 max_num_seqs 如何配合？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-chunked-prefill-decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4: Chunked Prefill 如何与 decode 同批？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5-1-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5: 前缀全命中为何还要重算 1 token？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q6-mindie-prescheduler-dp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q6: MindIE 的 PreScheduler 多 DP 投票机制如何工作？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q7: 抢占对延迟有什么影响，如何缓解？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q8-mindie-placeholder-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q8: MindIE 的 placeholder token 机制解决什么问题？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 口述话术
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 延伸阅读
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 延伸阅读">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 相关主题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 源文件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="continuous-batching">调度器与 Continuous Batching<a class="headerlink" href="#continuous-batching" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>覆盖 15 个知识点 | 来源 3 个文件 | 更新于 2026-07-11</p>
+</blockquote>
+<h2 id="1">1. 一句话总结<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>调度器通过 <strong>Continuous Batching</strong> 动态组合 Prefill 与 Decode 请求，驱动 <strong>PagedAttention</strong> 分页化管理 KV 缓存，在有限 GPU/NPU 内存下最大化吞吐并控制延迟。MindIE 与 vLLM 均采用 waiting/running/swapped 多队列模型，MindIE 额外内置 <strong>PD 分离</strong> KV 传输调度、多 DP 协调及可插拔 <strong>Stage Policy</strong>，形成面向昇腾生产环境的工程化扩展。</p>
+<div class="admonition abstract">
+<p class="admonition-title">30 秒速览</p>
+<ul>
+<li><strong>核心原理</strong></li>
+<li><strong>框架对比</strong></li>
+<li><strong>面试要点</strong></li>
+<li>问题背景</li>
+<li>方案概述</li>
+<li>调度队列与请求状态机</li>
+</ul>
+</div>
+<hr />
+<h2 id="2">2. 核心原理<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<h3 id="21">2.1 问题背景<a class="headerlink" href="#21" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>静态 batching</strong> 要求 batch 内所有请求同时完成，Prefill 与 Decode 计算模式差异大，导致 GPU 利用率低，产生“bubble”。</li>
+<li><strong>KV 缓存碎片化</strong> 按最大长度预留造成严重浪费，无法动态共享前缀。</li>
+<li><strong>长短请求混存</strong> 长 prompt 一次性占满计算预算，导致 decode 延迟剧烈抖动（TPOT P99 劣化）。</li>
+<li><strong>内存压力</strong> 大并发时 KV 缓存不足，需要高效的抢占/换出机制。</li>
+</ul>
+<h3 id="22">2.2 方案概述<a class="headerlink" href="#22" title="Permanent link">&para;</a></h3>
+<p>核心思路是将推理调度抽象为**动态混合批处理**：
+1. <strong>Continuous Batching</strong>：不再等待整个 batch 结束，每步 forward 都可增删请求。维护 waiting/running/swapped 队列，请求在队列间按需迁移。
+2. <strong>PagedAttention</strong>：将每层 KV 缓存划分为固定大小的 block，通过 block table 实现逻辑到物理的映射，支持按需分配、共享 prefix 和零碎片。
+3. <strong>调度器</strong> 负责每步决策：以 token budget / max_seqs 为限制，从队列中选取请求执行 forward，合并 <strong>Chunked Prefill</strong>、前缀缓存命中、PD 分离 KV 传输等逻辑。</p>
+<p>下方以 MindIE 的架构为例展示典型的分层设计（vLLM 架构思想类似）：</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph ENGINE_LAYER[ENGINE LAYER]
+        direction TB
+        IScheduler[IScheduler 接口]
+        PrePost[PreScheduler / PostScheduler 跨 DP 同步模块]
+    end
+
+    subgraph POLICY_LAYER[POLICY LAYER]
+        Policies[StagePolicy | FcfsPolicy | PDDSPolicy | LayerwiseFcfs KVTransferPolicy]
+    end
+
+    subgraph QUEUE_MODEL[QUEUE MODEL]
+        Queues[waiting_ | running_ | swapped_ | transferringMap_]
+    end
+
+    subgraph BLOCK_MGMT[Block Space Management]
+        BlockSpaceManager[BlockSpaceManager NPU + CPU Blocks]
+    end
+
+    IScheduler --&gt; Policies
+    PrePost --&gt; Policies
+    Policies --&gt; Queues
+    Queues --&gt; BlockSpaceManager</code></pre>
+<h2 id="3">3. 实现细节<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<h3 id="31">3.1 调度队列与请求状态机<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<p><strong>vLLM v1</strong> (<code>vllm/v1/request.py</code>)
+- 状态枚举：<code>WAITING</code>、<code>WAITING_FOR_STRUCTURED_OUTPUT_GRAMMAR</code>、<code>WAITING_FOR_REMOTE_KVS</code>、<code>RUNNING</code>、<code>PREEMPTED</code>、<code>FINISHED_*</code>。
+- 队列：<code>waiting</code> / <code>skipped_waiting</code> / <code>running</code>。<strong>无 SWAPPED 状态</strong>，抢占一律 recompute。
+- 进入 RUNNING 的请求通过 <code>num_computed_tokens</code> 持续追赶 token 总数，天然支持 chunked prefill。</p>
+<p><strong>MindIE</strong> (<code>src/scheduler/</code>)
+- 队列模型：
+  - <code>waiting_</code>：无 KV block，待首次分配。
+  - <code>running_</code>：已分配 block，正在进行 Decode 或 Chunked Prefill。
+  - <code>swapped_</code>：KV 已换出至 CPU，内存不足时暂存。
+  - <code>transferringMap_</code>：PD 分离场景下 Prefill 结束等待 Publish / D 节点正在 Pull KV。
+- 队列基于 <code>ConcurrentDeque</code>，调度线程通过 <code>Dequeue</code> 拷贝到 Policy 专属 <code>SeqGroupCollection</code>，决策后通过 <code>BackfillConcurrentQueue</code> 写回。</p>
+<h3 id="32">3.2 每步调度决策流程<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
+<p><strong>vLLM v1</strong> <code>vllm/v1/core/sched/scheduler.py::schedule()</code>
+1. 设定 <code>token_budget = max_num_scheduled_tokens</code>。
+2. 遍历 <code>running</code> 队列：扣减 budget，调用 <code>allocate_slots()</code>，若失败则触发抢占（recompute）。
+3. 遍历 <code>waiting</code> 队列：受 <code>token_budget</code>、<code>max_num_seqs</code>、KV 空闲块数约束，按 FCFS 调度。
+4. 输出 <code>SchedulerOutput</code>（<code>block_ids</code>、<code>num_scheduled_tokens</code>、<code>preempted_req_ids</code>）。</p>
+<blockquote>
+<p>设计哲学：无独立 prefill/decode 阶段，仅维护 <code>num_computed_tokens</code>。</p>
+</blockquote>
+<p><strong>MindIE</strong> <code>src/scheduler/scheduler.cpp::Schedule()</code>
+<pre class="mermaid"><code>flowchart TB
+    A[Schedule] --&gt; B[DecidePDPriority needSync ← PreScheduler 跨 DP 同步]
+    B --&gt; C[PrepCandidates pdPriorityType, budget]
+    C --&gt; D[Policy.Apply budget, data -- prefillPolicy_ / decodePolicy_]
+    D --&gt; E[BackfillConcurrentQueue policyOutput]
+    E --&gt; F[ConvertToSchedulerOutput budget, policyOutput]
+    F --&gt; G[PostScheduler::SyncBatchInfo AllGather]
+    G --&gt; H[AsyncExecuteModel → PrepareNextSchedule]</code></pre>
+- <code>DecidePDPriority</code> 综合 StagePolicy、空闲 block 比例、Chunked Prefill 等因素决定 PREFILL_FIRST / DECODE_FIRST / MIX。
+- PreScheduler 跨 DP 同步优先级（多数投票）。
+- <code>PrepCandidatesForPolicy</code> 从队列拷贝候选序列，Policy::Apply 在预算内选择请求。
+- PostScheduler 通过 AllGather 对齐各 DP 的 batch 信息。</p>
+<h3 id="33">3.3 抢占与内存回收<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>vLLM v1</strong>：仅 RECOMPUTE。<code>_preempt_request()</code> 将请求状态设为 <code>PREEMPTED</code>，<code>num_computed_tokens = 0</code>，释放 KV blocks，重新插入 waiting 队列头部。优点：实现简单，无 PCIe 搬运；缺点：长 prompt 重算代价高。</li>
+<li><strong>MindIE</strong>：支持 <code>PreemptionMode::RECOMPUTE</code> 和 <code>SWAP</code>。<code>SWAP</code> 将 KV 换出至 CPU，需配置 <code>maxPreemptCount</code> 限制 swap 次数，超过后回退 recompute。注意：<strong>Parallel Sampling 不支持 RECOMPUTE</strong>，否则触发 abort。</li>
+<li>代码路径：<code>src/scheduler/policy/fcfs_policy.cpp</code> → <code>Preempt()</code></li>
+<li>Decode 内存不足时优先 Swap，配置允许时则 Recompute。</li>
+</ul>
+<h3 id="34-pagedattention-kv">3.4 PagedAttention 与 KV 缓存管理<a class="headerlink" href="#34-pagedattention-kv" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>物理块池</strong>：vLLM v1 <code>BlockPool</code>（<code>block_pool.py</code>）；MindIE <code>BlockSpaceManager</code>。块含 <code>block_id</code>、<code>ref_cnt</code>、<code>block_hash</code>，通过空闲链表/LRU 管理。</li>
+<li><strong>映射关系</strong>：Worker 侧 <code>block_table[req_idx, logical_block] = physical_block_id</code>；<code>slot = physical_block_id * block_size + offset_in_block</code>。Triton kernel / NPU 算子据此计算全局 slot。</li>
+<li><strong>前缀缓存</strong>：</li>
+<li>vLLM：链式 hash <code>block_hash = H(parent_hash, tokens, extra_keys)</code>；命中后 <code>num_computed_tokens</code> 可跳过多块，但通常需重算最后 1 token 以获取 logits。</li>
+<li>MindIE：<code>BlockSpaceManager</code> 直接计算 <code>computedLens</code> / <code>remoteComputedLens</code>，配合 <code>PrefixCachePlugin</code> 共享物理块。</li>
+</ul>
+<h3 id="35-chunked-prefill-mix">3.5 Chunked Prefill 与 MIX 模式<a class="headerlink" href="#35-chunked-prefill-mix" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>vLLM v1</strong>：<code>enable_chunked_prefill=True</code>（默认）。prefill 不再原子化，请求 <code>is_prefill_chunk=True</code> 表示尚未完成 prompt。同一步内先扫 running 再 waiting，自然实现 decode 与 chunked prefill 混合。Attention 核依据 <code>query_len</code> 分流计算（<code>chunked_prefill_paged_decode.py</code>）。</li>
+<li><strong>MindIE</strong>：<code>enableChunkedPrefill</code> 开启后，PD 角色返回 <code>PDPriorityType::MIX</code>，Policy 同时从三队列取数执行。<code>isLastChunk_</code> 控制是否输出 token 及插入 placeholder token。整体效果与 vLLM 类似，但融入可插拔 Policy 和异步占位机制。</li>
+</ul>
+<h3 id="36-pd-kv">3.6 PD 分离与远程 KV 传输<a class="headerlink" href="#36-pd-kv" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>vLLM v1</strong>：引入 <code>WAITING_FOR_REMOTE_KVS</code> 状态。<code>KVConnector</code> 查询匹配 token，若 <code>load_kv_async=True</code> 则预先分配 KV block，请求转至该状态；Worker 异步拉取完成后回退 WAITING，下一轮进入 RUNNING。</li>
+<li>防死锁：<code>_inflight_prefill_reserved_blocks</code> 预留块不可抢占。</li>
+<li>失败处理：<code>kv_load_failure_policy=recompute</code> 回退重算。</li>
+<li><strong>MindIE PDDS</strong>：</li>
+<li>P 节点：<code>SchedulePrefill()</code> 后，非 last chunk 进 <code>running_</code>，last chunk 进 <code>transferringMap_</code>。</li>
+<li>D 节点：<code>KVTransferSchedulePolicy::PickPullSeqGroup</code> 选择请求进 <code>transferringMap_</code>，Worker 执行 Pull，完成后调用 <code>KVPulledReqEnterRunningQueue</code> 移入 <code>running_</code>。</li>
+<li>D 的 <code>ScheduleTransfer()</code> 负责驱动 Pull 调度；P 节点通过 <code>ReleaseKvPulledBlocks()</code> 回收已 transfer 的 KV blocks。</li>
+</ul>
+<h3 id="37-dp-mindie">3.7 多 DP 协调与同步（MindIE 特色）<a class="headerlink" href="#37-dp-mindie" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>PreScheduler</strong>：跨 DP 同步 <code>pdPriority_</code>、<code>waitingSeqGroupNum_</code>、<code>runningSeqGroupNum_</code>。多数投票决定全局优先级（PREFILL_FIRST 节点数 ≥ 半数）。空队列 DP 不参与投票，避免影响决策。</li>
+<li><strong>PostScheduler</strong>：Batch 下发前 AllGather <code>maxBatchSize</code>、<code>maxSeqLen</code>、<code>seqLenList</code> 并取全局最大值；集中式场景聚合各 DP 的 MetaDatas 与 SchedulerOutputs。</li>
+<li>通信路径：同主机使用 <code>ThreadGroupCC::AllGather</code>，跨节点使用 <code>ProcessGroup::AllGather</code>。</li>
+</ul>
+<hr />
+<h2 id="4">4. 框架对比<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="41-mindie-scheduler-vs-vllm-scheduler">4.1 MindIE Scheduler vs vLLM Scheduler<a class="headerlink" href="#41-mindie-scheduler-vs-vllm-scheduler" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>对比维度</th>
+<th>MindIE Scheduler</th>
+<th>vLLM Scheduler (v1)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>实现语言</td>
+<td>C++ 引擎层 (<code>src/scheduler/</code>)</td>
+<td>Python (<code>vllm/v1/core/sched/scheduler.py</code>)</td>
+</tr>
+<tr>
+<td>接口抽象</td>
+<td><code>IScheduler</code> 多态 + <code>MakeScheduler</code> 工厂</td>
+<td>单一 <code>Scheduler</code> 类</td>
+</tr>
+<tr>
+<td>队列模型</td>
+<td>waiting_ / running_ / swapped_ + transferringMap_</td>
+<td>waiting / running（无 swapped）</td>
+</tr>
+<tr>
+<td>抢占</td>
+<td>RECOMPUTE / SWAP 双模式</td>
+<td>仅 RECOMPUTE</td>
+</tr>
+<tr>
+<td>Chunked Prefill</td>
+<td>MIX 模式 + <code>isLastChunk_</code> + StagePolicy 联动</td>
+<td>天然混批，无阶段概念</td>
+</tr>
+<tr>
+<td>PD 分离</td>
+<td>内置 PDDS + <code>KVTransferSchedulePolicy</code></td>
+<td>外部 <code>KVConnector</code> + <code>WAITING_FOR_REMOTE_KVS</code></td>
+</tr>
+<tr>
+<td>多 DP 协调</td>
+<td>PreScheduler/PostScheduler 显式同步 + 多数投票</td>
+<td>依赖外部协调或 Ray</td>
+</tr>
+<tr>
+<td>Stage 决策</td>
+<td>可插拔 StagePolicy（PrefillFirst/TPT/Latency/EdgeCloud 等）</td>
+<td>内嵌参数控制优先级</td>
+</tr>
+<tr>
+<td><strong>Prefix Cache</strong></td>
+<td><code>BlockSpaceManager</code> 直接计算 computedLens</td>
+<td>链式 block hash，自动前缀缓存</td>
+</tr>
+<tr>
+<td>异步推理</td>
+<td>Placeholder token（-1）预占 KV，支持多 batch 流水</td>
+<td>同步，Pipeline Parallel 另有机制</td>
+</tr>
+<tr>
+<td>边云</td>
+<td>LayerwiseFcfsPolicy + P 延迟下发</td>
+<td>无内置支持</td>
+</tr>
+</tbody>
+</table>
+<p><strong>总结</strong>：MindIE 在队列语义上与 vLLM 同源，但针对昇腾多 DP/PD 分离/边云协同做了深度工程扩展；vLLM v1 采用极简设计，牺牲 swap 换取调度简洁性，并通过快速 Python 迭代集成更多社区方案。</p>
+<hr />
+<h2 id="5">5. 面试要点<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<h3 id="51">5.1 常见追问<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
+<h4 id="q1-block-table">Q1: block table 里存什么？<a class="headerlink" href="#q1-block-table" title="Permanent link">&para;</a></h4>
+<ul>
+<li>每请求一行，元素为 physical_block_id，索引为 logical_block_idx。</li>
+<li><code>slot = physical_block_id × block_size + offset_in_block</code>，用于 Attention kernel 定位 KV。</li>
+</ul>
+<h4 id="q2-vllm-v1-swapped">Q2: 为什么 vLLM v1 没有 SWAPPED？<a class="headerlink" href="#q2-vllm-v1-swapped" title="Permanent link">&para;</a></h4>
+<ul>
+<li>为简化设计，完全依赖 recompute。v0/MindIE 保留 SWAP 以减少重算，代价是引入 PCIe 搬运延迟和管理复杂度。</li>
+<li>生产建议：通过 <code>watermark</code>、Chunked Prefill 控制 KV 用量，避免进入重算。</li>
+</ul>
+<h4 id="q3-max_num_batched_tokens-max_num_seqs">Q3: max_num_batched_tokens 和 max_num_seqs 如何配合？<a class="headerlink" href="#q3-max_num_batched_tokens-max_num_seqs" title="Permanent link">&para;</a></h4>
+<ul>
+<li>前者限制单步 token 总预算（如 8192），后者限制最大并发序列数（如 128）。</li>
+<li>极端情况：128 个 seq 每个解码 1 token（共 128 token），或 1 个 seq 处理 2048 token prefill。</li>
+</ul>
+<h4 id="q4-chunked-prefill-decode">Q4: Chunked Prefill 如何与 decode 同批？<a class="headerlink" href="#q4-chunked-prefill-decode" title="Permanent link">&para;</a></h4>
+<ul>
+<li>调度器无阶段隔离，每步先处理 running（含未完成 prefill 的 chunk），再接纳 waiting。</li>
+<li>Attention kernel 根据 <code>query_len</code> 分流，chunk 做 prefill attention，decode 做 paged decode。</li>
+</ul>
+<h4 id="q5-1-token">Q5: 前缀全命中为何还要重算 1 token？<a class="headerlink" href="#q5-1-token" title="Permanent link">&para;</a></h4>
+<ul>
+<li>需要生成下一个 token 的 logits，且 block 对齐可能导致尾块未满而整体重算。<code>max_cache_hit_length = num_tokens - 1</code>。</li>
+</ul>
+<h4 id="q6-mindie-prescheduler-dp">Q6: MindIE 的 PreScheduler 多 DP 投票机制如何工作？<a class="headerlink" href="#q6-mindie-prescheduler-dp" title="Permanent link">&para;</a></h4>
+<ul>
+<li>PreScheduler 在 P/D 决策前 AllGather 各 DP 的 <code>pdPriority_</code>、队列长度。多数票决定：PREFILL_FIRST 节点数 ≥ 半数则 PREFILL，否则 DECODE。空队列 DP 不参与投票，防止“陪跑”干扰。</li>
+</ul>
+<h4 id="q7">Q7: 抢占对延迟有什么影响，如何缓解？<a class="headerlink" href="#q7" title="Permanent link">&para;</a></h4>
+<ul>
+<li>长 prompt recompute 代价大，导致 TTFT 波动。缓解：开启 Chunked Prefill、调高 <code>watermark</code> 预留缓冲块、限制 <code>long_prefill_token_threshold</code>，或使用 SWAP（MindIE）避免重算。</li>
+</ul>
+<h4 id="q8-mindie-placeholder-token">Q8: MindIE 的 placeholder token 机制解决什么问题？<a class="headerlink" href="#q8-mindie-placeholder-token" title="Permanent link">&para;</a></h4>
+<ul>
+<li>异步推理下，允许调度器提前生成 -1 token 占位，预占 KV slots，保持 NPU 连续运转。Response 线程稍后回填真实 token，降低调度等待气泡，提升 NPU 利用率。</li>
+</ul>
+<h3 id="52">5.2 口述话术<a class="headerlink" href="#52" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>“调度器的核心是 Continuous Batching：不再等一个 batch 所有请求结束，每步 forward 都可以动态增减请求。vLLM v1 做得特别纯粹——它根本没有 prefill/decode 阶段概念，只维护 <code>num_computed_tokens</code>，用 token budget 控制每次推进的量。当内存不够就 recompute，简洁但重算代价要考虑。MindIE 则是在相同队列模型上，面向昇腾场景加了 SWAP 抢占、PD 分离 KV 传输调度、以及多 DP 的 PreScheduler/PostScheduler 同步，还用可插拔的 Stage Policy 动态选择 prefill 还是 decode 优先。如果你要选型，单机小并发 vLLM 足够灵活，大规模多机 PD 分离、边云协同，MindIE 内置能力更系统化。”</p>
+</blockquote>
+<hr />
+<h2 id="6">6. 延伸阅读<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<h3 id="61">6.1 相关主题<a class="headerlink" href="#61" title="Permanent link">&para;</a></h3>
+<ul>
+<li>PagedAttention 与 KV 缓存</li>
+<li>Prefix Caching 深入</li>
+<li>PD 分离架构与 KV 路由</li>
+<li>Chunked Prefill 与 SplitFuse 对比</li>
+<li>多 DP/PP 并行下的调度同步</li>
+</ul>
+<h3 id="62">6.2 源文件<a class="headerlink" href="#62" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>文件路径</th>
+<th>标题</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>wiki/repos/mindie-pyserver/scheduler.md</td>
+<td>MindIE-LLM Scheduler 调度器</td>
+<td>源码分析</td>
+</tr>
+<tr>
+<td>wiki/raw/articles/pyserver/scheduler_deep_analysis.md</td>
+<td>Scheduler 调度器 — 深度分析</td>
+<td>对照分析</td>
+</tr>
+<tr>
+<td></td>
+<td>interview/2026-07-10/01-PagedAttention与ContinuousBatching调度专题.md</td>
+<td>PagedAttention + Continuous Batching + Scheduler + Chunked Prefill</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="../vllm-scheduler-analysis/">vllm-scheduler-analysis.md</a></td>
+<td>vLLM V1 调度器源码深入分析（2026-07-22 新专题）</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="../vllm-mindie-comparison/">vllm-mindie-comparison.md</a></td>
+<td>vLLM vs MindIE LLM 框架调度抢占对比</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

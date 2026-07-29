@@ -1,0 +1,5046 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="LLM 推理工程面试知识库">
+      
+      
+      
+        <link rel="canonical" href="https://lyr-gw.github.io/interview-docs/topics/vllm-mindie-comparison/">
+      
+      
+        <link rel="prev" href="../vllm-scheduler-analysis/">
+      
+      
+        <link rel="next" href="../operator-hardware/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>vLLM vs MindIE LLM 框架对比 - Interview Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#vllm-vs-mindie-llm" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="Interview Docs" class="md-header__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Interview Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              vLLM vs MindIE LLM 框架对比
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Interview Docs" class="md-nav__button md-logo" aria-label="Interview Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Interview Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Lyr-GW/interview-docs" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Lyr-GW/interview-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更记录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理引擎核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理引擎核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kv-cache-affinity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache 亲和调度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../speculative-decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    投机推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flash-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash Attention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scheduler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调度器与 Continuous Batching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../function-call-structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Call 与结构化输出
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prefix-cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prefix Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP 服务层
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型与框架
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模型与框架
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deepseek-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference-frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pymotor-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyMotor 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quantization-pd-separation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    量化与 PD 分离
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    vLLM 专题（2026-07-22 新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vllm-scheduler-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM V1 调度器源码分析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vLLM vs MindIE LLM 框架对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 结论先行
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 总览对照表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 框架架构对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 框架架构对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-vllm-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 vLLM V1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-mindie-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 MindIE LLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 请求执行主链
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 请求状态与队列对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 请求状态与队列对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-mindie-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 MindIE LLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 状态机差异
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-token-vs-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 调度抽象：统一 token vs 显式 P/D 阶段
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 调度抽象：统一 token vs 显式 P/D 阶段">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 vLLM 的统一模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 MindIE 的两级决策
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-mindie-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 MindIE 的 P/D 阶段策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 调度预算与准入控制
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 调度预算与准入控制">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 参数映射
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 vLLM 的准入
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 MindIE 的准入
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 一个重要差别
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-fcfs-priority-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. FCFS、请求 Priority 与阶段 Priority
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. FCFS、请求 Priority 与阶段 Priority">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 MindIE 中三种"优先"必须区分
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 抢占机制逐行对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 抢占机制逐行对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 触发器
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-victim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Victim 选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-vllm-recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 vLLM 的 recompute
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-mindie-swap-recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 MindIE 的 swap / recompute 决策
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.4 MindIE 的 swap / recompute 决策">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#swap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWAP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RECOMPUTE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#85-maxpreemptcount" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 maxPreemptCount 的准确语义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#86" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.6 两种方案的成本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#87" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.7 特殊限制
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-chunked-prefill-splitfuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Chunked Prefill 与 SplitFuse
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Chunked Prefill 与 SplitFuse">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 共同目标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-mindie-splitfuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 MindIE SplitFuse
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#94-partial-prefill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.4 Partial-prefill 配额形成反差
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#95-mindie-chunk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.5 MindIE 当前源码的动态 chunk 可疑点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#96" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.6 特性组合
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-paged-kv-prefix-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Paged KV 与 Prefix Cache
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Paged KV 与 Prefix Cache">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 共同结构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 粒度与默认配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#105-prefix-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.5 Prefix Cache 组合差异
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 异步调度对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. 异步调度对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 共同风险
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. P/D 混部与分离
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. P/D 混部与分离">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.2 MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#123" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.3 对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 投机解码、结构化输出与调度
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. 投机解码、结构化输出与调度">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 投机解码
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-function-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 结构化输出 / Function Call
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 可观测性与排障映射
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. 可观测性与排障映射">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 vLLM 抢占排障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 MindIE 抢占排障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.3 不能直接照搬的调参经验
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 典型场景推演
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. 典型场景推演">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#151-prefill-decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.1 长 Prefill 到达，已有 Decode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15.1 长 Prefill 到达，已有 Decode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mindiesplitfuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MindIE，SplitFuse 关闭
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mindiesplitfuse_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MindIE，SplitFuse 开启
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#152-decode-block-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.2 Decode 跨 block 边界，设备 KV 不足
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15.2 Decode 跨 block 边界，设备 KV 不足">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vllm_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#153-ttft-npu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.3 新请求 TTFT 已超时，但 NPU 放不下
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15.3 新请求 TTFT 已超时，但 NPU 放不下">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vllm_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mindie_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#154-cpu-swap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.4 CPU swap 空间耗尽
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. 选型与设计启示
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. 选型与设计启示">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.1 何时更偏向 vLLM 的设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.2 何时更偏向 MindIE 的设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#163-scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.3 对自研 Scheduler 的启示
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. 源码审计发现与版本风险
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="17. 源码审计发现与版本风险">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#171" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17.1 已确认的源码事实
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#172" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17.2 文档与源码冲突时怎么处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. 源码阅读地图
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="18. 源码阅读地图">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#181-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.1 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#182-mindie-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.2 MindIE LLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. 面试回答模板
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="19. 面试回答模板">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#191-90" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.1 90 秒总对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#192" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.2 追问：谁的抢占更好
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#193-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.3 追问：Priority 有什么差异
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. 最终对照速记
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. 参考资料
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="21. 参考资料">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        本地源码
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        官方资料
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. 自检清单
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子与硬件（新）
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    算子与硬件（新）
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理算子与硬件总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator-resume-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    算子 × 简历答辩总纲
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术专题
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    技术专题
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能分析与调优
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../k8s-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K8s 与基础设施
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../attention-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attention 技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training-techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练技术
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../agent-tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent 与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm-probing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM 探针攻击
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interview-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试策略与问答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 结论先行
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 总览对照表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 框架架构对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 框架架构对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-vllm-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 vLLM V1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-mindie-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 MindIE LLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 请求执行主链
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 请求状态与队列对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 请求状态与队列对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-mindie-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 MindIE LLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 状态机差异
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-token-vs-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 调度抽象：统一 token vs 显式 P/D 阶段
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 调度抽象：统一 token vs 显式 P/D 阶段">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 vLLM 的统一模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 MindIE 的两级决策
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-mindie-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 MindIE 的 P/D 阶段策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 调度预算与准入控制
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 调度预算与准入控制">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 参数映射
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 vLLM 的准入
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 MindIE 的准入
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 一个重要差别
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-fcfs-priority-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. FCFS、请求 Priority 与阶段 Priority
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. FCFS、请求 Priority 与阶段 Priority">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 MindIE 中三种"优先"必须区分
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 抢占机制逐行对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 抢占机制逐行对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 触发器
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-victim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Victim 选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-vllm-recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 vLLM 的 recompute
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-mindie-swap-recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 MindIE 的 swap / recompute 决策
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.4 MindIE 的 swap / recompute 决策">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#swap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWAP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RECOMPUTE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#85-maxpreemptcount" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 maxPreemptCount 的准确语义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#86" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.6 两种方案的成本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#87" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.7 特殊限制
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-chunked-prefill-splitfuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Chunked Prefill 与 SplitFuse
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Chunked Prefill 与 SplitFuse">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 共同目标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-mindie-splitfuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 MindIE SplitFuse
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#94-partial-prefill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.4 Partial-prefill 配额形成反差
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#95-mindie-chunk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.5 MindIE 当前源码的动态 chunk 可疑点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#96" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.6 特性组合
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-paged-kv-prefix-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Paged KV 与 Prefix Cache
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Paged KV 与 Prefix Cache">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 共同结构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 粒度与默认配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#105-prefix-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.5 Prefix Cache 组合差异
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 异步调度对比
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. 异步调度对比">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 共同风险
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-pd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. P/D 混部与分离
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. P/D 混部与分离">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.2 MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#123" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.3 对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 投机解码、结构化输出与调度
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. 投机解码、结构化输出与调度">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 投机解码
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-function-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 结构化输出 / Function Call
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 可观测性与排障映射
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. 可观测性与排障映射">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 vLLM 抢占排障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 MindIE 抢占排障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.3 不能直接照搬的调参经验
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 典型场景推演
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. 典型场景推演">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#151-prefill-decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.1 长 Prefill 到达，已有 Decode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15.1 长 Prefill 到达，已有 Decode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mindiesplitfuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MindIE，SplitFuse 关闭
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mindiesplitfuse_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MindIE，SplitFuse 开启
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#152-decode-block-kv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.2 Decode 跨 block 边界，设备 KV 不足
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15.2 Decode 跨 block 边界，设备 KV 不足">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vllm_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#153-ttft-npu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.3 新请求 TTFT 已超时，但 NPU 放不下
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15.3 新请求 TTFT 已超时，但 NPU 放不下">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vllm_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mindie_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MindIE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#154-cpu-swap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.4 CPU swap 空间耗尽
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. 选型与设计启示
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. 选型与设计启示">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.1 何时更偏向 vLLM 的设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162-mindie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.2 何时更偏向 MindIE 的设计
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#163-scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.3 对自研 Scheduler 的启示
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. 源码审计发现与版本风险
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="17. 源码审计发现与版本风险">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#171" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17.1 已确认的源码事实
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#172" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17.2 文档与源码冲突时怎么处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. 源码阅读地图
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="18. 源码阅读地图">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#181-vllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.1 vLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#182-mindie-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.2 MindIE LLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. 面试回答模板
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="19. 面试回答模板">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#191-90" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.1 90 秒总对比
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#192" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.2 追问：谁的抢占更好
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#193-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.3 追问：Priority 有什么差异
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. 最终对照速记
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. 参考资料
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="21. 参考资料">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        本地源码
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        官方资料
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. 自检清单
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="vllm-vs-mindie-llm">vLLM vs MindIE LLM：框架调度抢占对比<a class="headerlink" href="#vllm-vs-mindie-llm" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>覆盖 40+ 个知识点 | vLLM V1 vs MindIE LLM 源码对比 | 更新于 2026-07-22</p>
+<p>归档日期：2026-07-22<br />
+vLLM 基线：<code>main@8df14cfc8c8a09b4e57f082e59593a3abce4ffb3</code>，<code>v0.23.1rc0-1050-g8df14cfc8</code><br />
+MindIE LLM 基线：<code>master@238c543c3ce34e64260d1a4ed99c3e210f13793f</code><br />
+对比范围：框架架构、请求生命周期、调度策略、KV 管理、抢占、SplitFuse/Chunked Prefill、异步调度与 P/D 分离。<br />
+前置阅读：<a href="./00-vLLM框架重点特性与请求调度抢占源码分析.md"><code>00-vLLM框架重点特性与请求调度抢占源码分析.md</code></a>。</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 结论先行<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>vLLM V1 和 MindIE LLM 都具备 Paged KV Cache、Continuous Batching、Prefix Cache、分块 Prefill、异步执行、投机解码和 P/D 分离能力，但两者的调度抽象明显不同：</p>
+<ul>
+<li><strong>vLLM V1 是统一 token scheduler。</strong> 不把 prefill/decode 作为两个互斥调度阶段，而是让每个请求的 <code>num_computed_tokens</code> 追赶当前 token 总量；每步先推进 running，再用剩余预算接纳 waiting。</li>
+<li><strong>MindIE LLM 是显式阶段 scheduler。</strong> <code>SequenceData</code> 保存 <code>PREFILL/DECODE</code>，Scheduler 先决定本轮是 <code>PREFILL_FIRST</code>、<code>DECODE_FIRST</code> 还是 <code>MIX</code>，再把 waiting/running/swapped 中的请求交给对应 FCFS policy。</li>
+<li><strong>vLLM V1 常规抢占只有 recompute；MindIE 同时保留 swap 和 recompute。</strong> MindIE 在 NPU KV 不足时优先尝试 NPU→CPU swap，受 <code>maxPreemptCount</code> 和 CPU block 容量约束，否则回退 recompute。</li>
+<li><strong>两者的常规 victim 都偏向队尾。</strong> vLLM FCFS 从 <code>running</code> 尾部抢，priority 模式选最低优先级 running；MindIE FCFS 从候选 running 队尾抢。</li>
+<li><strong>vLLM 有真正进入调度热路径的 request priority；MindIE 当前主 FCFS 热路径没有消费请求的 <code>priority_</code> 字段。</strong> MindIE 文档/源码里的"优先级"更多指 P/D 阶段优先、首 Token 等待超时保护或 SLO stage policy，不能与 vLLM request priority 直接等同。</li>
+<li><strong>分块调度上，vLLM 的 chunking 更内生；MindIE 的 SplitFuse 更显式。</strong> vLLM 统一 scheduler 自然支持混合 query length；MindIE 需要 <code>MIX</code> forward、显式 partial-prefill 统计和 Text Generator 的 SplitFuse plugin 配合。</li>
+<li><strong>MindIE 的生产调度旋钮更偏阶段/SLO。</strong> 它有 <code>maxQueueDelayMicroseconds</code>、<code>maxFirstTokenWaitTime</code>、<code>stageSelectPolicy</code>、LLF 和动态 batch size；vLLM 内置策略更简洁，复杂 SLO/tenant 策略通常交给 router 或自定义 scheduler。</li>
+</ul>
+<p>一句话总结：</p>
+<blockquote>
+<p>vLLM V1 追求以 token 进度统一 prefill/decode/spec/prefix 的调度模型；MindIE LLM 以 P/D 阶段、设备分层 KV 和 Ascend 执行链为中心，保留更显式的阶段选择、swap 和 SLO 调度能力。</p>
+</blockquote>
+<hr />
+<h2 id="2">2. 总览对照表<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>vLLM V1</th>
+<th>MindIE LLM</th>
+<th>核心差异</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主要硬件生态</td>
+<td>CUDA/ROCm/CPU/XPU 等多后端</td>
+<td>Ascend NPU</td>
+<td>通用多后端 vs 昇腾深度优化</td>
+</tr>
+<tr>
+<td>核心引擎</td>
+<td>Python V1 EngineCore + Executor/Worker</td>
+<td>C++ LLM Manager/Engine/Scheduler + Python Text Generator</td>
+<td>MindIE 控制面更重 C++</td>
+</tr>
+<tr>
+<td>请求抽象</td>
+<td><code>Request</code></td>
+<td><code>SequenceGroup</code> / <code>Sequence</code></td>
+<td>MindIE 保留 group/多序列语义</td>
+</tr>
+<tr>
+<td>阶段模型</td>
+<td>无严格 prefill/decode scheduler phase</td>
+<td>显式 <code>SequenceStage::PREFILL/DECODE</code></td>
+<td>统一 token vs 阶段化</td>
+</tr>
+<tr>
+<td>主队列</td>
+<td><code>waiting</code>、<code>skipped_waiting</code>、<code>running</code></td>
+<td><code>waiting</code>、<code>running</code>、<code>swapped</code>、<code>transferringMap</code></td>
+<td>MindIE 显式 CPU swap 与传输态</td>
+</tr>
+<tr>
+<td>默认请求排序</td>
+<td>FCFS</td>
+<td>FCFS</td>
+<td>两者都非所有条件下的绝对严格 FIFO</td>
+</tr>
+<tr>
+<td>请求 priority</td>
+<td><code>fcfs</code> / <code>priority</code> 可选，热路径生效</td>
+<td>请求有 <code>priority_</code>，当前 FCFS policy 未读取</td>
+<td>vLLM 内置 request priority 更完整</td>
+</tr>
+<tr>
+<td>P/D 优先</td>
+<td>running 先于 waiting，chunked 后自然 decode-first</td>
+<td>显式 P/D stage policy</td>
+<td>MindIE 可独立选择本轮阶段</td>
+</tr>
+<tr>
+<td>单步 token 预算</td>
+<td><code>max_num_scheduled_tokens</code> / <code>max_num_batched_tokens</code></td>
+<td><code>maxPrefillTokens</code> / <code>SchedulingBudget</code></td>
+<td>字段映射不完全一一对应</td>
+</tr>
+<tr>
+<td>序列预算</td>
+<td><code>max_num_seqs</code></td>
+<td><code>maxBatchSize</code>、<code>maxPrefillBatchSize</code></td>
+<td>MindIE 区分 P/D batch size</td>
+</tr>
+<tr>
+<td>KV 准入</td>
+<td><code>allocate_slots</code>，可 full-ISL gate + watermark</td>
+<td><code>CanAllocate</code> / <code>CanAppendSlot</code></td>
+<td>vLLM 当前有显式 admission headroom</td>
+</tr>
+<tr>
+<td>常规抢占</td>
+<td>recompute only</td>
+<td>swap 优先，不能 swap 时 recompute</td>
+<td>最大架构差异之一</td>
+</tr>
+<tr>
+<td>victim</td>
+<td>FCFS 队尾；priority 最低优先级</td>
+<td>running 候选队尾</td>
+<td>MindIE 未按 request priority 选 victim</td>
+</tr>
+<tr>
+<td>分块 Prefill</td>
+<td>V1 默认开启，统一 scheduler 内生</td>
+<td>SplitFuse，<code>MIX</code> + TG plugin</td>
+<td>MindIE 特性组合约束更多</td>
+</tr>
+<tr>
+<td>Prefix Cache</td>
+<td>block hash + ref count + free queue</td>
+<td>prefix hash + ref count + LRU evictor + CoW</td>
+<td>原理相近，实现对象不同</td>
+</tr>
+<tr>
+<td>KV 池化/P-D</td>
+<td>KV Connector</td>
+<td>Block Manager + KV pool/transfer policy</td>
+<td>两者都有 scheduler/worker 两侧协同</td>
+</tr>
+<tr>
+<td>异步调度</td>
+<td><code>AsyncScheduler</code>、placeholder、deferred free</td>
+<td>async batch + placeholder + AsyncExecuteModel</td>
+<td>都需处理乐观进度和 KV 生命周期</td>
+</tr>
+<tr>
+<td>SLO-aware</td>
+<td>内置较轻，常上移到 router</td>
+<td>LLF stage policy + latency predictor + dynamic batch</td>
+<td>MindIE 内置更强阶段 SLO 控制</td>
+</tr>
+<tr>
+<td>指标</td>
+<td>KV usage、preemption、queue、latency</td>
+<td>NPU/CPU block、swapped、preemption、prefix hit</td>
+<td>MindIE 额外关注 CPU swap 层</td>
+</tr>
+</tbody>
+</table>
+<p>MindIE 官方开源说明把框架划分为 Server、LLM Manager、Text Generator、Modeling 四层，并明确调度器支持 FCFS/PDDS/Layerwise，Block Manager 支持 LRU/Prefix Cache/CoW：<a href="https://gitcode.com/Ascend/MindIE-LLM/">MindIE-LLM 官方仓库</a>。</p>
+<hr />
+<h2 id="3">3. 框架架构对比<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<h3 id="31-vllm-v1">3.1 vLLM V1<a class="headerlink" href="#31-vllm-v1" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>@startuml
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>skinparam componentStyle rectangle
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>component &quot;OpenAI API / LLM&quot; as VApi
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>component &quot;AsyncLLM\\nInput/Output Processor&quot; as VAsync
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>component &quot;EngineCore&quot; as VCore
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>component &quot;Scheduler\\nKVCacheManager&quot; as VSched
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>component &quot;Executor&quot; as VExec
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>component &quot;GPU Worker\\nGPUModelRunner&quot; as VWorker
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>VApi --&gt; VAsync
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>VAsync --&gt; VCore : EngineCoreRequest
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>VCore --&gt; VSched : schedule / update
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>VCore --&gt; VExec : SchedulerOutput
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>VExec --&gt; VWorker : execute_model
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>VWorker --&gt; VCore : ModelRunnerOutput
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>@enduml
+</code></pre></div>
+<p>特点：</p>
+<ul>
+<li>前端异步协议处理与 EngineCore 分离；</li>
+<li>Scheduler 本身用 Python 实现，KV 管理和 worker input batch 紧密协作；</li>
+<li><code>SchedulerOutput</code> 是 scheduler→worker 的核心执行契约；</li>
+<li>ModelRunner 直接管理 block table、slot mapping、graph 和模型 forward。</li>
+</ul>
+<h3 id="32-mindie-llm">3.2 MindIE LLM<a class="headerlink" href="#32-mindie-llm" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>@startuml
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>skinparam componentStyle rectangle
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>component &quot;Server\\nOpenAI/Triton/TGI/vLLM API&quot; as MServer
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>component &quot;LLM Manager&quot; as MManager
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>component &quot;C++ LlmEngine&quot; as MEngine
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>component &quot;Scheduler / Policy\\nBlock Manager&quot; as MSched
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>component &quot;Executor / Communicator&quot; as MExec
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>component &quot;Text Generator\\nPreprocess/Generate/Sampler&quot; as MTG
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>component &quot;Modeling / ATB Models&quot; as MModel
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>MServer --&gt; MManager
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>MManager --&gt; MEngine
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>MEngine --&gt; MSched : Schedule
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>MEngine --&gt; MExec : ExecuteModelRequest
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>MExec --&gt; MTG
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>MTG --&gt; MModel
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>MTG --&gt; MExec : ModelBatchResult
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>MExec --&gt; MEngine : callback
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>@enduml
+</code></pre></div>
+<p>特点：</p>
+<ul>
+<li>Server、LLM Manager、Text Generator、Modeling 分层明确；</li>
+<li>C++ Engine/Scheduler/Block Manager 负责控制面和请求状态；</li>
+<li>Python Text Generator 负责模型前处理、forward、sample、插件；</li>
+<li>Executor/Communicator 负责跨进程、跨机、跨卡任务下发；</li>
+<li>一个 DP 域对应调度和 KV 管理语义，跨 DP 还可能同步 stage decision、batch metadata 或执行 dummy batch。</li>
+</ul>
+<p>官方架构文档也把 KV Connector、SpecDecoding 和 ChunkPrefill 放在上述分层中：<a href="https://gitcode.com/Ascend/MindIE-LLM/blob/dev/docs/zh/developer_guide/architecture_design/architecture_overview.md">MindIE LLM 架构设计</a>。</p>
+<h3 id="33">3.3 请求执行主链<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>vLLM</th>
+<th>MindIE LLM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>入队</td>
+<td><code>AsyncLLM</code> → <code>EngineCoreClient</code> → <code>Scheduler.add_request</code></td>
+<td>Server/Manager → <code>LlmEngine::AddRequest</code> → <code>Scheduler::AddSeqGroup</code></td>
+</tr>
+<tr>
+<td>调度</td>
+<td><code>EngineCore.step()</code> 调 <code>Scheduler.schedule()</code></td>
+<td><code>LlmEngine::SchedulerThreadEntry()</code> 调 <code>Scheduler::Schedule()</code></td>
+</tr>
+<tr>
+<td>计划</td>
+<td><code>SchedulerOutput</code></td>
+<td><code>SchedulerOutputs</code> + <code>SequenceGroupMetaDatas</code></td>
+</tr>
+<tr>
+<td>执行</td>
+<td><code>model_executor.execute_model()</code></td>
+<td><code>Executor::AsyncExecuteModel()</code></td>
+</tr>
+<tr>
+<td>进度推进</td>
+<td><code>_update_after_schedule</code> + <code>update_from_output</code></td>
+<td><code>PrepareNextSchedule</code> + response handler</td>
+</tr>
+<tr>
+<td>输出</td>
+<td><code>EngineCoreOutputs</code> → <code>OutputProcessor</code></td>
+<td><code>ModelBatchResult</code> → output handler → manager callback</td>
+</tr>
+</tbody>
+</table>
+<p>两者都采用"调度与执行解耦 + 异步回调/结果处理"，但 MindIE 的跨 DP 同步、dummy batch 和 Executor 通信层更加显式。</p>
+<hr />
+<h2 id="4">4. 请求状态与队列对比<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="41-vllm">4.1 vLLM<a class="headerlink" href="#41-vllm" title="Permanent link">&para;</a></h3>
+<p>核心状态：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>WAITING
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>WAITING_FOR_STRUCTURED_OUTPUT_GRAMMAR
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>WAITING_FOR_REMOTE_KVS
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>WAITING_FOR_STREAMING_REQ
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>RUNNING
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>PREEMPTED
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>FINISHED_*
+</code></pre></div>
+<p>队列：</p>
+<ul>
+<li><code>waiting</code>：可参与准入；</li>
+<li><code>skipped_waiting</code>：grammar、远程 KV、streaming input 等异步依赖未就绪；</li>
+<li><code>running</code>：已持有执行态/KV 的请求。</li>
+</ul>
+<h3 id="42-mindie-llm">4.2 MindIE LLM<a class="headerlink" href="#42-mindie-llm" title="Permanent link">&para;</a></h3>
+<p><a href="../../MindIE-LLM/src/include/dataclass/sequence.h"><code>SequenceStatus</code></a> 更接近经典 vLLM V0 模型：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>WAITING
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>RUNNING
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>SWAPPED
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>FINISH_STOPPED
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>FINISH_LENGTH_CAPPED
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>FINISH_ABORTED
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>FINISH_IGNORED
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>FINISH_RECOMPUTE
+</code></pre></div>
+<p>另有显式：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>SequenceStage::PREFILL
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>SequenceStage::DECODE
+</code></pre></div>
+<p>容器：</p>
+<ul>
+<li><code>waiting_</code>：尚未分配 KV 的新请求；P/D 分离下也可能包含 D 侧等待拉 KV 的请求；</li>
+<li><code>running_</code>：持有 NPU KV 的 decode 或未完成 chunked prefill；</li>
+<li><code>swapped_</code>：KV 已在 CPU；</li>
+<li><code>transferringMap_</code>：P 节点已完成 prefill、等待 KV 被拉取/释放的请求。</li>
+</ul>
+<h3 id="43">4.3 状态机差异<a class="headerlink" href="#43" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>@startuml
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>title vLLM V1
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>[*] --&gt; V_WAITING
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>V_WAITING --&gt; V_RUNNING : admit
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>V_RUNNING --&gt; V_PREEMPTED : recompute preemption
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>V_PREEMPTED --&gt; V_RUNNING : re-admit
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>V_WAITING --&gt; V_REMOTE : async KV load
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>V_REMOTE --&gt; V_WAITING : load complete
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>V_RUNNING --&gt; V_FINISHED
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>@enduml
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>@startuml
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>title MindIE LLM
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>[*] --&gt; M_WAITING
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>M_WAITING --&gt; M_RUNNING : allocate NPU KV
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>M_RUNNING --&gt; M_SWAPPED : swap out to CPU
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>M_SWAPPED --&gt; M_RUNNING : swap in to NPU
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>M_RUNNING --&gt; M_WAITING : recompute preemption (PnD)
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>M_RUNNING --&gt; M_FINISH_RECOMPUTE : separated D asks coordinator to re-dispatch P
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>M_RUNNING --&gt; M_TRANSFERRING : P finished, wait KV pull
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>M_RUNNING --&gt; M_FINISHED
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>@enduml
+</code></pre></div>
+<p>最本质的区别是：vLLM V1 用 <code>PREEMPTED</code> 表达"释放后等待重算"；MindIE 用 <code>SWAPPED</code> 保留 CPU KV 恢复通路，而 recompute 后通常回 <code>WAITING</code>，PD 分离 D 侧还可能结束当前 engine 生命周期并通知 coordinator 重新走 P。</p>
+<hr />
+<h2 id="5-token-vs-pd">5. 调度抽象：统一 token vs 显式 P/D 阶段<a class="headerlink" href="#5-token-vs-pd" title="Permanent link">&para;</a></h2>
+<h3 id="51-vllm">5.1 vLLM 的统一模型<a class="headerlink" href="#51-vllm" title="Permanent link">&para;</a></h3>
+<p>vLLM 每一步计算：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>remaining = num_tokens_with_spec
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>          + num_output_placeholders
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>          - num_computed_tokens
+</code></pre></div>
+<p>然后先推进 running，再准入 waiting。prefill/decode 只是 <code>remaining</code> 大小和当前进度的结果。</p>
+<p>优势：</p>
+<ul>
+<li>chunked prefill、prefix hit、spec decode 共用同一进度模型；</li>
+<li>混合 query length 是正常 batch，不必先选本轮 P 或 D；</li>
+<li>scheduler 主循环较统一。</li>
+</ul>
+<p>代价：</p>
+<ul>
+<li>复杂约束集中在一个大 <code>schedule()</code> 中；</li>
+<li>P/D 独立 SLO 策略需额外机制或上层路由；</li>
+<li>async/spec/grammar/connector 的 placeholder 与回滚逻辑复杂。</li>
+</ul>
+<h3 id="52-mindie">5.2 MindIE 的两级决策<a class="headerlink" href="#52-mindie" title="Permanent link">&para;</a></h3>
+<p>MindIE 每轮先调用 <a href="../../MindIE-LLM/src/scheduler/scheduler.cpp"><code>Scheduler::DecidePDPriority</code></a>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Stage decision
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  PnD:
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    enableChunkedPrefill -&gt; MIX
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    otherwise -&gt; PREFILL_FIRST or DECODE_FIRST
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>  P node -&gt; PREFILL_FIRST
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>  D node -&gt; DECODE_FIRST
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>Policy decision
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>  PREFILL_FIRST -&gt; ApplyToWaitingQueue
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>  DECODE_FIRST  -&gt; ApplyToRunningQueue -&gt; ApplyToSwappedQueue
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>  MIX           -&gt; running -&gt; swapped -&gt; waiting
+</code></pre></div>
+<p>优势：</p>
+<ul>
+<li>可以直接表达 Prefill-first、Decode-first、吞吐优先或 SLO stage policy；</li>
+<li>P/D 混部与分离角色逻辑清楚；</li>
+<li>swap queue 是一级调度对象。</li>
+</ul>
+<p>代价：</p>
+<ul>
+<li>非 SplitFuse 的混部模式下，P 和 D 通常分 batch，容易产生阶段空泡或 tail latency；</li>
+<li>prefix/spec/chunking 要跨阶段和 plugin 协作；</li>
+<li>阶段选择和请求排序是两套不同策略，概念更容易混淆。</li>
+</ul>
+<h3 id="53-mindie-pd">5.3 MindIE 的 P/D 阶段策略<a class="headerlink" href="#53-mindie-pd" title="Permanent link">&para;</a></h3>
+<p>当前 <code>StagePolicyType</code> 包括：</p>
+<ul>
+<li><code>PREFILL_FIRST</code>；</li>
+<li><code>FIXED_COST_TIME_TPT_FIRST</code>：固定代价/吞吐倾向；</li>
+<li><code>LATENCY_FIRST</code>：基于 latency predictor 和 laxity 选择阶段；</li>
+<li><code>EDGE_CLOUD</code>：Layerwise/边云场景。</li>
+</ul>
+<p><code>stageSelectPolicy=2</code> 对应 TTFT/TPOT 预测和 LLF（Least Laxity First），还可以配合动态 batch size。官方文档说明该能力面向 PD 混部，且不能与 SplitFuse 同时开启：<a href="../../MindIE-LLM/docs/zh/user_guide/feature/slo_aware_scheduling_optimization.md">MindIE SLO 调度优化</a>。</p>
+<p>vLLM 内置 scheduler 没有直接对应的 LLF stage selector；类似目标一般通过优先级、router、PD 分离或自定义 scheduler 实现。</p>
+<hr />
+<h2 id="6">6. 调度预算与准入控制<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<h3 id="61">6.1 参数映射<a class="headerlink" href="#61" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>目标</th>
+<th>vLLM</th>
+<th>MindIE LLM</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单步 token 上限</td>
+<td><code>max_num_batched_tokens</code> / <code>max_num_scheduled_tokens</code></td>
+<td><code>maxPrefillTokens</code> / <code>SchedulingBudget.maxNumBatchedTokens_</code></td>
+<td>MindIE 初始化还会取 <code>max(maxSeqLen, maxPrefillTokens)</code>，chunked 构造时再覆盖</td>
+</tr>
+<tr>
+<td>Decode 并发</td>
+<td><code>max_num_seqs</code></td>
+<td><code>maxBatchSize</code></td>
+<td>MindIE 明确称最大 decode batch</td>
+</tr>
+<tr>
+<td>Prefill 并发</td>
+<td>同一 <code>max_num_seqs</code></td>
+<td><code>maxPrefillBatchSize</code></td>
+<td>MindIE P/D 分开配置</td>
+</tr>
+<tr>
+<td>排队聚批</td>
+<td>上层/engine loop 行为</td>
+<td><code>maxQueueDelayMicroseconds</code></td>
+<td>MindIE 显式等待请求积累 batch</td>
+</tr>
+<tr>
+<td>长 prefill cap</td>
+<td><code>long_prefill_token_threshold</code></td>
+<td><code>prefillChunkSize</code> / <code>longPrefillTokenThreshold</code></td>
+<td>MindIE 固定 chunk 与长请求判定分离</td>
+</tr>
+<tr>
+<td>partial prefill 数</td>
+<td>配置存在，但当前 V1 热路径未消费</td>
+<td><code>maxNumPartialPrefills</code></td>
+<td>MindIE 热路径 <code>Statistics4PartialPrefill</code> 使用</td>
+</tr>
+<tr>
+<td>长 partial 数</td>
+<td>配置存在，但当前 V1 热路径未消费</td>
+<td><code>maxLongPartialPrefills</code></td>
+<td>MindIE 会跳过超额长请求</td>
+</tr>
+<tr>
+<td>KV headroom</td>
+<td><code>watermark</code></td>
+<td>固定 <code>reservedBlockNum_</code> 当前通常为 0；另有 5% decode reserve 用于 stage decision</td>
+<td>语义不同</td>
+</tr>
+<tr>
+<td>完整输入准入</td>
+<td><code>scheduler_reserve_full_isl</code></td>
+<td><code>CanAllocate</code> 按当前完整 <code>GetTokenIds()</code> 算块</td>
+<td>两者都可避免只放首 chunk 的盲目准入，但实现位置不同</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-vllm">6.2 vLLM 的准入<a class="headerlink" href="#62-vllm" title="Permanent link">&para;</a></h3>
+<p>waiting 请求调用 <code>KVCacheManager.allocate_slots()</code>：</p>
+<ul>
+<li>可先检查 full input sequence 是否整体能放入；</li>
+<li>考虑 prefix/external KV、lookahead、encoder、reserved blocks；</li>
+<li>对 waiting/preempted 可额外保留 watermark；</li>
+<li>失败时停止 waiting 准入，不主动踢 running。</li>
+</ul>
+<h3 id="63-mindie">6.3 MindIE 的准入<a class="headerlink" href="#63-mindie" title="Permanent link">&para;</a></h3>
+<p>waiting 请求先调用 <code>SelfAttnBlockManager::CanAllocate()</code>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>required = ceil(len(GetTokenIds()) / blockSize)
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>if required &gt; total NPU blocks -&gt; NEVER
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>if free NPU blocks &gt;= required -&gt; OK
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>else -&gt; LATER
+</code></pre></div>
+<p>随后再检查 token/seq budget，成功才 <code>AllocateAndSetRunning()</code>。</p>
+<p>这里与 vLLM 有一个关键的"检查 vs 实际分配"差异：</p>
+<ul>
+<li>vLLM 开启 <code>scheduler_reserve_full_isl</code> 后，先用完整输入长度做 admission gate，但随后真正 <code>allocate_new_blocks()</code> 的仍是当前 computed/prefix/chunk/lookahead 所需 slots；</li>
+<li>MindIE <code>Allocate()</code> 直接把完整 <code>GetTokenIds()</code> 交给 <code>BlockTable::Allocate()</code>，为整段当前序列建立 block table。对首次 prefill，它通常就是完整 prompt；recompute 时还可能包含已有 output token。</li>
+</ul>
+<p>因此 SplitFuse 主要切的是**每轮计算 token**，不意味着 MindIE 只为当前 chunk 增量占用 prompt KV block。vLLM 的 chunk allocation 更增量，但 full-ISL gate 会阻止完整输入明显放不下的请求进入。</p>
+<p>running 请求增长则走 <code>CanAppendSlot()</code>：根据 block table 尾部剩余 slot、当前新增 token 和 speculative slots 计算是否需要新 block。</p>
+<h3 id="64">6.4 一个重要差别<a class="headerlink" href="#64" title="Permanent link">&para;</a></h3>
+<p>vLLM waiting 准入失败时通常只是等待；MindIE waiting <code>CanAllocate=LATER</code> 时还会检查 <code>maxFirstTokenWaitTime</code>。如果新请求首 Token 等待超时，会置 <code>newRequestFirst_</code>，在后续 running 调度中主动制造一次抢占，为新请求让位。</p>
+<p>所以 MindIE 除了 capacity-triggered preemption，还有 wait-time-triggered preemption；vLLM 当前内置 priority 没有完全等价的"等待超时后强制踢 running"逻辑。</p>
+<p>另一个重要差别是 KV 占用时间：MindIE 新 prompt 准入时通常已经为完整 prompt 建表，KV 压力更早暴露；vLLM 增量分配当前 chunk，靠 full-ISL gate/watermark 控制未来增长风险，而不是提前物理占满全部 prompt slots。</p>
+<hr />
+<h2 id="7-fcfs-priority-priority">7. FCFS、请求 Priority 与阶段 Priority<a class="headerlink" href="#7-fcfs-priority-priority" title="Permanent link">&para;</a></h2>
+<h3 id="71-vllm">7.1 vLLM<a class="headerlink" href="#71-vllm" title="Permanent link">&para;</a></h3>
+<p>vLLM 内置两种 request queue policy：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>fcfs:
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  waiting 按 arrival order
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>  KV 不足 victim = running tail
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>priority:
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>  waiting 按 (priority, arrival_time, request_id)
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>  数值越小越优先
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>  KV 不足 victim = max(priority, arrival_time)
+</code></pre></div>
+<p>priority 对 waiting 顺序和 victim 都生效，但仍不是高优请求到达即立即中断。</p>
+<h3 id="72-mindie">7.2 MindIE<a class="headerlink" href="#72-mindie" title="Permanent link">&para;</a></h3>
+<p>MindIE 的请求入口和 <code>SequenceGroup</code> 确实保存 <code>priority</code> / <code>priority_</code>，但对当前基线执行：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>rg<span class="w"> </span><span class="s2">&quot;priority_&quot;</span><span class="w"> </span>src/scheduler<span class="w"> </span>src/sequence<span class="w"> </span>src/engine
+</code></pre></div>
+<p>只发现构建 <code>SequenceGroup</code> 时赋值，没有在 <code>FcfsPolicy</code>、stage policy 或 victim selection 中读取。因此不能声称当前主 Scheduler 已按请求 <code>priority_</code> 排序。</p>
+<h3 id="73-mindie">7.3 MindIE 中三种"优先"必须区分<a class="headerlink" href="#73-mindie" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+<th>是否是 request priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FCFS</td>
+<td>waiting/running/swapped 内按队列顺序</td>
+<td>否</td>
+</tr>
+<tr>
+<td><code>PREFILL_FIRST/DECODE_FIRST/MIX</code></td>
+<td>本轮选择哪一阶段/组合</td>
+<td>否</td>
+</tr>
+<tr>
+<td><code>newRequestFirst_</code></td>
+<td>新请求 TTFT 等待超时后触发一次 running 抢占</td>
+<td>不是通用 priority queue</td>
+</tr>
+<tr>
+<td><code>priority_</code></td>
+<td>请求携带的优先级字段</td>
+<td>当前 FCFS 热路径未消费</td>
+</tr>
+<tr>
+<td>LLF</td>
+<td>比较 P/D 两类工作的 laxity</td>
+<td>阶段 SLO，不是单请求 heap</td>
+</tr>
+</tbody>
+</table>
+<p>这也是两框架面试对比最容易答错的地方：vLLM 的 <code>scheduling_policy=priority</code> 和 MindIE 的 <code>stageSelectPolicy</code> 不在同一个抽象层。</p>
+<hr />
+<h2 id="8">8. 抢占机制逐行对比<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<h3 id="81">8.1 触发器<a class="headerlink" href="#81" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>触发场景</th>
+<th>vLLM</th>
+<th>MindIE LLM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>running 增长无 KV</td>
+<td><code>allocate_slots()</code> 返回 <code>None</code></td>
+<td><code>CanAppendSlot()</code> 为 false</td>
+</tr>
+<tr>
+<td>beam/parallel sampling 新分支无块</td>
+<td>统一在 allocation 约束内</td>
+<td><code>AllocBlocks4ParallelSeqGrp()</code> false</td>
+</tr>
+<tr>
+<td>waiting 无 KV</td>
+<td>停止准入</td>
+<td>通常停止准入；TTFT 超时可设置 <code>newRequestFirst_</code></td>
+</tr>
+<tr>
+<td>新请求等待超时</td>
+<td>无等价内置强制抢占</td>
+<td><code>maxFirstTokenWaitTime</code> → 下一轮强制抢占</td>
+</tr>
+<tr>
+<td>thinking budget 等特殊状态</td>
+<td>普通 stop/processor 机制</td>
+<td><code>UpdateStatusForRecompute()</code> 可主动 recompute</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-victim">8.2 Victim 选择<a class="headerlink" href="#82-victim" title="Permanent link">&para;</a></h3>
+<p>vLLM：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">FCFS</span><span class="p">:</span>     <span class="n">victim</span> <span class="o">=</span> <span class="n">running</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">PRIORITY</span><span class="p">:</span> <span class="n">victim</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">running</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="p">(</span><span class="n">priority</span><span class="p">,</span> <span class="n">arrival_time</span><span class="p">))</span>
+</code></pre></div>
+<p>MindIE：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">candidate_running</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="n">victim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">candidate_running</span><span class="p">.</span><span class="n">back</span><span class="p">();</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="n">candidate_running</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="n">victim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">current</span><span class="p">;</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="p">}</span>
+</code></pre></div>
+<p>两者 FCFS 都保护更早的 running 请求，优先牺牲队尾；vLLM priority 能按业务优先级改变 victim，MindIE 当前 FCFS 不能。</p>
+<h3 id="83-vllm-recompute">8.3 vLLM 的 recompute<a class="headerlink" href="#83-vllm-recompute" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>free KV/encoder state
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>remove from inflight prefill
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>status = PREEMPTED
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>num_computed_tokens = 0
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>clear spec tokens
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>prepend waiting
+</code></pre></div>
+<p>请求的 prompt/output token 仍保留，恢复时重新构建模型状态。</p>
+<h3 id="84-mindie-swap-recompute">8.4 MindIE 的 swap / recompute 决策<a class="headerlink" href="#84-mindie-swap-recompute" title="Permanent link">&para;</a></h3>
+<p><a href="../../MindIE-LLM/src/scheduler/policy/fcfs_policy.cpp"><code>FcfsPolicy::Preempt</code></a>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RECOMPUTE</span><span class="p">;</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">swapNum</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">maxPreemptCount</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">CanSwapOut</span><span class="p">(</span><span class="n">seqGroup</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SWAP</span><span class="p">;</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span><span class="n">swapNum</span><span class="o">++</span><span class="p">;</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="p">}</span>
+</code></pre></div>
+<h4 id="swap">SWAP<a class="headerlink" href="#swap" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>NPU block -&gt; CPU block mapping
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>SequenceStatus::RUNNING -&gt; SWAPPED
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>request enters swapped_ queue
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>later CanSwapIn -&gt; CPU block -&gt; NPU block -&gt; RUNNING
+</code></pre></div>
+<h4 id="recompute">RECOMPUTE<a class="headerlink" href="#recompute" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>status = WAITING
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>free sequence NPU blocks
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>ResetStateForCompute()
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>PnD: re-enter local waiting
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>separated D: send RECOMPUTED_TRIGGERED to coordinator, re-dispatch from P
+</code></pre></div>
+<h3 id="85-maxpreemptcount">8.5 <code>maxPreemptCount</code> 的准确语义<a class="headerlink" href="#85-maxpreemptcount" title="Permanent link">&para;</a></h3>
+<p>当前源码里的 <code>swapNum</code> 是 <code>ApplyToRunningQueue()</code> 的局部变量，每次调用从 0 开始，只在本轮成功选择 SWAP 时递增。因此在该提交下：</p>
+<blockquote>
+<p><code>maxPreemptCount</code> 实际限制的是一次 running-policy 调用中最多有多少个 victim 采用 SWAP；超过后其余 victim 用 RECOMPUTE。</p>
+</blockquote>
+<p>它不是"同一个请求累计被抢占 N 次后才从 swap 改为 recompute"，也不是全局累计抢占上限。旧笔记中如有后一种表述，应以当前源码为准。</p>
+<p>此外配置校验要求 <code>maxPreemptCount &lt;= maxBatchSize</code>；启用 swap 还需要 <code>cpuMemSize/cpuBlockNum</code> 提供 Host KV 空间。</p>
+<h3 id="86">8.6 两种方案的成本<a class="headerlink" href="#86" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>成本</th>
+<th>vLLM recompute</th>
+<th>MindIE swap</th>
+<th>MindIE recompute</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>释放设备 KV</td>
+<td>是</td>
+<td>是</td>
+<td>是</td>
+</tr>
+<tr>
+<td>Host 内存</td>
+<td>不需要常规 swap pool</td>
+<td>需要</td>
+<td>不需要保存 KV</td>
+</tr>
+<tr>
+<td>PCIe/互连传输</td>
+<td>无 swap 传输</td>
+<td>NPU→CPU + CPU→NPU</td>
+<td>无 swap 传输</td>
+</tr>
+<tr>
+<td>恢复计算</td>
+<td>prompt + output 状态重建</td>
+<td>通常不重算已保存 KV</td>
+<td>prompt + output 状态重建</td>
+</tr>
+<tr>
+<td>状态机</td>
+<td>简单</td>
+<td>更复杂</td>
+<td>中等</td>
+</tr>
+<tr>
+<td>长上下文</td>
+<td>重算代价高</td>
+<td>Host 足够且链路可接受时可能更优</td>
+<td>重算代价高</td>
+</tr>
+</tbody>
+</table>
+<p>MindIE 的选择不是"swap 永远优于 recompute"：CPU block 不够、单轮 swap 配额用完或传输过慢时，recompute 仍是必要回退。</p>
+<h3 id="87">8.7 特殊限制<a class="headerlink" href="#87" title="Permanent link">&para;</a></h3>
+<ul>
+<li>MindIE PnD 中 parallel sampling 遇到 recompute 当前会被标记为不支持并中止该请求；</li>
+<li>MindIE P 节点正常不做本地 recompute，D 节点 recompute 需要重新经过 P；</li>
+<li>vLLM async/connector 场景通过 deferred block free 防止旧 in-flight GPU 写与新 KV load 竞争；</li>
+<li>MindIE async batch 同样用 placeholder 和执行 batch 计数限制并发在途轮次，但释放/交换由其 C++ block/executor 协议处理。</li>
+</ul>
+<hr />
+<h2 id="9-chunked-prefill-splitfuse">9. Chunked Prefill 与 SplitFuse<a class="headerlink" href="#9-chunked-prefill-splitfuse" title="Permanent link">&para;</a></h2>
+<h3 id="91">9.1 共同目标<a class="headerlink" href="#91" title="Permanent link">&para;</a></h3>
+<p>两者都解决：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>长 prefill 原子执行
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a> -&gt; decode 长时间得不到调度
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a> -&gt; TPOT/ITL tail 抖动
+</code></pre></div>
+<p>方法都是把 prompt 切成多 step，并让 decode 优先使用预算。</p>
+<h3 id="92-vllm">9.2 vLLM<a class="headerlink" href="#92-vllm" title="Permanent link">&para;</a></h3>
+<ul>
+<li>V1 scheduler 默认允许 chunked prefill；</li>
+<li>running 先调度，waiting prefill 用剩余 token budget；</li>
+<li>prefill chunk 和 decode 在统一 batch 语义内；</li>
+<li><code>long_prefill_token_threshold</code> 可限制单请求每 step token；</li>
+<li>不要求另一个"SplitFuse plugin"决定输出过滤。</li>
+</ul>
+<h3 id="93-mindie-splitfuse">9.3 MindIE SplitFuse<a class="headerlink" href="#93-mindie-splitfuse" title="Permanent link">&para;</a></h3>
+<p>MindIE 开启后：</p>
+<ol>
+<li><code>DecidePDPriority()</code> 对 PnD 返回 <code>MIX</code>；</li>
+<li><code>FcfsPolicy::ScheduleChunkedPrefill()</code> 依次处理 running、swapped、waiting；</li>
+<li><code>SchedulerOutputs.forwardMode_ = MIXED</code>，decode 放在 batch 前部；</li>
+<li>Text Generator 的 <code>SplitfusePlugin</code> 生成 per-request prefill/decode metadata；</li>
+<li>非最后一个 prefill chunk 的 sampled token 被过滤/丢弃；</li>
+<li>未完成 prefill 回到 running。</li>
+</ol>
+<p>需要强调：这里的"切块"是 forward 计算切块。根据当前 <code>SelfAttnBlockManager::Allocate()</code>，首次准入仍按完整 prompt token IDs 建立 BlockTable；不能把 SplitFuse 理解成 KV 也只为当前 chunk 延迟分配。</p>
+<p>官方文档称 SplitFuse 默认在 Decode 优先基础上把 Prefill 填入 batch 空隙：<a href="../../MindIE-LLM/docs/zh/user_guide/feature/split_fuse.md">MindIE SplitFuse</a>。</p>
+<h3 id="94-partial-prefill">9.4 Partial-prefill 配额形成反差<a class="headerlink" href="#94-partial-prefill" title="Permanent link">&para;</a></h3>
+<p>MindIE 当前热路径真正构建 <code>Statistics4PartialPrefill</code>，并用：</p>
+<ul>
+<li><code>maxNumPartialPrefills</code>；</li>
+<li><code>maxLongPartialPrefills</code>；</li>
+<li><code>longPrefillTokenThreshold</code></li>
+</ul>
+<p>限制长请求并允许短请求跳过超额长请求。</p>
+<p>vLLM 当前基线虽仍定义类似配置，但 V1 <code>schedule()</code> 没有读取前两个计数字段。</p>
+<h3 id="95-mindie-chunk">9.5 MindIE 当前源码的动态 chunk 可疑点<a class="headerlink" href="#95-mindie-chunk" title="Permanent link">&para;</a></h3>
+<p><a href="../../MindIE-LLM/src/sequence/scheduling_budget.cpp"><code>SchedulingBudget::GetPrefillSlots</code></a> 当前结构是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">prefillChunkSize</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">prefillChunkSize</span><span class="p">;</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">maxPrefillTokens</span><span class="p">;</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="p">}</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="c1">// 后面才是根据 SchedulablePrefills 动态计算的代码</span>
+</code></pre></div>
+<p>因此本提交中"动态切分长度"分支在控制流上不可达。文档描述"不配置 <code>prefillChunkSize</code> 时根据请求数动态切分"，但当前源码实际会直接返回 <code>maxPrefillTokens</code>。</p>
+<p>这是一次**源码审计发现**，不应外推到其他发布版本；如果要依赖动态 SplitFuse，需在目标构建版本上复核或补测试。相对地，长请求数量的 <code>CanSchedule()</code> 过滤逻辑仍实际生效。</p>
+<h3 id="96">9.6 特性组合<a class="headerlink" href="#96" title="Permanent link">&para;</a></h3>
+<p>vLLM 的统一调度通常允许 chunked prefill 与 prefix/spec/structured output 在同一引擎抽象下组合，但仍受具体模型和 backend 限制。</p>
+<p>MindIE 文档对 SplitFuse 的硬件、模型、量化和特性叠加列出更明确限制；例如当前文档声明与 MTP、并行解码、长序列等存在互斥。部署前应按目标版本特性矩阵验收，不能仅看 scheduler 支持 <code>MIX</code> 就推断模型执行侧一定兼容。</p>
+<hr />
+<h2 id="10-paged-kv-prefix-cache">10. Paged KV 与 Prefix Cache<a class="headerlink" href="#10-paged-kv-prefix-cache" title="Permanent link">&para;</a></h2>
+<h3 id="101">10.1 共同结构<a class="headerlink" href="#101" title="Permanent link">&para;</a></h3>
+<p>两者都有：</p>
+<ul>
+<li>固定 token block；</li>
+<li>request/sequence 的逻辑 block table；</li>
+<li>物理 block allocator；</li>
+<li>prefix hash 链；</li>
+<li>reference count；</li>
+<li>空闲/可驱逐 cached block；</li>
+<li>full block 复用和尾块重算；</li>
+<li>speculative lookahead slot。</li>
+</ul>
+<h3 id="102-vllm">10.2 vLLM<a class="headerlink" href="#102-vllm" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>Scheduler
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>  -&gt; KVCacheManager
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>     -&gt; KVCacheCoordinator
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>        -&gt; BlockPool
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>Worker
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>  -&gt; BlockTable
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>  -&gt; Triton slot mapping
+</code></pre></div>
+<p><code>BlockPool</code> 用统一 free queue 表达普通 free block 与可驱逐 cached block 的顺序；不同 cache spec 用 KV cache group/coordinator 隔离。</p>
+<h3 id="103-mindie">10.3 MindIE<a class="headerlink" href="#103-mindie" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>Scheduler / PolicyHelper
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>  -&gt; SelfAttnBlockManager
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>     -&gt; BlockTable
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>        -&gt; CpuNpuBlockAllocator
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>           -&gt; PrefixCacheBlockAllocator / HashlessBlockAllocator
+</code></pre></div>
+<p>MindIE <code>PrefixCacheBlockAllocator</code> 维护：</p>
+<ul>
+<li><code>cachedBlocks_</code>：prefix hash → block id；</li>
+<li><code>refCounter_</code>；</li>
+<li><code>evictor_</code>：LRU；</li>
+<li><code>cowTracker_</code>：共享尾块写入时 Copy-on-Write；</li>
+<li><code>touchedBlocks_</code> / computed attribute。</li>
+</ul>
+<h3 id="104">10.4 粒度与默认配置<a class="headerlink" href="#104" title="Permanent link">&para;</a></h3>
+<p>MindIE 服务参数文档给出的 <code>cacheBlockSize</code> 默认/建议值为 128，并要求其他值通常为 16 的整数倍。vLLM 当前 block size 是 platform 决定或用户指定，不应笼统固定成 16；不同 backend 和混合 KV 模型可能调整。</p>
+<p>block 更大：</p>
+<ul>
+<li>hash/metadata 少；</li>
+<li>大块传输和 Ascend 执行更规整；</li>
+<li>尾块内部浪费、prefix 复用粒度更粗。</li>
+</ul>
+<h3 id="105-prefix-cache">10.5 Prefix Cache 组合差异<a class="headerlink" href="#105-prefix-cache" title="Permanent link">&para;</a></h3>
+<p>MindIE 当前公开文档对 Prefix Cache 与 SplitFuse、DP、Function Call 等组合有明确版本约束；vLLM 更倾向让 cache key 的 extra fields 和统一 scheduler 承载组合，但同样需要以 backend/model 支持矩阵为准。</p>
+<p>MindIE 还把 DRAM/外部 KV pool 作为 Prefix Cache 的层级扩展；vLLM 则通过 KV Connector/LMCache/Mooncake 等插件化后端连接远程或外部 KV。</p>
+<hr />
+<h2 id="11">11. 异步调度对比<a class="headerlink" href="#11" title="Permanent link">&para;</a></h2>
+<h3 id="111-vllm">11.1 vLLM<a class="headerlink" href="#111-vllm" title="Permanent link">&para;</a></h3>
+<p><code>AsyncScheduler</code>：</p>
+<ul>
+<li>为下一轮输出增加 placeholder；</li>
+<li>Scheduler 可在上一轮 token 返回前继续签发；</li>
+<li>structured output/spec token 返回后校正；</li>
+<li>多 batch in flight 时延迟 block free；</li>
+<li>PP 下限制同一请求下一次 decode eligible step。</li>
+</ul>
+<h3 id="112-mindie">11.2 MindIE<a class="headerlink" href="#112-mindie" title="Permanent link">&para;</a></h3>
+<p>MindIE：</p>
+<ul>
+<li><code>activateAsyncInference</code> 打开异步推理；</li>
+<li>Scheduler 设置 <code>maxScheduledBatch_</code>；</li>
+<li><code>PrepareNextSchedule()</code> 累加 computed token 并添加 placeholder；</li>
+<li><code>AsyncExecuteModel()</code> 回调交给 output handler；</li>
+<li>通过 async batch num 限制在途 batch；</li>
+<li>MTP 下 placeholder 数还要覆盖 <code>(1 + speculationGamma)</code>。</li>
+</ul>
+<h3 id="113">11.3 共同风险<a class="headerlink" href="#113" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>风险</th>
+<th>两者的共同本质</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>乐观进度</td>
+<td>调度时真实 token 尚未返回</td>
+</tr>
+<tr>
+<td>stop 越界</td>
+<td>可能多签发一步，需要丢弃或阻止</td>
+</tr>
+<tr>
+<td>spec reject</td>
+<td>draft token 数与实际接受数不同</td>
+</tr>
+<tr>
+<td>KV 生命周期</td>
+<td>逻辑 finish/preempt 早于设备操作完成</td>
+</tr>
+<tr>
+<td>grammar/mask</td>
+<td>下一轮合法 token 集依赖上一轮输出</td>
+</tr>
+</tbody>
+</table>
+<p>vLLM 把这些大多集中在 Scheduler/ModelRunner；MindIE 分散在 C++ Scheduler、Executor、output handler 和 Python plugin manager。</p>
+<hr />
+<h2 id="12-pd">12. P/D 混部与分离<a class="headerlink" href="#12-pd" title="Permanent link">&para;</a></h2>
+<h3 id="121-vllm">12.1 vLLM<a class="headerlink" href="#121-vllm" title="Permanent link">&para;</a></h3>
+<ul>
+<li>普通实例：统一 scheduler 内混合 P/D；</li>
+<li>分离实例：KV Connector 区分 producer/consumer；</li>
+<li>consumer waiting 请求查远程命中、分配目标 block、异步 load；</li>
+<li><code>WAITING_FOR_REMOTE_KVS</code> 显式表示传输依赖；</li>
+<li>P/D orchestration 通常由示例 proxy 或外部系统负责。</li>
+</ul>
+<h3 id="122-mindie">12.2 MindIE<a class="headerlink" href="#122-mindie" title="Permanent link">&para;</a></h3>
+<p>Scheduler 角色明确：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>Role::PnD     混部
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>Role::P       Prefill 节点
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>Role::D       Decode 节点
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>Role::Flex*   灵活角色
+</code></pre></div>
+<ul>
+<li>P：prefill 完成后请求进入 <code>transferringMap_</code>，直到 D 拉取并通知释放；</li>
+<li>D：<code>ScheduleTransfer()</code> 为 KV pull 单独建 budget；</li>
+<li>free token 要减去 <code>maxBatchSize</code>，给 decode 保留空间，避免 KV pull 导致 swap/recompute；</li>
+<li>D 收到 KV 后进入 running；</li>
+<li>D recompute 时向 coordinator 返回 <code>RECOMPUTED_TRIGGERED</code>，由 P 重新计算。</li>
+</ul>
+<h3 id="123">12.3 对比<a class="headerlink" href="#123" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>vLLM</th>
+<th>MindIE LLM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>传输状态</td>
+<td>request status + connector metadata</td>
+<td>role queue + transferring map + transfer scheduler</td>
+</tr>
+<tr>
+<td>调度耦合</td>
+<td>Connector 插入统一 scheduler</td>
+<td>KV transfer 有独立 policy/budget</td>
+</tr>
+<tr>
+<td>重算回退</td>
+<td>consumer 可按 failure policy recompute</td>
+<td>D 通知 coordinator，重新调度 P</td>
+</tr>
+<tr>
+<td>资源保护</td>
+<td>in-flight reserved blocks</td>
+<td>transfer budget 预留 decode token/block 空间</td>
+</tr>
+<tr>
+<td>集群控制</td>
+<td>通常外置</td>
+<td>与 MindIE Motor/coordinator 体系结合更紧</td>
+</tr>
+</tbody>
+</table>
+<p>MindIE 的 P/D 语义更"产品化地内建角色"；vLLM 的 Connector 抽象更插件化、生态化。</p>
+<hr />
+<h2 id="13">13. 投机解码、结构化输出与调度<a class="headerlink" href="#13" title="Permanent link">&para;</a></h2>
+<h3 id="131">13.1 投机解码<a class="headerlink" href="#131" title="Permanent link">&para;</a></h3>
+<p>共同点：</p>
+<ul>
+<li>都需预留 lookahead KV slot；</li>
+<li>都需要 placeholder 表示尚未确认的输出；</li>
+<li>验证拒绝后要回收/校正进度；</li>
+<li>batch 大、接受率低时可能负收益。</li>
+</ul>
+<p>差异：</p>
+<ul>
+<li>vLLM 的 spec token 是统一 scheduler 的 <code>num_tokens_with_spec</code> 一部分；</li>
+<li>MindIE 用 <code>speculationGamma</code>、TG plugin 和 scheduler placeholder 共同实现，且与 SplitFuse 等特性存在更明确互斥矩阵。</li>
+</ul>
+<h3 id="132-function-call">13.2 结构化输出 / Function Call<a class="headerlink" href="#132-function-call" title="Permanent link">&para;</a></h3>
+<p>vLLM 有 <code>WAITING_FOR_STRUCTURED_OUTPUT_GRAMMAR</code> 和 scheduler-side grammar bitmask 协调。</p>
+<p>MindIE 的 Function Call/约束输出更多位于 Server/Text Generator/plugin 路径，主 C++ <code>FcfsPolicy</code> 没有等价的 grammar waiting 状态。其调度影响往往通过 plugin compatibility、采样路径和异步 placeholder 体现。</p>
+<p>这反映两者边界不同：vLLM Scheduler 更直接感知 structured output；MindIE Scheduler 更聚焦 batch/KV/P-D，输出语义更多由 TG 层承载。</p>
+<hr />
+<h2 id="14">14. 可观测性与排障映射<a class="headerlink" href="#14" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>目标</th>
+<th>vLLM 指标/状态</th>
+<th>MindIE 指标/状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>设备 KV 水位</td>
+<td><code>vllm:kv_cache_usage_perc</code></td>
+<td>NPU block usage/free blocks</td>
+</tr>
+<tr>
+<td>Host swap 水位</td>
+<td>V1 常规无 swap queue</td>
+<td>CPU block usage/free blocks</td>
+</tr>
+<tr>
+<td>抢占</td>
+<td><code>vllm:num_preemptions</code></td>
+<td><code>num_preemptions_total</code> / cumulativePreemptCount</td>
+</tr>
+<tr>
+<td>swap backlog</td>
+<td>无</td>
+<td><code>swappedRequestNum</code></td>
+</tr>
+<tr>
+<td>排队</td>
+<td>running/waiting</td>
+<td>running/waiting/transferring/swapped</td>
+</tr>
+<tr>
+<td>Prefix 命中</td>
+<td>prefix cache hit stats</td>
+<td><code>npu_prefix_cache_hit_rate</code>、radix match counters</td>
+</tr>
+<tr>
+<td>执行</td>
+<td>prompt/generation throughput</td>
+<td>prefill/decode throughput</td>
+</tr>
+<tr>
+<td>阶段决策</td>
+<td>batch 中 token 组成</td>
+<td>forwardMode + PD priority type</td>
+</tr>
+</tbody>
+</table>
+<h3 id="141-vllm">14.1 vLLM 抢占排障<a class="headerlink" href="#141-vllm" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>KV usage / block boundary / max_num_seqs
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a> -&gt; full-ISL admission / watermark
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a> -&gt; chunk size / lookahead / remote KV reservation
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a> -&gt; prefix cache churn
+</code></pre></div>
+<h3 id="142-mindie">14.2 MindIE 抢占排障<a class="headerlink" href="#142-mindie" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>NPU free blocks 低？
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a> -&gt; maxBatchSize / maxPrefillBatchSize / maxPrefillTokens
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a> -&gt; cacheBlockSize / npuMemSize / KV dtype
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>
+<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>CPU free blocks 低？
+<a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a> -&gt; swap 无法使用，转 recompute
+<a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a> -&gt; cpuMemSize / maxPreemptCount
+<a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>
+<a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>newRequestFirst 日志？
+<a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a> -&gt; maxFirstTokenWaitTime 触发的 TTFT 保护
+<a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>
+<a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a>swapped queue 长？
+<a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a> -&gt; swap-in 得不到 NPU 空间，可能形成 Host 堆积
+<a id="__codelineno-24-14" name="__codelineno-24-14" href="#__codelineno-24-14"></a>
+<a id="__codelineno-24-15" name="__codelineno-24-15" href="#__codelineno-24-15"></a>PnD P/D tail 抖动？
+<a id="__codelineno-24-16" name="__codelineno-24-16" href="#__codelineno-24-16"></a> -&gt; stageSelectPolicy / maxQueueDelay / SplitFuse / dynamic batch
+</code></pre></div>
+<h3 id="143">14.3 不能直接照搬的调参经验<a class="headerlink" href="#143" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>在 vLLM 中</th>
+<th>到 MindIE 时不能简单映射为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>调 <code>max_num_seqs</code></td>
+<td>只调 <code>maxBatchSize</code>；还要看 <code>maxPrefillBatchSize</code> 和 stage policy</td>
+</tr>
+<tr>
+<td>开 chunked prefill</td>
+<td>只开一个 scheduler bool；还涉及 Mix/SplitFuse plugin 和兼容矩阵</td>
+</tr>
+<tr>
+<td>增 KV cache memory</td>
+<td>只增 <code>npuMemSize</code>；MindIE 还可能需要 CPU swap pool</td>
+</tr>
+<tr>
+<td>priority</td>
+<td><code>stageSelectPolicy</code>；一个是 request priority，一个是 P/D stage priority</td>
+</tr>
+<tr>
+<td>preempt=recompute</td>
+<td>MindIE 默认也一定重算；<code>maxPreemptCount&gt;0</code> 且 Host 空间足时会 swap</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="15">15. 典型场景推演<a class="headerlink" href="#15" title="Permanent link">&para;</a></h2>
+<h3 id="151-prefill-decode">15.1 长 Prefill 到达，已有 Decode<a class="headerlink" href="#151-prefill-decode" title="Permanent link">&para;</a></h3>
+<h4 id="vllm">vLLM<a class="headerlink" href="#vllm" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>running decode 先消耗 token budget
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a> -&gt; waiting long prefill 使用剩余 budget
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a> -&gt; 自动成为 chunked prefill
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a> -&gt; 下一轮仍在 running，与 decode 一起推进
+</code></pre></div>
+<h4 id="mindiesplitfuse">MindIE，SplitFuse 关闭<a class="headerlink" href="#mindiesplitfuse" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>DecidePDPriority 选择 P 或 D
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a> -&gt; 本轮通常是纯 prefill 或纯 decode batch
+<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a> -&gt; stage policy 决定 TTFT/TPOT 权衡
+</code></pre></div>
+<h4 id="mindiesplitfuse_1">MindIE，SplitFuse 开启<a class="headerlink" href="#mindiesplitfuse_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>MIX
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a> -&gt; running decode first
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a> -&gt; swapped in if possible
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a> -&gt; waiting prefill 填剩余 budget
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a> -&gt; mixed forward + TG SplitFuse preprocess
+</code></pre></div>
+<h3 id="152-decode-block-kv">15.2 Decode 跨 block 边界，设备 KV 不足<a class="headerlink" href="#152-decode-block-kv" title="Permanent link">&para;</a></h3>
+<h4 id="vllm_1">vLLM<a class="headerlink" href="#vllm_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>allocate_slots fails
+<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a> -&gt; FCFS/priority 选 victim
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a> -&gt; free victim KV
+<a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a> -&gt; victim PREEMPTED + num_computed_tokens=0
+<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a> -&gt; retry current request
+</code></pre></div>
+<h4 id="mindie">MindIE<a class="headerlink" href="#mindie" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>CanAppendSlot false
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a> -&gt; running tail victim
+<a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a> -&gt; swapNum &lt; maxPreemptCount and CPU has blocks?
+<a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>      yes: NPU -&gt; CPU, victim SWAPPED
+<a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>      no:  free KV, reset compute, victim recompute
+<a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a> -&gt; retry current request
+</code></pre></div>
+<h3 id="153-ttft-npu">15.3 新请求 TTFT 已超时，但 NPU 放不下<a class="headerlink" href="#153-ttft-npu" title="Permanent link">&para;</a></h3>
+<h4 id="vllm_2">vLLM<a class="headerlink" href="#vllm_2" title="Permanent link">&para;</a></h4>
+<p>若只是 waiting 准入失败，请求继续 waiting；除非已有 running 后续增长触发常规抢占，或业务在上层采取 admission/priority 策略。</p>
+<h4 id="mindie_1">MindIE<a class="headerlink" href="#mindie_1" title="Permanent link">&para;</a></h4>
+<p>waiting 检测 <code>CanAllocate=LATER</code> 且等待超过 <code>maxFirstTokenWaitTime</code>，设置 <code>newRequestFirst_</code>；后续 running policy 即使当前请求本可 append，也会抢占一个队尾请求，为新请求腾出机会。</p>
+<p>这使 MindIE 能以内置机制用部分 TPOT/E2E 代价换 TTFT tail。</p>
+<h3 id="154-cpu-swap">15.4 CPU swap 空间耗尽<a class="headerlink" href="#154-cpu-swap" title="Permanent link">&para;</a></h3>
+<p>MindIE <code>CanSwapOut=false</code> 后 <code>Preempt()</code> 选择 recompute，不会继续强行 swap。若大量请求已在 <code>swapped_</code> 等不到 swap-in，需要同时降低 NPU 过度并发、增加 Host KV 或减少每轮 swap 配额；只增加 CPU 空间可能把问题从重算变成长期 swap backlog。</p>
+<hr />
+<h2 id="16">16. 选型与设计启示<a class="headerlink" href="#16" title="Permanent link">&para;</a></h2>
+<h3 id="161-vllm">16.1 何时更偏向 vLLM 的设计<a class="headerlink" href="#161-vllm" title="Permanent link">&para;</a></h3>
+<ul>
+<li>需要多硬件/多模型生态和快速接入；</li>
+<li>希望 prefix/spec/chunked/structured output 共享统一调度抽象；</li>
+<li>request priority 简单分级已经足够；</li>
+<li>接受把全局 SLO、租户公平、cache-aware placement 放在 router；</li>
+<li>不希望维护 CPU KV swap 状态机。</li>
+</ul>
+<h3 id="162-mindie">16.2 何时更偏向 MindIE 的设计<a class="headerlink" href="#162-mindie" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Ascend 上追求深度适配和 ATB/MindIE 生产栈；</li>
+<li>需要显式 P/D stage control、跨 DP 协同或 SLO stage policy；</li>
+<li>希望在 Host 内存充足时用 swap 保存长上下文计算成果；</li>
+<li>需要 P/D role、KV pool、Motor/coordinator 更紧密的体系；</li>
+<li>能接受特性组合矩阵与平台版本约束。</li>
+</ul>
+<h3 id="163-scheduler">16.3 对自研 Scheduler 的启示<a class="headerlink" href="#163-scheduler" title="Permanent link">&para;</a></h3>
+<p>可组合两者优点：</p>
+<ol>
+<li>单实例内部使用 vLLM 式统一 token accounting；</li>
+<li>外层增加 MindIE 式 SLO-aware admission/stage controller；</li>
+<li>victim score 同时考虑 priority、已计算 token、重算 FLOPs、swap bytes 和 deadline；</li>
+<li>swap/recompute 不用固定二选一，而是比较：</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>T_swap_out + expected_wait + T_swap_in
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>vs
+<a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>T_recompute(prefix_miss_tokens)
+</code></pre></div>
+<ol>
+<li>增加 aging，避免 priority 或短请求优先造成饥饿；</li>
+<li>admission 时检查 full-ISL/KV growth，避免先塞满再抢占；</li>
+<li>把跨实例 cache affinity 和单实例 KV allocation 保持分层。</li>
+</ol>
+<hr />
+<h2 id="17">17. 源码审计发现与版本风险<a class="headerlink" href="#17" title="Permanent link">&para;</a></h2>
+<h3 id="171">17.1 已确认的源码事实<a class="headerlink" href="#171" title="Permanent link">&para;</a></h3>
+<ol>
+<li>vLLM V1 常规抢占是 recompute，无 <code>SWAPPED</code> 状态。</li>
+<li>MindIE <code>FcfsPolicy</code> 同时实现 SWAP 和 RECOMPUTE。</li>
+<li>MindIE <code>maxPreemptCount</code> 在当前代码中是单次 running-policy 调用的 swap 数上限。</li>
+<li>MindIE 请求 <code>priority_</code> 当前没有进入 Scheduler/Policy 热路径。</li>
+<li>vLLM 的 <code>max_num_partial_prefills</code> / <code>max_long_partial_prefills</code> 当前未进入 V1 主循环。</li>
+<li>MindIE 的 partial-prefill 长请求数量过滤进入了热路径。</li>
+<li>MindIE <code>GetPrefillSlots()</code> 的动态 slot 计算在当前控制流上不可达。</li>
+</ol>
+<h3 id="172">17.2 文档与源码冲突时怎么处理<a class="headerlink" href="#172" title="Permanent link">&para;</a></h3>
+<ul>
+<li>产品支持范围、硬件/模型/特性组合：优先看与部署包同版本的官方文档；</li>
+<li>运行时实际分支、victim 和状态变化：优先看构建产物对应 commit；</li>
+<li>配置字段存在但是否生效：必须确认热路径引用；</li>
+<li>性能结论：必须用真实 ISL/OSL、arrival、并发和硬件压测，不从机制直接推百分比。</li>
+</ul>
+<hr />
+<h2 id="18">18. 源码阅读地图<a class="headerlink" href="#18" title="Permanent link">&para;</a></h2>
+<h3 id="181-vllm">18.1 vLLM<a class="headerlink" href="#181-vllm" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Engine step</td>
+<td><a href="../../vllm/vllm/v1/engine/core.py"><code>vllm/vllm/v1/engine/core.py</code></a></td>
+</tr>
+<tr>
+<td>调度主循环</td>
+<td><a href="../../vllm/vllm/v1/core/sched/scheduler.py"><code>vllm/vllm/v1/core/sched/scheduler.py</code></a></td>
+</tr>
+<tr>
+<td>FCFS/Priority queue</td>
+<td><a href="../../vllm/vllm/v1/core/sched/request_queue.py"><code>vllm/vllm/v1/core/sched/request_queue.py</code></a></td>
+</tr>
+<tr>
+<td>请求状态</td>
+<td><a href="../../vllm/vllm/v1/request.py"><code>vllm/vllm/v1/request.py</code></a></td>
+</tr>
+<tr>
+<td>KV allocation</td>
+<td><a href="../../vllm/vllm/v1/core/kv_cache_manager.py"><code>vllm/vllm/v1/core/kv_cache_manager.py</code></a></td>
+</tr>
+<tr>
+<td>物理 block pool</td>
+<td><a href="../../vllm/vllm/v1/core/block_pool.py"><code>vllm/vllm/v1/core/block_pool.py</code></a></td>
+</tr>
+<tr>
+<td>Worker block table</td>
+<td><a href="../../vllm/vllm/v1/worker/block_table.py"><code>vllm/vllm/v1/worker/block_table.py</code></a></td>
+</tr>
+<tr>
+<td>Async Scheduler</td>
+<td><a href="../../vllm/vllm/v1/core/sched/async_scheduler.py"><code>vllm/vllm/v1/core/sched/async_scheduler.py</code></a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="182-mindie-llm">18.2 MindIE LLM<a class="headerlink" href="#182-mindie-llm" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Engine 主循环</td>
+<td><a href="../../MindIE-LLM/src/engine/llm_engine.cpp"><code>MindIE-LLM/src/engine/llm_engine.cpp</code></a></td>
+</tr>
+<tr>
+<td>Scheduler/阶段选择</td>
+<td><a href="../../MindIE-LLM/src/scheduler/scheduler.cpp"><code>MindIE-LLM/src/scheduler/scheduler.cpp</code></a></td>
+</tr>
+<tr>
+<td>FCFS/抢占</td>
+<td><a href="../../MindIE-LLM/src/scheduler/policy/fcfs_policy.cpp"><code>MindIE-LLM/src/scheduler/policy/fcfs_policy.cpp</code></a></td>
+</tr>
+<tr>
+<td>Policy KV 操作</td>
+<td><a href="../../MindIE-LLM/src/scheduler/policy/policy_helper.cpp"><code>MindIE-LLM/src/scheduler/policy/policy_helper.cpp</code></a></td>
+</tr>
+<tr>
+<td>调度预算/partial prefill</td>
+<td><a href="../../MindIE-LLM/src/sequence/scheduling_budget.cpp"><code>MindIE-LLM/src/sequence/scheduling_budget.cpp</code></a></td>
+</tr>
+<tr>
+<td>状态/阶段</td>
+<td><a href="../../MindIE-LLM/src/include/dataclass/sequence.h"><code>MindIE-LLM/src/include/dataclass/sequence.h</code></a></td>
+</tr>
+<tr>
+<td>Block Manager</td>
+<td><a href="../../MindIE-LLM/src/block_manager/self_attn_block_manager.cpp"><code>MindIE-LLM/src/block_manager/self_attn_block_manager.cpp</code></a></td>
+</tr>
+<tr>
+<td>Block Table</td>
+<td><a href="../../MindIE-LLM/src/block_manager/block_table.cpp"><code>MindIE-LLM/src/block_manager/block_table.cpp</code></a></td>
+</tr>
+<tr>
+<td>Prefix Cache allocator</td>
+<td><a href="../../MindIE-LLM/src/block_manager/prefix_cache_block_allocator.cpp"><code>MindIE-LLM/src/block_manager/prefix_cache_block_allocator.cpp</code></a></td>
+</tr>
+<tr>
+<td>SplitFuse TG plugin</td>
+<td><a href="../../MindIE-LLM/mindie_llm/text_generator/plugins/splitfuse/splitfuse_plugin.py"><code>MindIE-LLM/mindie_llm/text_generator/plugins/splitfuse/splitfuse_plugin.py</code></a></td>
+</tr>
+<tr>
+<td>SLO stage policy</td>
+<td><a href="../../MindIE-LLM/src/scheduler/policy/stage_policy/latency_stage_policy.cpp"><code>MindIE-LLM/src/scheduler/policy/stage_policy/latency_stage_policy.cpp</code></a></td>
+</tr>
+<tr>
+<td>服务参数</td>
+<td><a href="../../MindIE-LLM/docs/zh/user_guide/user_manual/service_parameter_configuration.md"><code>MindIE-LLM/docs/zh/user_guide/user_manual/service_parameter_configuration.md</code></a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="19">19. 面试回答模板<a class="headerlink" href="#19" title="Permanent link">&para;</a></h2>
+<h3 id="191-90">19.1 90 秒总对比<a class="headerlink" href="#191-90" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>两者都有 PagedAttention、Continuous Batching、Prefix Cache、Chunked Prefill 和 PD 分离，但调度抽象不同。vLLM V1 是统一 token scheduler，没有严格 P/D phase，每步让 <code>num_computed_tokens</code> 追上 prompt、output 和 spec token，先 running 后 waiting；MindIE 保留显式 PREFILL/DECODE stage，先选本轮 P-first、D-first 或 Mix，再从 waiting、running、swapped 三队列组 batch。抢占上 vLLM V1 只有 recompute，释放 KV、计算进度归零、回 waiting；MindIE 优先在 <code>maxPreemptCount</code> 和 Host KV 容量允许时做 NPU↔CPU swap，否则 recompute。vLLM 内置 request priority 会影响 waiting 和 victim；MindIE 当前主 FCFS 没消费请求 priority，它的 stageSelectPolicy 是 P/D 阶段优先，不是同一概念。SplitFuse 打开后 MindIE 才像 vLLM chunked prefill 一样 decode-first 混 P/D，但还需要 TG plugin 和特性兼容矩阵。</p>
+</blockquote>
+<h3 id="192">19.2 追问：谁的抢占更好<a class="headerlink" href="#192" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>不能脱离 workload。vLLM recompute 状态简单、没有 Host KV 和 PCIe 搬运，短上下文或算力富余时合适；MindIE swap 能保存长上下文成果，但占 CPU 内存并付两次传输，swapped queue 还可能堆积。正确选择应比较 swap out+等待+swap in 与 prefix miss 部分重算的时间，同时先用 admission、KV 容量和并发限制减少抢占。</p>
+</blockquote>
+<h3 id="193-priority">19.3 追问：Priority 有什么差异<a class="headerlink" href="#193-priority" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>vLLM priority 是 request-level，数值越小越先准入，KV 不足时最低优先级 running 先被抢。MindIE 当前 <code>priority_</code> 虽传入 SequenceGroup，但 FCFS policy 没读取；它主要有 P/D stage priority、LLF SLO policy 和 <code>maxFirstTokenWaitTime</code> 触发的新请求优先。三者不能混称请求优先级。</p>
+</blockquote>
+<hr />
+<h2 id="20">20. 最终对照速记<a class="headerlink" href="#20" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>vLLM V1
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>  unified token progress
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>  waiting/skipped/running
+<a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>  FCFS or request priority
+<a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>  recompute-only preemption
+<a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a>  chunked prefill is scheduler-native
+<a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a>  connector-centric external KV
+<a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a>
+<a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a>MindIE LLM
+<a id="__codelineno-31-10" name="__codelineno-31-10" href="#__codelineno-31-10"></a>  explicit PREFILL/DECODE stage
+<a id="__codelineno-31-11" name="__codelineno-31-11" href="#__codelineno-31-11"></a>  waiting/running/swapped/transferring
+<a id="__codelineno-31-12" name="__codelineno-31-12" href="#__codelineno-31-12"></a>  FCFS + stage/SLO decision
+<a id="__codelineno-31-13" name="__codelineno-31-13" href="#__codelineno-31-13"></a>  SWAP then RECOMPUTE fallback
+<a id="__codelineno-31-14" name="__codelineno-31-14" href="#__codelineno-31-14"></a>  SplitFuse = MIX scheduler + TG plugin
+<a id="__codelineno-31-15" name="__codelineno-31-15" href="#__codelineno-31-15"></a>  role/transfer-policy-centric P/D
+</code></pre></div>
+<hr />
+<h2 id="21">21. 参考资料<a class="headerlink" href="#21" title="Permanent link">&para;</a></h2>
+<h3 id="_1">本地源码<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>vLLM：<code>main@8df14cfc8c8a09b4e57f082e59593a3abce4ffb3</code></li>
+<li>MindIE LLM：<code>master@238c543c3ce34e64260d1a4ed99c3e210f13793f</code></li>
+<li>具体文件见 §18 源码阅读地图。</li>
+</ul>
+<h3 id="_2">官方资料<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="https://docs.vllm.ai/en/stable/">vLLM stable documentation</a></li>
+<li><a href="https://docs.vllm.ai/en/v0.10.1.1/configuration/optimization.html">vLLM Optimization and Tuning</a></li>
+<li><a href="https://gitcode.com/Ascend/MindIE-LLM/">MindIE-LLM 官方仓库</a></li>
+<li><a href="https://gitcode.com/Ascend/MindIE-LLM/blob/dev/docs/zh/developer_guide/architecture_design/architecture_overview.md">MindIE LLM 架构设计</a></li>
+<li><a href="../../MindIE-LLM/docs/zh/user_guide/feature/split_fuse.md">MindIE SplitFuse</a></li>
+<li><a href="../../MindIE-LLM/docs/zh/user_guide/feature/slo_aware_scheduling_optimization.md">MindIE SLO 调度优化</a></li>
+<li><a href="../../MindIE-LLM/docs/zh/user_guide/feature/prefix_cache.md">MindIE Prefix Cache</a></li>
+</ul>
+<hr />
+<h2 id="22">22. 自检清单<a class="headerlink" href="#22" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[x] 两个框架均锁定源码 commit</li>
+<li>[x] 区分统一 token scheduler 与显式 P/D stage scheduler</li>
+<li>[x] 对齐 waiting/running/swapped/remote/transferring 状态</li>
+<li>[x] 展开常规抢占触发、victim、swap、recompute 和恢复路径</li>
+<li>[x] 校正 <code>maxPreemptCount</code> 的当前源码语义</li>
+<li>[x] 区分 request priority、stage priority、LLF 和 TTFT 超时抢占</li>
+<li>[x] 对比 Chunked Prefill 与 SplitFuse 的 scheduler/TG 分工</li>
+<li>[x] 对比 Prefix Cache、异步调度、P/D 分离和指标</li>
+<li>[x] 标注配置存在但热路径未消费、文档与源码不一致的风险</li>
+<li>[x] 提供调参映射、场景推演、源码地图和口述模板</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>
